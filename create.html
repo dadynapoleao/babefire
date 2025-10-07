@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Criação - Babefire</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        :root {
+            --primary-color: #007BFF; --primary-hover: #0056b3; --light-gray: #f4f4f4;
+            --gray: #ccc; --dark-gray: #555; --background-color: #ffffff;
+            --text-color: #333; --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; background-color: var(--light-gray);
+            color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;
+        }
+
+        .container {
+            width: 100%; max-width: 800px; background-color: var(--background-color); padding: 25px;
+            border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray);
+            padding-bottom: 15px; margin-bottom: 15px;
+        }
+        header h1 { margin: 0; font-size: 24px; color: var(--dark-gray); }
+
+        .tabs { display: flex; border-bottom: 2px solid var(--gray); margin-bottom: 20px; }
+        .tab-button {
+            padding: 10px 20px; cursor: pointer; border: none; background-color: transparent;
+            font-size: 16px; font-weight: 500; color: var(--dark-gray);
+            border-bottom: 3px solid transparent; transition: all 0.3s ease;
+        }
+        .tab-button.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+        .tab-button:hover { background-color: #e9e9e9; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        form { display: flex; flex-direction: column; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 5px; font-weight: 500; }
+        .form-group input[type="text"], .form-group input[type="date"], .form-group input[type="url"], .form-group select {
+            width: 100%; padding: 10px; border: 1px solid var(--gray);
+            border-radius: var(--border-radius); font-size: 16px; box-sizing: border-box;
+        }
+
+        .search-container { position: relative; }
+        .search-results {
+            position: absolute; top: 100%; left: 0; right: 0; background-color: white; border: 1px solid var(--gray);
+            border-top: none; border-radius: 0 0 var(--border-radius) var(--border-radius);
+            max-height: 200px; overflow-y: auto; z-index: 1000; display: none;
+        }
+        .search-results.visible { display: block; }
+        .result-item { padding: 10px; cursor: pointer; }
+        .result-item:hover { background-color: var(--light-gray); }
+        
+        .selected-items-container {
+            display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; border: 1px solid var(--gray);
+            border-radius: var(--border-radius); min-height: 40px; background-color: #fafafa;
+        }
+        .selected-item {
+            display: flex; align-items: center; background-color: var(--primary-color);
+            color: white; padding: 5px 10px; border-radius: 15px; font-size: 14px;
+        }
+        .remove-item { margin-left: 8px; cursor: pointer; font-weight: bold; border: none; background: none; color: white; }
+        
+        .video-preview-panel {
+            display: none; margin-top: 10px;
+        }
+        .video-preview-panel iframe, .video-preview-panel video {
+            width: 100%; aspect-ratio: 16 / 9; border: none; border-radius: var(--border-radius);
+        }
+        
+        .video-placeholder {
+            width: 100%; aspect-ratio: 16 / 9; background-color: #2c3e50;
+            border-radius: var(--border-radius); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: white;
+            padding: 20px; box-sizing: border-box;
+        }
+        .video-placeholder svg { width: 64px; height: 64px; opacity: 0.7; margin-bottom: 10px; }
+        .video-placeholder p { margin: 0; font-size: 14px; text-align: center; }
+        
+        .btn-create, .btn-index {
+            cursor: pointer; transition: background-color 0.3s ease; border: none;
+            border-radius: var(--border-radius); color: white; text-decoration: none;
+        }
+        .btn-create {
+            padding: 12px 20px; background-color: var(--primary-color);
+            font-size: 16px; font-weight: bold; margin-top: 10px;
+        }
+        .btn-create:hover { background-color: var(--primary-hover); }
+        .btn-index { padding: 8px 16px; background-color: var(--dark-gray); font-size: 14px; }
+        .btn-index:hover { background-color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Painel de Criação</h1>
+            <a href="index.html" class="btn-index">Voltar para Index</a>
+        </header>
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="scene">Criar Scenne</button>
+            <button class="tab-button" data-tab="actor">Criar Actor</button>
+            <button class="tab-button" data-tab="movie">Criar Movie</button>
+        </nav>
+        <main>
+            <section id="scene" class="tab-content active">
+                <h2>Criar Nova Scenne</h2>
+                <form id="form-scene">
+                    <div class="form-group">
+                        <label for="scenne-name">Nome da Scenne</label>
+                        <input type="text" id="scenne-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scenne-babes-search">Pesquisar Babes</label>
+                        <div class="search-container">
+                            <input type="text" id="scenne-babes-search" placeholder="Digite para pesquisar e adicionar...">
+                            <div class="search-results" id="scenne-babes-results"></div>
+                        </div>
+                        <label style="margin-top: 10px;">Babes Selecionadas:</label>
+                        <div class="selected-items-container" id="scenne-babes-selected"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="scenne-date">Data (dd/mm/aaaa)</label>
+                        <input type="date" id="scenne-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scenne-image-url">URL da Imagem</label>
+                        <input type="url" id="scenne-image-url" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label for="scenne-video-url">URL do Vídeo</label>
+                        <input type="url" id="scenne-video-url" placeholder="https://...">
+                        <div id="scenne-video-preview" class="video-preview-panel"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="scenne-movie-assoc">Associar a Filme (Opcional)</label>
+                        <select id="scenne-movie-assoc"><option value="">Carregando...</option></select>
+                    </div>
+                    <button type="submit" class="btn-create">Criar Scenne</button>
+                </form>
+            </section>
+            <section id="actor" class="tab-content">
+                <h2>Criar Novo Actor</h2>
+                <form id="form-actor">
+                    <div class="form-group">
+                        <label for="actor-name">Nome</label>
+                        <input type="text" id="actor-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="actor-nationality-search">Nacionalidade</label>
+                        <div class="search-container">
+                            <input type="text" id="actor-nationality-search" placeholder="Digite para pesquisar..." required autocomplete="off">
+                            <input type="hidden" id="actor-nationality-id" name="nationId">
+                            <div class="search-results" id="actor-nationality-results"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="actor-star">Star (0-50)</label>
+                        <select id="actor-star" required></select>
+                    </div>
+                    <button type="submit" class="btn-create">Criar Actor</button>
+                </form>
+            </section>
+            <section id="movie" class="tab-content">
+                 <h2>Criar Novo Movie</h2>
+                <form id="form-movie">
+                    <div class="form-group">
+                        <label for="movie-name">Nome do Movie</label>
+                        <input type="text" id="movie-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="movie-date">Data do Movie</label>
+                        <input type="date" id="movie-date" required>
+                    </div>
+                     <div class="form-group">
+                        <label>Anexar Scennes (Seleção Múltipla)</label>
+                        <div id="movie-scennes-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 8px;"><p>Carregando...</p></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="movie-image-url">URL da Imagem de Capa</label>
+                        <input type="url" id="movie-image-url" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label for="movie-url">URL do Movie (Opcional)</label>
+                        <input type="url" id="movie-url" placeholder="https://...">
+                        <div id="movie-video-preview" class="video-preview-panel"></div>
+                    </div>
+                    <button type="submit" class="btn-create">Gravar Movie</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA",
+            authDomain: "babefire-cc191.firebaseapp.com",
+            projectId: "babefire-cc191",
+            storageBucket: "babefire-cc191.appspot.com",
+            messagingSenderId: "574351844261",
+            appId: "1:574351844261:web:b2d038682b18f5d9b43e4c"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        let allBabes = [], allNations = [];
+
+        const tabs = document.querySelectorAll('.tab-button');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(item => item.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(item => item.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        async function checkIfNameExists(collectionName, name) {
+            const searchName = name.trim().toLowerCase();
+            if (!searchName) return false;
+            const q = query(collection(db, collectionName), where("searchName", "==", searchName));
+            try {
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (error) {
+                console.error(`Erro ao verificar:`, error);
+                alert("Ocorreu um erro ao verificar o nome.");
+                return true;
+            }
+        }
+        
+        async function fetchFromFirebase(collectionName) {
+            try {
+                const snapshot = await getDocs(collection(db, collectionName));
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } catch (error) {
+                console.error(`Erro ao buscar '${collectionName}':`, error);
+                alert(`Não foi possível carregar ${collectionName}.`);
+                return [];
+            }
+        }
+        
+        async function saveToFirebase(collectionName, data) {
+            try {
+                await addDoc(collection(db, collectionName), data);
+                alert(`${collectionName.slice(0, -1)} criado com sucesso!`);
+                return true;
+            } catch (error) {
+                console.error("Erro ao salvar:", error);
+                alert("Erro ao salvar dados.");
+                return false;
+            }
+        }
+
+        function setupSearchableInput(inputId, resultsId, dataArray, onSelectCallback) {
+            const searchInput = document.getElementById(inputId);
+            const resultsContainer = document.getElementById(resultsId);
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                if (!searchTerm) { resultsContainer.classList.remove('visible'); return; }
+                const filteredData = dataArray.filter(item => (item.name || '').toLowerCase().includes(searchTerm));
+                resultsContainer.innerHTML = '';
+                if (filteredData.length > 0) {
+                    filteredData.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.textContent = item.name;
+                        div.addEventListener('click', () => { onSelectCallback(item); resultsContainer.classList.remove('visible'); });
+                        resultsContainer.appendChild(div);
+                    });
+                    resultsContainer.classList.add('visible');
+                } else { resultsContainer.classList.remove('visible'); }
+            });
+            document.addEventListener('click', (e) => {
+                if (!searchInput.parentElement.contains(e.target)) {
+                    resultsContainer.classList.remove('visible');
+                }
+            });
+        }
+        
+        function generateEmbedHtml(url) {
+            let embedUrl = null, match;
+            match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (match) embedUrl = `https://www.youtube.com/embed/${match[1]}`;
+            match = !embedUrl && url.match(/xvideos\.com\/video([0-9]+)/);
+            if (match) embedUrl = `https://www.xvideos.com/embedframe/${match[1]}`;
+            match = !embedUrl && url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+            if (match) embedUrl = `https://player.vimeo.com/video/${match[1]}`;
+            if (!embedUrl && url.match(/\.(mp4|webm|ogg)$/i)) return `<video controls src="${url}"></video>`;
+            if (embedUrl) return `<iframe src="${embedUrl}" allowfullscreen></iframe>`;
+            return null;
+        }
+
+        function handleUrlPreview(url, previewElementId) {
+            const previewPanel = document.getElementById(previewElementId);
+            if (!url.trim() || !url.startsWith('http')) {
+                previewPanel.style.display = 'none';
+                previewPanel.innerHTML = '';
+                return;
+            }
+            const embedHtml = generateEmbedHtml(url);
+            if (embedHtml) {
+                previewPanel.innerHTML = embedHtml;
+            } else {
+                previewPanel.innerHTML = `
+                    <div class="video-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5V19L19 12L8 5Z" fill="white"/></svg>
+                        <p>Pré-visualização genérica do link</p>
+                    </div>
+                `;
+            }
+            previewPanel.style.display = 'block';
+        }
+        
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); };
+        }
+
+        function populateChecklist(elementId, items, name) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = items.length > 0 ? '' : `<p>Nenhum item encontrado.</p>`;
+            items.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(item => {
+                const label = document.createElement('label');
+                label.style.display = 'block';
+                label.innerHTML = `<input type="checkbox" name="${name}" value="${item.id}"> ${item.name || 'Sem nome'}`;
+                container.appendChild(label);
+            });
+        }
+        
+        function populateSelect(elementId, items, placeholder) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = '';
+            if (placeholder) select.innerHTML += `<option value="">${placeholder}</option>`;
+            items.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(item => {
+                select.innerHTML += `<option value="${item.id}">${item.name || 'Sem nome'}</option>`;
+            });
+        }
+        
+        function populateStarRating() {
+            const select = document.getElementById('actor-star');
+            for (let i = 0; i <= 50; i++) select.innerHTML += `<option value="${i}">${i}</option>`;
+        }
+
+        async function loadInitialData() {
+            const [babes, nations, movies, scennes] = await Promise.all([
+                fetchFromFirebase('babes'), fetchFromFirebase('nations'),
+                fetchFromFirebase('movies'), fetchFromFirebase('scennes')
+            ]);
+            allBabes = babes; allNations = nations;
+            setupSearchableInput('scenne-babes-search', 'scenne-babes-results', allBabes, addBabeToSelected);
+            setupSearchableInput('actor-nationality-search', 'actor-nationality-results', allNations, selectNation);
+            populateSelect('scenne-movie-assoc', movies, 'Nenhum');
+            populateChecklist('movie-scennes-list', scennes, 'scenne');
+            populateStarRating();
+        }
+
+        function addBabeToSelected(babe) {
+            const selectedContainer = document.getElementById('scenne-babes-selected');
+            if (document.querySelector(`.selected-item[data-id="${babe.id}"]`)) return;
+            const pill = document.createElement('div');
+            pill.className = 'selected-item';
+            pill.dataset.id = babe.id;
+            pill.innerHTML = `<span>${babe.name}</span><button type="button" class="remove-item">&times;</button>`;
+            pill.querySelector('.remove-item').addEventListener('click', () => pill.remove());
+            selectedContainer.appendChild(pill);
+            document.getElementById('scenne-babes-search').value = '';
+        }
+
+        function selectNation(nation) {
+            document.getElementById('actor-nationality-search').value = nation.name;
+            document.getElementById('actor-nationality-id').value = nation.id;
+        }
+
+        function resetSceneForm() { document.getElementById('form-scene').reset(); document.getElementById('scenne-babes-selected').innerHTML = ''; document.getElementById('scenne-video-preview').style.display = 'none'; }
+        function resetActorForm() { document.getElementById('form-actor').reset(); document.getElementById('actor-nationality-id').value = ''; }
+        function resetMovieForm() { document.getElementById('form-movie').reset(); document.getElementById('movie-video-preview').style.display = 'none'; }
+
+        const debouncedPreviewHandler = debounce(handleUrlPreview, 500);
+        document.getElementById('scenne-video-url').addEventListener('input', (e) => debouncedPreviewHandler(e.target.value, 'scenne-video-preview'));
+        document.getElementById('movie-url').addEventListener('input', (e) => debouncedPreviewHandler(e.target.value, 'movie-video-preview'));
+
+        document.getElementById('form-scene').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const sceneName = document.getElementById('scenne-name').value;
+            if (await checkIfNameExists('scennes', sceneName)) { alert(`ERRO: Uma scenne com o nome "${sceneName}" já existe.`); return; }
+            const sceneData = {
+                name: sceneName, searchName: sceneName.trim().toLowerCase(),
+                date: document.getElementById('scenne-date').value,
+                imageUrl: document.getElementById('scenne-image-url').value, videoUrl: document.getElementById('scenne-video-url').value,
+                movieId: document.getElementById('scenne-movie-assoc').value || null,
+                babeIds: Array.from(document.querySelectorAll('#scenne-babes-selected .selected-item')).map(pill => pill.dataset.id),
+                createdAt: new Date()
+            };
+            if (await saveToFirebase('scennes', sceneData)) resetSceneForm();
+        });
+
+        document.getElementById('form-actor').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const actorName = document.getElementById('actor-name').value;
+            if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um actor com o nome "${actorName}" já existe.`); return; }
+            const nationId = document.getElementById('actor-nationality-id').value;
+            if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
+            const actorData = {
+                name: actorName, searchName: actorName.trim().toLowerCase(),
+                nationId: nationId, starRating: parseInt(document.getElementById('actor-star').value, 10),
+                createdAt: new Date()
+            };
+            if (await saveToFirebase('babes', actorData)) resetActorForm();
+        });
+
+        document.getElementById('form-movie').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const movieName = document.getElementById('movie-name').value;
+            if (await checkIfNameExists('movies', movieName)) { alert(`ERRO: Um movie com o nome "${movieName}" já existe.`); return; }
+            const movieData = {
+                name: movieName, searchName: movieName.trim().toLowerCase(),
+                date: document.getElementById('movie-date').value,
+                coverImageUrl: document.getElementById('movie-image-url').value,
+                movieUrl: document.getElementById('movie-url').value,
+                scenneIds: Array.from(document.querySelectorAll('#movie-scennes-list input:checked')).map(cb => cb.value),
+                createdAt: new Date()
+            };
+            if (await saveToFirebase('movies', movieData)) resetMovieForm();
+        });
+        
+        loadInitialData();
+    </script>
+</body>
+</html>
