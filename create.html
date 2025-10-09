@@ -552,40 +552,74 @@
 
         if (!key) continue;
 
-        const value = cleanValue(rawValue); // Usado para a maioria dos casos
+        const value = cleanValue(rawValue);
         const lowerKey = key.toLowerCase();
         const months = { 'january': '01', 'february': '02', 'march': '03', 'april': '04', 'may': '05', 'june': '06', 'july': '07', 'august': '08', 'september': '09', 'october': '10', 'november': '11', 'december': '12' };
 
         switch (lowerKey) {
-            case 'born': case 'date of birth':
-                // ... (a lógica de data está correta) ...
+            // --- LÓGICA DE DATA RESTAURADA ---
+            case 'born':
+            case 'date of birth':
+                 console.groupCollapsed(`🎂 Encontrada a chave de data '${lowerKey}' com valor bruto: "${rawValue}"`);
+                if (value) {
+                    let day, monthStr, year;
+                    
+                    let match = value.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/i);
+                    if (match) {
+                        let [_, pMonthStr, pDay, pYear] = match;
+                        day = pDay; monthStr = pMonthStr; year = pYear;
+                        console.log(`- Formato "Mês Dia, Ano" detectado.`);
+                    } else {
+                        match = value.match(/(\d+)(?:st|nd|rd|th)\s+of\s+(\w+)\s+(\d{4})/i);
+                        if (match) {
+                            let [_, pDay, pMonthStr, pYear] = match;
+                            day = pDay; monthStr = pMonthStr; year = pYear;
+                            console.log(`- Formato "Dia de Mês Ano" detectado.`);
+                        }
+                    }
+                    
+                    if (day && monthStr && year) {
+                        const month = months[monthStr.toLowerCase()];
+                        if (month) {
+                            extractedData.birthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                            console.log(`- ✅ Data convertida com sucesso para: ${extractedData.birthDate}`);
+                        } else {
+                            console.warn(`- ❌ Falha ao converter o mês: "${monthStr}"`);
+                        }
+                    } else {
+                        console.warn(`- ❌ Não foi possível extrair a data completa do valor limpo: "${value}"`);
+                    }
+                }
+                const nextLine = lines[i + 1] ? lines[i + 1].trim() : '';
+                if (nextLine && !nextLine.includes('\t') && !nextLine.includes(':')) {
+                    const countryName = nextLine.split(',').pop().trim();
+                    if (!extractedData.nation && allNations.find(n => n.name === countryName)) {
+                        extractedData.nation = countryName;
+                    }
+                }
+                console.groupEnd();
                 break;
 
             case 'nationality':
                 console.groupCollapsed(`🌎 Encontrada a chave 'nationality' com valor bruto: "${rawValue}"`);
                 let demonym = '';
-                
-                // **INÍCIO DA LÓGICA CORRIGIDA**
-                const parenMatch = rawValue.match(/\((.*?)\)/); // Tenta encontrar "(...)"
+                const parenMatch = rawValue.match(/\((.*?)\)/);
                 
                 if (parenMatch && parenMatch[1]) {
-                    // Se encontrou, usa o conteúdo de dentro dos parênteses
                     demonym = parenMatch[1].split(',')[0].trim().toLowerCase();
-                    console.log(`- Gentílico extraído DE DENTRO dos parênteses: "${demonym}"`);
+                    console.log(`- Gentílico extraído de dentro dos parênteses: "${demonym}"`);
                 } else {
-                    // Se não, usa o valor como está (para formatos como "Nationality: Romanian")
                     demonym = rawValue.split(',')[0].trim().toLowerCase();
-                    console.log(`- Nenhum parêntese encontrado. Gentílico extraído do valor bruto: "${demonym}"`);
+                    console.log(`- Gentílico extraído do valor bruto: "${demonym}"`);
                 }
-                // **FIM DA LÓGICA CORRIGIDA**
 
                 const countryFromMap = demonymToCountryMap[demonym];
                 if (countryFromMap) {
-                    console.log(`- ✅ Tradução encontrada no dicionário: "${demonym}" -> "${countryFromMap}"`);
+                    console.log(`- ✅ Tradução encontrada: "${demonym}" -> "${countryFromMap}"`);
                     extractedData.nation = countryFromMap;
                 } else {
                     console.warn(`- ❌ Gentílico "${demonym}" não encontrado no dicionário.`);
-                    extractedData.nation = demonym; // Usa o próprio gentílico como fallback
+                    extractedData.nation = demonym;
                 }
                 console.groupEnd();
                 break;
@@ -603,6 +637,7 @@
     console.groupEnd();
 
     console.group("📝--- PREENCHENDO O FORMULÁRIO ---");
+    // ... (O resto da função, que preenche o formulário, está correto e não precisa ser alterado)
     console.log("Dados finais extraídos para o formulário:", extractedData);
     console.log("Dados de biografia extras para salvar:", tempActorBioData);
 
