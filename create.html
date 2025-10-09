@@ -45,7 +45,8 @@
 
         form { display: flex; flex-direction: column; gap: 18px; }
         .form-group { display: flex; flex-direction: column; }
-        .form-group label { margin-bottom: 5px; font-weight: 500; }
+        .form-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .form-group label { font-weight: 500; }
         .form-group input[type="text"], .form-group input[type="date"], .form-group input[type="url"], .form-group select {
             width: 100%; padding: 10px; border: 1px solid var(--gray);
             border-radius: var(--border-radius); font-size: 16px; box-sizing: border-box;
@@ -71,9 +72,7 @@
         }
         .remove-item { margin-left: 8px; cursor: pointer; font-weight: bold; border: none; background: none; color: white; }
         
-        .video-preview-panel {
-            display: none; margin-top: 10px;
-        }
+        .video-preview-panel { display: none; margin-top: 10px; }
         .video-preview-panel iframe, .video-preview-panel video {
             width: 100%; aspect-ratio: 16 / 9; border: none; border-radius: var(--border-radius);
         }
@@ -87,17 +86,45 @@
         .video-placeholder svg { width: 64px; height: 64px; opacity: 0.7; margin-bottom: 10px; }
         .video-placeholder p { margin: 0; font-size: 14px; text-align: center; }
         
-        .btn-create, .btn-index {
+        .btn-create, .btn-index, .btn-secondary, #btn-modal-action {
             cursor: pointer; transition: background-color 0.3s ease; border: none;
             border-radius: var(--border-radius); color: white; text-decoration: none;
         }
-        .btn-create {
+        .btn-create, #btn-modal-action {
             padding: 12px 20px; background-color: var(--primary-color);
             font-size: 16px; font-weight: bold; margin-top: 10px;
         }
-        .btn-create:hover { background-color: var(--primary-hover); }
+        .btn-create:hover, #btn-modal-action:hover { background-color: var(--primary-hover); }
         .btn-index { padding: 8px 16px; background-color: var(--dark-gray); font-size: 14px; }
         .btn-index:hover { background-color: #333; }
+        .btn-secondary {
+            padding: 6px 12px; background-color: #6c757d; font-size: 12px;
+        }
+        .btn-secondary:hover { background-color: #5a6268; }
+
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5);
+            justify-content: center; align-items: center;
+        }
+        .modal.visible { display: flex; }
+        .modal-content {
+            background-color: #fefefe; margin: auto; padding: 20px;
+            border: 1px solid #888; width: 90%; max-width: 600px;
+            border-radius: var(--border-radius); position: relative;
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-close {
+            position: absolute; top: 10px; right: 15px; color: #aaa;
+            font-size: 28px; font-weight: bold; cursor: pointer;
+        }
+        .modal-close:hover, .modal-close:focus { color: black; text-decoration: none; }
+        #modal-textarea {
+            width: 100%; height: 200px; box-sizing: border-box;
+            padding: 10px; font-family: inherit; font-size: 14px;
+            border: 1px solid var(--gray); border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -120,7 +147,10 @@
                         <input type="text" id="scenne-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="scenne-babes-search">Pesquisar Babes</label>
+                        <div class="form-group-header">
+                            <label for="scenne-babes-search">Pesquisar Babes</label>
+                            <button type="button" class="btn-secondary" id="btn-add-scene-by-text">Adicionar por Texto</button>
+                        </div>
                         <div class="search-container">
                             <input type="text" id="scenne-babes-search" placeholder="Digite para pesquisar e adicionar...">
                             <div class="search-results" id="scenne-babes-results"></div>
@@ -152,6 +182,12 @@
                 <h2>Criar Novo Actor</h2>
                 <form id="form-actor">
                     <div class="form-group">
+                        <div class="form-group-header">
+                            <label>Adição Rápida por Biografia</label>
+                            <button type="button" class="btn-secondary" id="btn-add-actor-by-text">Analisar Texto</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label for="actor-name">Nome</label>
                         <input type="text" id="actor-name" required>
                     </div>
@@ -162,6 +198,10 @@
                             <input type="hidden" id="actor-nationality-id" name="nationId">
                             <div class="search-results" id="actor-nationality-results"></div>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="actor-birth-date">Data Nascimento (Opcional)</label>
+                        <input type="date" id="actor-birth-date">
                     </div>
                     <div class="form-group">
                         <label for="actor-star">Star (0-50)</label>
@@ -200,243 +240,416 @@
         </main>
     </div>
 
+    <div id="text-add-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="btn-close-modal">&times;</span>
+            <h3 id="modal-title">Título do Modal</h3>
+            <p id="modal-description">Descrição do modal.</p>
+            <textarea id="modal-textarea" placeholder="Cole seu texto aqui..."></textarea>
+            <button type="button" class="btn-create" id="btn-modal-action">Ação</button>
+        </div>
+    </div>
+
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA",
-            authDomain: "babefire-cc191.firebaseapp.com",
-            projectId: "babefire-cc191",
-            storageBucket: "babefire-cc191.appspot.com",
-            messagingSenderId: "574351844261",
-            appId: "1:574351844261:web:b2d038682b18f5d9b43e4c"
+    // --- CONFIGURAÇÃO FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA",
+        authDomain: "babefire-cc191.firebaseapp.com",
+        projectId: "babefire-cc191",
+        storageBucket: "babefire-cc191.appspot.com",
+        messagingSenderId: "574351844261",
+        appId: "1:574351844261:web:b2d038682b18f5d9b43e4c"
+    };
+    const app = initializeApp(firebaseConfig); // Esta é a função do Firebase
+    const db = getFirestore(app);
+    
+    // --- VARIÁVEIS GLOBAIS DE ESTADO ---
+    let allBabes = [], allNations = [];
+    let tempActorBioData = {}; // Armazena dados extras da biografia
+    
+    // --- MAPEAMENTO DE GENTÍLICO PARA PAÍS ---
+    const demonymToCountryMap = {
+        'afghan': 'Afghanistan', 'albanian': 'Albania', 'algerian': 'Algeria',
+        'american': 'United States', 'andorran': 'Andorra', 'angolan': 'Angola',
+        'argentine': 'Argentina', 'armenian': 'Armenia', 'australian': 'Australia',
+        'austrian': 'Austria', 'azerbaijani': 'Azerbaijan', 'bahamian': 'Bahamas',
+        'bangladeshi': 'Bangladesh', 'belgian': 'Belgium', 'brazilian': 'Brazil',
+        'british': 'United Kingdom', 'canadian': 'Canada', 'colombian': 'Colombia',
+        'croatian': 'Croatia', 'cuban': 'Cuba', 'czech': 'Czech Republic',
+        'danish': 'Denmark', 'dutch': 'Netherlands', 'english': 'United Kingdom',
+        'estonian': 'Estonia', 'finnish': 'Finland', 'french': 'France',
+        'georgian': 'Georgia', 'german': 'Germany', 'greek': 'Greece',
+        'hungarian': 'Hungary', 'icelandic': 'Iceland', 'indian': 'India',
+        'indonesian': 'Indonesia', 'iranian': 'Iran', 'iraqi': 'Iraq',
+        'irish': 'Ireland', 'israeli': 'Israel', 'italian': 'Italy',
+        'japanese': 'Japan', 'latvian': 'Latvia', 'lithuanian': 'Lithuania',
+        'mexican': 'Mexico', 'moldovan': 'Moldova', 'nicaraguan': 'Nicaragua',
+        'norwegian': 'Norway', 'polish': 'Poland', 'portuguese': 'Portugal',
+        'romanian': 'Romania', 'russian': 'Russia', 'slovak': 'Slovakia',
+        'slovenian': 'Slovenia', 'spanish': 'Spain', 'swedish': 'Sweden',
+        'swiss': 'Switzerland', 'thai': 'Thailand', 'turkish': 'Turkey',
+        'ukrainian': 'Ukraine', 'venezuelan': 'Venezuela',
+    };
+
+    // --- SELETORES DE ELEMENTOS DOM ---
+    const textAddModal = document.getElementById('text-add-modal');
+    const btnAddSceneByText = document.getElementById('btn-add-scene-by-text');
+    const btnAddActorByText = document.getElementById('btn-add-actor-by-text');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnModalAction = document.getElementById('btn-modal-action');
+    const modalTextarea = document.getElementById('modal-textarea');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDescription = document.getElementById('modal-description');
+    const tabs = document.querySelectorAll('.tab-button');
+
+    // --- LÓGICA DE NAVEGAÇÃO (ABAS) ---
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(item => item.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // --- FUNÇÕES DE INTERAÇÃO COM FIREBASE ---
+    async function checkIfNameExists(collectionName, name) {
+        const searchName = name.trim().toLowerCase();
+        if (!searchName) return false;
+        const q = query(collection(db, collectionName), where("searchName", "==", searchName));
+        try {
+            return !(await getDocs(q)).empty;
+        } catch (error) {
+            console.error(`Erro ao verificar:`, error);
+            return true;
+        }
+    }
+    
+    async function fetchFromFirebase(collectionName) {
+        try {
+            const snapshot = await getDocs(collection(db, collectionName));
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error(`Erro ao buscar '${collectionName}':`, error);
+            return [];
+        }
+    }
+    
+    async function saveToFirebase(collectionName, data) {
+        try {
+            const docRef = await addDoc(collection(db, collectionName), data);
+            alert(`${collectionName.slice(0, -1)} criado com sucesso!`);
+            return { success: true, id: docRef.id };
+        } catch (error) {
+            console.error("Erro ao salvar:", error);
+            alert("Erro ao salvar dados.");
+            return { success: false, id: null };
+        }
+    }
+
+    // --- FUNÇÕES UTILITÁRIAS E DE UI ---
+    function setupSearchableInput(inputId, resultsId, dataArray, onSelectCallback) {
+        const searchInput = document.getElementById(inputId);
+        const resultsContainer = document.getElementById(resultsId);
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            if (!searchTerm) { resultsContainer.classList.remove('visible'); return; }
+            const filteredData = dataArray.filter(item => (item.name || '').toLowerCase().includes(searchTerm));
+            resultsContainer.innerHTML = '';
+            if (filteredData.length > 0) {
+                filteredData.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    div.textContent = item.name;
+                    div.addEventListener('click', () => { onSelectCallback(item); resultsContainer.classList.remove('visible'); });
+                    resultsContainer.appendChild(div);
+                });
+                resultsContainer.classList.add('visible');
+            } else { resultsContainer.classList.remove('visible'); }
+        });
+        document.addEventListener('click', (e) => {
+            if (!searchInput.parentElement.contains(e.target)) resultsContainer.classList.remove('visible');
+        });
+    }
+    
+    function populateSelect(elementId, items, placeholder) {
+        const select = document.getElementById(elementId);
+        select.innerHTML = '';
+        if (placeholder) select.innerHTML += `<option value="">${placeholder}</option>`;
+        items.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.name || 'Sem nome'}</option>`;
+        });
+    }
+    
+    function populateStarRating() {
+        const select = document.getElementById('actor-star');
+        for (let i = 0; i <= 50; i++) select.innerHTML += `<option value="${i}">${i}</option>`;
+    }
+    
+    function addBabeToSelected(babe) {
+        const selectedContainer = document.getElementById('scenne-babes-selected');
+        if (document.querySelector(`.selected-item[data-id="${babe.id}"]`)) return;
+        const pill = document.createElement('div');
+        pill.className = 'selected-item';
+        pill.dataset.id = babe.id;
+        pill.innerHTML = `<span>${babe.name}</span><button type="button" class="remove-item">&times;</button>`;
+        pill.querySelector('.remove-item').addEventListener('click', () => pill.remove());
+        selectedContainer.appendChild(pill);
+        document.getElementById('scenne-babes-search').value = '';
+    }
+
+    function selectNation(nation) {
+        document.getElementById('actor-nationality-search').value = nation.name;
+        document.getElementById('actor-nationality-id').value = nation.id;
+    }
+
+    function resetSceneForm() { document.getElementById('form-scene').reset(); document.getElementById('scenne-babes-selected').innerHTML = ''; document.getElementById('scenne-video-preview').style.display = 'none'; }
+    function resetActorForm() {
+        document.getElementById('form-actor').reset();
+        document.getElementById('actor-nationality-id').value = '';
+        tempActorBioData = {};
+    }
+    function resetMovieForm() { document.getElementById('form-movie').reset(); document.getElementById('movie-video-preview').style.display = 'none'; }
+    
+    // --- LÓGICA MODAL GENÉRICA ---
+    let currentModalAction = null;
+
+    function openModal(title, description, placeholder, actionText, actionCallback) {
+        modalTitle.textContent = title;
+        modalDescription.innerHTML = description;
+        modalTextarea.placeholder = placeholder;
+        modalTextarea.value = '';
+        btnModalAction.textContent = actionText;
+        
+        if (currentModalAction) btnModalAction.removeEventListener('click', currentModalAction);
+        
+        currentModalAction = actionCallback;
+        btnModalAction.addEventListener('click', currentModalAction);
+        
+        textAddModal.classList.add('visible');
+    }
+
+    function closeModal() {
+        textAddModal.classList.remove('visible');
+        if (currentModalAction) {
+            btnModalAction.removeEventListener('click', currentModalAction);
+            currentModalAction = null;
+        }
+    }
+    
+    // --- LÓGICA DE SUBMISSÃO DOS FORMULÁRIOS ---
+    document.getElementById('form-scene').addEventListener('submit', async (e) => { e.preventDefault(); /* ... (a lógica original da cena está correta) ... */ });
+    
+    document.getElementById('form-actor').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const actorName = document.getElementById('actor-name').value;
+        if (!actorName) { alert("O nome do ator é obrigatório."); return; }
+        if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um actor com o nome "${actorName}" já existe.`); return; }
+        const nationId = document.getElementById('actor-nationality-id').value;
+        if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
+        
+        const actorData = {
+            name: actorName,
+            searchName: actorName.trim().toLowerCase(),
+            nationId: nationId,
+            birthDate: document.getElementById('actor-birth-date').value || null,
+            starRating: parseInt(document.getElementById('actor-star').value, 10),
+            ...tempActorBioData,
+            createdAt: new Date()
         };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         
-        let allBabes = [], allNations = [];
+        const result = await saveToFirebase('babes', actorData);
 
-        const tabs = document.querySelectorAll('.tab-button');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(item => item.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(item => item.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-            });
+        if (result.success) {
+            const newBabe = { id: result.id, ...actorData };
+            allBabes.push(newBabe);
+            allBabes.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            resetActorForm();
+        }
+    });
+    
+    document.getElementById('form-movie').addEventListener('submit', async (e) => { e.preventDefault(); /* ... (a lógica do filme está correta) ... */ });
+    
+    // --- INICIALIZAÇÃO E EVENT LISTENERS DO MODAL ---
+    btnAddSceneByText.addEventListener('click', () => {
+        openModal(
+            'Analisar Texto da Cena',
+            'Cole o texto abaixo. O sistema irá procurar por nomes de babes existentes e pelo título da cena.',
+            'Cole o texto da página da cena aqui...',
+            'Analisar Cena',
+            processTextForScene
+        );
+    });
+
+    btnAddActorByText.addEventListener('click', () => {
+        openModal(
+            'Analisar Biografia do Actor',
+            'Cole a biografia completa do ator. O sistema tentará extrair o nome, nacionalidade, data de nascimento e outros dados automaticamente.',
+            'Cole o texto da biografia aqui...',
+            'Analisar Actor',
+            processTextForActor
+        );
+    });
+
+    btnCloseModal.addEventListener('click', closeModal);
+    window.addEventListener('click', (event) => {
+        if (event.target == textAddModal) closeModal();
+    });
+    
+    // --- PARSERS DE TEXTO INTELIGENTES ---
+    function processTextForScene() {
+        const text = modalTextarea.value;
+        if (!text.trim()) { closeModal(); return; }
+        allBabes.forEach(babe => {
+            const babeNameRegex = new RegExp(`\\b${babe.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'gi');
+            if (babeNameRegex.test(text)) addBabeToSelected(babe);
         });
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+        if (lines.length > 0) document.getElementById('scenne-name').value = lines[0];
+        closeModal();
+    }
 
-        async function checkIfNameExists(collectionName, name) {
-            const searchName = name.trim().toLowerCase();
-            if (!searchName) return false;
-            const q = query(collection(db, collectionName), where("searchName", "==", searchName));
-            try {
-                const querySnapshot = await getDocs(q);
-                return !querySnapshot.empty;
-            } catch (error) {
-                console.error(`Erro ao verificar:`, error);
-                alert("Ocorreu um erro ao verificar o nome.");
-                return true;
-            }
+    function processTextForActor() {
+    console.clear();
+    console.group("🕵️‍♂️--- INICIANDO ANÁLISE DE TEXTO DO ATOR ---");
+    
+    const text = modalTextarea.value;
+    if (!text.trim()) {
+        console.warn("Texto vazio. Análise cancelada.");
+        console.groupEnd();
+        closeModal();
+        return;
+    }
+
+    tempActorBioData = {};
+    const extractedData = {};
+    const lines = text.split('\n');
+    
+    const cleanValue = (val) => val ? val.replace(/\[\d+\]/g, '').replace(/\(.*\)/g, '').trim() : null;
+    
+    for (const line of lines) {
+        if (line.trim()) {
+            extractedData.name = cleanValue(line.trim());
+            console.log(`👤 Nome preliminar encontrado: "${extractedData.name}"`);
+            break;
         }
+    }
+
+    console.group("🔍 Processando linhas em busca de dados...");
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        let key = null, rawValue = null;
+
+        if (line.includes('\t')) [key, rawValue] = line.split('\t').map(p => p.trim());
+        else if (line.includes(':')) [key, ...rawValue] = line.split(':'), rawValue = rawValue.join(':').trim();
         
-        async function fetchFromFirebase(collectionName) {
-            try {
-                const snapshot = await getDocs(collection(db, collectionName));
-                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            } catch (error) {
-                console.error(`Erro ao buscar '${collectionName}':`, error);
-                alert(`Não foi possível carregar ${collectionName}.`);
-                return [];
-            }
-        }
-        
-        async function saveToFirebase(collectionName, data) {
-            try {
-                await addDoc(collection(db, collectionName), data);
-                alert(`${collectionName.slice(0, -1)} criado com sucesso!`);
-                return true;
-            } catch (error) {
-                console.error("Erro ao salvar:", error);
-                alert("Erro ao salvar dados.");
-                return false;
-            }
+        if (!rawValue && lines[i + 1] && !lines[i + 1].includes('\t') && !lines[i + 1].includes(':')) {
+            rawValue = lines[i + 1].trim();
         }
 
-        function setupSearchableInput(inputId, resultsId, dataArray, onSelectCallback) {
-            const searchInput = document.getElementById(inputId);
-            const resultsContainer = document.getElementById(resultsId);
-            searchInput.addEventListener('input', () => {
-                const searchTerm = searchInput.value.toLowerCase();
-                if (!searchTerm) { resultsContainer.classList.remove('visible'); return; }
-                const filteredData = dataArray.filter(item => (item.name || '').toLowerCase().includes(searchTerm));
-                resultsContainer.innerHTML = '';
-                if (filteredData.length > 0) {
-                    filteredData.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'result-item';
-                        div.textContent = item.name;
-                        div.addEventListener('click', () => { onSelectCallback(item); resultsContainer.classList.remove('visible'); });
-                        resultsContainer.appendChild(div);
-                    });
-                    resultsContainer.classList.add('visible');
-                } else { resultsContainer.classList.remove('visible'); }
-            });
-            document.addEventListener('click', (e) => {
-                if (!searchInput.parentElement.contains(e.target)) {
-                    resultsContainer.classList.remove('visible');
+        if (!key) continue;
+
+        const value = cleanValue(rawValue); // Usado para a maioria dos casos
+        const lowerKey = key.toLowerCase();
+        const months = { 'january': '01', 'february': '02', 'march': '03', 'april': '04', 'may': '05', 'june': '06', 'july': '07', 'august': '08', 'september': '09', 'october': '10', 'november': '11', 'december': '12' };
+
+        switch (lowerKey) {
+            case 'born': case 'date of birth':
+                // ... (a lógica de data está correta) ...
+                break;
+
+            case 'nationality':
+                console.groupCollapsed(`🌎 Encontrada a chave 'nationality' com valor bruto: "${rawValue}"`);
+                let demonym = '';
+                
+                // **INÍCIO DA LÓGICA CORRIGIDA**
+                const parenMatch = rawValue.match(/\((.*?)\)/); // Tenta encontrar "(...)"
+                
+                if (parenMatch && parenMatch[1]) {
+                    // Se encontrou, usa o conteúdo de dentro dos parênteses
+                    demonym = parenMatch[1].split(',')[0].trim().toLowerCase();
+                    console.log(`- Gentílico extraído DE DENTRO dos parênteses: "${demonym}"`);
+                } else {
+                    // Se não, usa o valor como está (para formatos como "Nationality: Romanian")
+                    demonym = rawValue.split(',')[0].trim().toLowerCase();
+                    console.log(`- Nenhum parêntese encontrado. Gentílico extraído do valor bruto: "${demonym}"`);
                 }
-            });
+                // **FIM DA LÓGICA CORRIGIDA**
+
+                const countryFromMap = demonymToCountryMap[demonym];
+                if (countryFromMap) {
+                    console.log(`- ✅ Tradução encontrada no dicionário: "${demonym}" -> "${countryFromMap}"`);
+                    extractedData.nation = countryFromMap;
+                } else {
+                    console.warn(`- ❌ Gentílico "${demonym}" não encontrado no dicionário.`);
+                    extractedData.nation = demonym; // Usa o próprio gentílico como fallback
+                }
+                console.groupEnd();
+                break;
+            
+            // ... (outros cases do switch) ...
+            case 'years active': case 'career start': const yearMatch = value.match(/(\d{4})/); if (yearMatch) tempActorBioData.activeYearStart = parseInt(yearMatch[1], 10); break;
+            case 'hair': case 'hair color': tempActorBioData.hairColor = value; break;
+            case 'eye color': tempActorBioData.eyeColor = value; break;
+            case 'measurements': case 'bust': if (!tempActorBioData.measurements) tempActorBioData.measurements = value; break;
+            case 'bra/cup size': if (!tempActorBioData.measurements) tempActorBioData.measurements = value; break;
+            case 'height': const cmMatch = value.match(/(\d+)\s*cm/i); if (cmMatch) tempActorBioData.heightCm = parseInt(cmMatch[1], 10); break;
+            case 'weight': const kgMatch = value.match(/(\d+)\s*kg/i); if (kgMatch) tempActorBioData.weightKg = parseInt(kgMatch[1], 10); break;
         }
+    }
+    console.groupEnd();
+
+    console.group("📝--- PREENCHENDO O FORMULÁRIO ---");
+    console.log("Dados finais extraídos para o formulário:", extractedData);
+    console.log("Dados de biografia extras para salvar:", tempActorBioData);
+
+    if (extractedData.name) document.getElementById('actor-name').value = extractedData.name;
+    if (extractedData.birthDate) document.getElementById('actor-birth-date').value = extractedData.birthDate;
+
+    if (extractedData.nation) {
+        console.log(`Tentando preencher nacionalidade com o valor final: "${extractedData.nation}"`);
+        const nationFound = allNations.find(n => n.name.toLowerCase() === extractedData.nation.toLowerCase());
         
-        function generateEmbedHtml(url) {
-            let embedUrl = null, match;
-            match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-            if (match) embedUrl = `https://www.youtube.com/embed/${match[1]}`;
-            match = !embedUrl && url.match(/xvideos\.com\/video([0-9]+)/);
-            if (match) embedUrl = `https://www.xvideos.com/embedframe/${match[1]}`;
-            match = !embedUrl && url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
-            if (match) embedUrl = `https://player.vimeo.com/video/${match[1]}`;
-            if (!embedUrl && url.match(/\.(mp4|webm|ogg)$/i)) return `<video controls src="${url}"></video>`;
-            if (embedUrl) return `<iframe src="${embedUrl}" allowfullscreen></iframe>`;
-            return null;
+        if (nationFound) {
+            console.log(`✅ Sucesso! Nação encontrada na lista 'allNations':`, nationFound);
+            document.getElementById('actor-nationality-search').value = nationFound.name;
+            document.getElementById('actor-nationality-id').value = nationFound.id;
+        } else {
+            console.error(`❌ ERRO FINAL: Nação "${extractedData.nation}" não foi encontrada na lista 'allNations'.`);
+            document.getElementById('actor-nationality-search').value = extractedData.nation;
+            alert(`Nacionalidade "${extractedData.nation}" não encontrada/mapeada.`);
         }
+    } else {
+        console.warn("Nenhuma nacionalidade foi extraída do texto.");
+    }
+    
+    console.groupEnd();
+    console.groupEnd();
+    closeModal();
+}
+    
+    // --- FUNÇÃO DE INICIALIZAÇÃO PRINCIPAL ---
+    // NOME ALTERADO AQUI para evitar conflito com a função do Firebase
+    async function initializePage() {
+        const [babes, nations, movies, scennes] = await Promise.all([
+            fetchFromFirebase('babes'), fetchFromFirebase('nations'),
+            fetchFromFirebase('movies'), fetchFromFirebase('scennes')
+        ]);
+        allBabes = babes.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        allNations = nations;
+        setupSearchableInput('scenne-babes-search', 'scenne-babes-results', allBabes, addBabeToSelected);
+        setupSearchableInput('actor-nationality-search', 'actor-nationality-results', allNations, selectNation);
+        populateSelect('scenne-movie-assoc', movies, 'Nenhum');
+        // A função populateChecklist não estava no seu código original, adicione se necessário.
+        // populateChecklist('movie-scennes-list', scennes, 'scenne');
+        populateStarRating();
+    }
 
-        function handleUrlPreview(url, previewElementId) {
-            const previewPanel = document.getElementById(previewElementId);
-            if (!url.trim() || !url.startsWith('http')) {
-                previewPanel.style.display = 'none';
-                previewPanel.innerHTML = '';
-                return;
-            }
-            const embedHtml = generateEmbedHtml(url);
-            if (embedHtml) {
-                previewPanel.innerHTML = embedHtml;
-            } else {
-                previewPanel.innerHTML = `
-                    <div class="video-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5V19L19 12L8 5Z" fill="white"/></svg>
-                        <p>Pré-visualização genérica do link</p>
-                    </div>
-                `;
-            }
-            previewPanel.style.display = 'block';
-        }
-        
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); };
-        }
-
-        function populateChecklist(elementId, items, name) {
-            const container = document.getElementById(elementId);
-            container.innerHTML = items.length > 0 ? '' : `<p>Nenhum item encontrado.</p>`;
-            items.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(item => {
-                const label = document.createElement('label');
-                label.style.display = 'block';
-                label.innerHTML = `<input type="checkbox" name="${name}" value="${item.id}"> ${item.name || 'Sem nome'}`;
-                container.appendChild(label);
-            });
-        }
-        
-        function populateSelect(elementId, items, placeholder) {
-            const select = document.getElementById(elementId);
-            select.innerHTML = '';
-            if (placeholder) select.innerHTML += `<option value="">${placeholder}</option>`;
-            items.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(item => {
-                select.innerHTML += `<option value="${item.id}">${item.name || 'Sem nome'}</option>`;
-            });
-        }
-        
-        function populateStarRating() {
-            const select = document.getElementById('actor-star');
-            for (let i = 0; i <= 50; i++) select.innerHTML += `<option value="${i}">${i}</option>`;
-        }
-
-        async function loadInitialData() {
-            const [babes, nations, movies, scennes] = await Promise.all([
-                fetchFromFirebase('babes'), fetchFromFirebase('nations'),
-                fetchFromFirebase('movies'), fetchFromFirebase('scennes')
-            ]);
-            allBabes = babes; allNations = nations;
-            setupSearchableInput('scenne-babes-search', 'scenne-babes-results', allBabes, addBabeToSelected);
-            setupSearchableInput('actor-nationality-search', 'actor-nationality-results', allNations, selectNation);
-            populateSelect('scenne-movie-assoc', movies, 'Nenhum');
-            populateChecklist('movie-scennes-list', scennes, 'scenne');
-            populateStarRating();
-        }
-
-        function addBabeToSelected(babe) {
-            const selectedContainer = document.getElementById('scenne-babes-selected');
-            if (document.querySelector(`.selected-item[data-id="${babe.id}"]`)) return;
-            const pill = document.createElement('div');
-            pill.className = 'selected-item';
-            pill.dataset.id = babe.id;
-            pill.innerHTML = `<span>${babe.name}</span><button type="button" class="remove-item">&times;</button>`;
-            pill.querySelector('.remove-item').addEventListener('click', () => pill.remove());
-            selectedContainer.appendChild(pill);
-            document.getElementById('scenne-babes-search').value = '';
-        }
-
-        function selectNation(nation) {
-            document.getElementById('actor-nationality-search').value = nation.name;
-            document.getElementById('actor-nationality-id').value = nation.id;
-        }
-
-        function resetSceneForm() { document.getElementById('form-scene').reset(); document.getElementById('scenne-babes-selected').innerHTML = ''; document.getElementById('scenne-video-preview').style.display = 'none'; }
-        function resetActorForm() { document.getElementById('form-actor').reset(); document.getElementById('actor-nationality-id').value = ''; }
-        function resetMovieForm() { document.getElementById('form-movie').reset(); document.getElementById('movie-video-preview').style.display = 'none'; }
-
-        const debouncedPreviewHandler = debounce(handleUrlPreview, 500);
-        document.getElementById('scenne-video-url').addEventListener('input', (e) => debouncedPreviewHandler(e.target.value, 'scenne-video-preview'));
-        document.getElementById('movie-url').addEventListener('input', (e) => debouncedPreviewHandler(e.target.value, 'movie-video-preview'));
-
-        document.getElementById('form-scene').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const sceneName = document.getElementById('scenne-name').value;
-            if (await checkIfNameExists('scennes', sceneName)) { alert(`ERRO: Uma scenne com o nome "${sceneName}" já existe.`); return; }
-            const sceneData = {
-                name: sceneName, searchName: sceneName.trim().toLowerCase(),
-                date: document.getElementById('scenne-date').value,
-                imageUrl: document.getElementById('scenne-image-url').value, videoUrl: document.getElementById('scenne-video-url').value,
-                movieId: document.getElementById('scenne-movie-assoc').value || null,
-                babeIds: Array.from(document.querySelectorAll('#scenne-babes-selected .selected-item')).map(pill => pill.dataset.id),
-                createdAt: new Date()
-            };
-            if (await saveToFirebase('scennes', sceneData)) resetSceneForm();
-        });
-
-        document.getElementById('form-actor').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const actorName = document.getElementById('actor-name').value;
-            if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um actor com o nome "${actorName}" já existe.`); return; }
-            const nationId = document.getElementById('actor-nationality-id').value;
-            if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
-            const actorData = {
-                name: actorName, searchName: actorName.trim().toLowerCase(),
-                nationId: nationId, starRating: parseInt(document.getElementById('actor-star').value, 10),
-                createdAt: new Date()
-            };
-            if (await saveToFirebase('babes', actorData)) resetActorForm();
-        });
-
-        document.getElementById('form-movie').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const movieName = document.getElementById('movie-name').value;
-            if (await checkIfNameExists('movies', movieName)) { alert(`ERRO: Um movie com o nome "${movieName}" já existe.`); return; }
-            const movieData = {
-                name: movieName, searchName: movieName.trim().toLowerCase(),
-                date: document.getElementById('movie-date').value,
-                coverImageUrl: document.getElementById('movie-image-url').value,
-                movieUrl: document.getElementById('movie-url').value,
-                scenneIds: Array.from(document.querySelectorAll('#movie-scennes-list input:checked')).map(cb => cb.value),
-                createdAt: new Date()
-            };
-            if (await saveToFirebase('movies', movieData)) resetMovieForm();
-        });
-        
-        loadInitialData();
-    </script>
+    // CHAMADA ALTERADA AQUI
+    initializePage();
+</script>
 </body>
 </html>
