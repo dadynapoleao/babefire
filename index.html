@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babes Directory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --primary-variant: #3700b3;
+            --secondary-color: #03dac6;
+            --text-color: #e0e0e0;
+            --border-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background-color: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        #search-bar {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: #2c2c2c;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
+        }
+
+        .filter-group {
+            flex-grow: 1;
+            min-width: 150px;
+        }
+
+        #results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            margin-bottom: 0.25rem;
+            opacity: 0.8;
+        }
+        
+        .card p strong {
+            color: var(--text-color);
+            opacity: 1;
+        }
+
+        #loading-message, #no-results-message {
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 2rem;
+            grid-column: 1 / -1; /* Span all columns */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Babes Directory</h1>
+            <p>Pesquise e filtre perfis</p>
+        </header>
+
+        <div class="controls">
+            <div class="filter-group" style="flex-basis: 100%;">
+                <input type="search" id="search-bar" placeholder="Digite um nome para pesquisar...">
+            </div>
+            <div class="filter-group">
+                <select id="age-filter">
+                    <option value="all">Todas as idades</option>
+                    <option value="18-25">18-25 anos</option>
+                    <option value="26-35">26-35 anos</option>
+                    <option value="36-45">36-45 anos</option>
+                    <option value="45+">45+ anos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select id="country-filter">
+                    <option value="all">Todos os países</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select id="continent-filter">
+                    <option value="all">Todos os continentes</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="results-grid">
+            <p id="loading-message">A carregar dados do Firebase...</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration (DADOS FORNECIDOS)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA",
+            authDomain: "babefire-cc191.firebaseapp.com",
+            projectId: "babefire-cc191",
+            storageBucket: "babefire-cc191.firebasestorage.app",
+            messagingSenderId: "574351844261",
+            appId: "1:574351844261:web:b2d038682b18f5d9b43e4c"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Variáveis globais para armazenar os dados e os elementos do DOM
+        let allBabes = [];
+        const searchBar = document.getElementById('search-bar');
+        const ageFilter = document.getElementById('age-filter');
+        const countryFilter = document.getElementById('country-filter');
+        const continentFilter = document.getElementById('continent-filter');
+        const resultsGrid = document.getElementById('results-grid');
+        const loadingMessage = document.getElementById('loading-message');
+
+        // Função para calcular a idade a partir da data de nascimento
+        function calculateAge(birthDateString) {
+            const birthDate = new Date(birthDateString);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // Função principal que carrega e processa todos os dados
+        async function loadData() {
+            try {
+                // Passo 1: Carregar todas as nações e criar um mapa para consulta rápida
+                const nationsSnapshot = await db.collection('nations').get();
+                const nationsMap = {};
+                nationsSnapshot.forEach(doc => {
+                    nationsMap[doc.id] = doc.data().continente;
+                });
+
+                // Passo 2: Carregar todos os perfis (babes)
+                const babesSnapshot = await db.collection('babes').get();
+                const processedBabes = [];
+                babesSnapshot.forEach(doc => {
+                    const babeData = doc.data();
+                    processedBabes.push({
+                        id: doc.id,
+                        name: babeData.name,
+                        birthDate: babeData.birthDate,
+                        nationId: babeData.nationId,
+                        // Passo 3: Adicionar dados processados (idade e continente)
+                        age: calculateAge(babeData.birthDate),
+                        continent: nationsMap[babeData.nationId] || 'Desconhecido'
+                    });
+                });
+                
+                allBabes = processedBabes;
+                
+                // Passo 4: Popular os filtros com valores únicos
+                populateFilters();
+                
+                // Passo 5: Exibir todos os resultados inicialmente
+                applyFilters();
+
+            } catch (error) {
+                console.error("Erro ao carregar dados do Firebase: ", error);
+                resultsGrid.innerHTML = '<p style="color: red; text-align: center; grid-column: 1 / -1;">Falha ao carregar dados. Verifique a consola e a sua configuração do Firebase.</p>';
+            } finally {
+                loadingMessage.style.display = 'none';
+            }
+        }
+
+        function populateFilters() {
+            const countries = new Set();
+            const continents = new Set();
+
+            allBabes.forEach(babe => {
+                if (babe.nationId) countries.add(babe.nationId);
+                if (babe.continent) continents.add(babe.continent);
+            });
+
+            // Ordenar alfabeticamente
+            const sortedCountries = [...countries].sort();
+            const sortedContinents = [...continents].sort();
+
+            sortedCountries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                countryFilter.appendChild(option);
+            });
+
+            sortedContinents.forEach(continent => {
+                const option = document.createElement('option');
+                option.value = continent;
+                option.textContent = continent;
+                continentFilter.appendChild(option);
+            });
+        }
+        
+        function renderResults(filteredBabes) {
+            resultsGrid.innerHTML = ''; // Limpa os resultados anteriores
+
+            if (filteredBabes.length === 0) {
+                 resultsGrid.innerHTML = '<p id="no-results-message">Nenhum resultado encontrado.</p>';
+                 return;
+            }
+
+            filteredBabes.forEach(babe => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h3>${babe.name}</h3>
+                    <p><strong>Idade:</strong> ${babe.age} anos</p>
+                    <p><strong>País:</strong> ${babe.nationId}</p>
+                    <p><strong>Continente:</strong> ${babe.continent}</p>
+                `;
+                resultsGrid.appendChild(card);
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = searchBar.value.toLowerCase();
+            const selectedAge = ageFilter.value;
+            const selectedCountry = countryFilter.value;
+            const selectedContinent = continentFilter.value;
+
+            let filteredResults = allBabes;
+
+            // Filtro de pesquisa (nome)
+            if (searchTerm) {
+                filteredResults = filteredResults.filter(babe => 
+                    babe.name.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Filtro de país
+            if (selectedCountry !== 'all') {
+                filteredResults = filteredResults.filter(babe => 
+                    babe.nationId === selectedCountry
+                );
+            }
+
+            // Filtro de continente
+            if (selectedContinent !== 'all') {
+                filteredResults = filteredResults.filter(babe => 
+                    babe.continent === selectedContinent
+                );
+            }
+            
+            // Filtro de idade
+            if (selectedAge !== 'all') {
+                 filteredResults = filteredResults.filter(babe => {
+                    const age = babe.age;
+                    if (selectedAge === '18-25') return age >= 18 && age <= 25;
+                    if (selectedAge === '26-35') return age >= 26 && age <= 35;
+                    if (selectedAge === '36-45') return age >= 36 && age <= 45;
+                    if (selectedAge === '45+') return age >= 45;
+                    return true;
+                 });
+            }
+
+            renderResults(filteredResults);
+        }
+
+        // Adicionar "event listeners" para acionar a filtragem
+        searchBar.addEventListener('input', applyFilters);
+        ageFilter.addEventListener('change', applyFilters);
+        countryFilter.addEventListener('change', applyFilters);
+        continentFilter.addEventListener('change', applyFilters);
+
+        // Iniciar a aplicação quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', loadData);
+
+    </script>
+</body>
+</html>
