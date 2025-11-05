@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página de Criação - Babefire</title>
     
+    <!-- Inclusão da biblioteca Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
@@ -29,6 +32,9 @@
             padding-bottom: 15px; margin-bottom: 15px;
         }
         header h1 { margin: 0; font-size: 24px; color: var(--dark-gray); }
+        .btn-index {
+            text-decoration: none; color: var(--primary-color); font-weight: 500;
+        }
 
         .tabs { display: flex; border-bottom: 2px solid var(--gray); margin-bottom: 20px; }
         .tab-button {
@@ -46,11 +52,13 @@
         form { display: flex; flex-direction: column; gap: 18px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .form-group label { font-weight: 500; }
-        .form-group input[type="text"], .form-group input[type="date"], .form-group input[type="url"], .form-group select {
+        .form-group label { font-weight: 500; margin-bottom: 5px; }
+        .form-group small { color: var(--dark-gray); font-size: 12px; margin-top: -3px; }
+        .form-group input[type="text"], .form-group input[type="date"], .form-group input[type="url"], .form-group select, .form-group textarea {
             width: 100%; padding: 10px; border: 1px solid var(--gray);
-            border-radius: var(--border-radius); font-size: 16px; box-sizing: border-box;
+            border-radius: var(--border-radius); font-size: 16px; box-sizing: border-box; font-family: 'Roboto', sans-serif;
         }
+        .form-group textarea { resize: vertical; min-height: 80px; }
 
         .search-container { position: relative; }
         .search-results {
@@ -67,35 +75,108 @@
             border-radius: var(--border-radius); min-height: 40px; background-color: #fafafa;
         }
         .selected-item {
-            display: flex; align-items: center; background-color: var(--primary-color);
-            color: white; padding: 5px 10px; border-radius: 15px; font-size: 14px;
+            display: flex; align-items: center; background-color: var(--primary-color); color: white;
+            padding: 5px 10px; border-radius: 15px; font-size: 14px;
         }
-        .remove-item { margin-left: 8px; cursor: pointer; font-weight: bold; border: none; background: none; color: white; }
+        .selected-item span { margin-right: 8px; }
+        .selected-item button {
+            border: none; background: transparent; color: white; font-size: 16px;
+            cursor: pointer; padding: 0; line-height: 1;
+        }
         
+        /* Estilos do Modal (genérico) */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5);
+            overflow: auto; background-color: rgba(0,0,0,0.6);
             justify-content: center; align-items: center;
         }
         .modal.visible { display: flex; }
         .modal-content {
             background-color: #fefefe; margin: auto; padding: 20px;
             border: 1px solid #888; width: 90%; max-width: 600px;
-            border-radius: var(--border-radius); position: relative;
+            border-radius: var(--border-radius); position: relative; box-shadow: 0 5px 25px rgba(0,0,0,0.2);
         }
         .modal-content h3 { margin-top: 0; }
-        .modal-content ul { list-style-type: none; padding: 0; }
-        .modal-content li { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
+        .modal-footer {
+            display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
+            padding-top: 15px; border-top: 1px solid var(--gray);
+        }
+        .btn-create, .btn-secondary {
+            padding: 10px 20px; border-radius: var(--border-radius); border: none; cursor: pointer; font-weight: 500;
+            font-size: 16px; transition: background-color 0.2s;
+        }
+        .btn-create { background-color: var(--primary-color); color: white; }
+        .btn-create:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: #e0e0e0; color: var(--dark-gray); }
+        .btn-secondary:hover { background-color: #d0d0d0; }
         .modal-close {
             position: absolute; top: 10px; right: 15px; color: #aaa;
             font-size: 28px; font-weight: bold; cursor: pointer;
         }
         #modal-textarea {
-            width: 100%; height: 200px; box-sizing: border-box;
-            padding: 10px; font-family: inherit; font-size: 14px;
-            border: 1px solid var(--gray); border-radius: var(--border-radius);
-            margin-bottom: 15px;
+            width: 100%; height: 200px; box-sizing: border-box; padding: 10px;
+            font-family: inherit; font-size: 14px; border: 1px solid var(--gray);
+            border-radius: var(--border-radius); margin-bottom: 15px; resize: vertical;
         }
+        
+        #actor-image-gallery {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;
+            padding: 10px; border: 1px solid var(--gray); border-radius: var(--border-radius);
+            max-height: 280px; overflow-y: auto; background-color: #fafafa;
+        }
+        .gallery-img {
+            width: 100%; height: 120px; object-fit: cover; border-radius: var(--border-radius); cursor: pointer;
+            border: 3px solid transparent; transition: border-color 0.3s ease;
+        }
+        .gallery-img:hover { border-color: var(--primary-color); }
+        #actor-image-gallery p { grid-column: 1 / -1; text-align: center; color: var(--dark-gray); }
+        
+        #actor-image-preview {
+            margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        #actor-image-preview img {
+            width: 150px; height: 150px; object-fit: cover; border-radius: 50%;
+            border: 2px solid var(--primary-color);
+        }
+
+        /* --- ESTILOS MODIFICADOS PARA O MODAL DE 400x400 --- */
+        #cropper-modal .modal-content {
+            width: 400px; /* Define uma largura fixa para o conteúdo do modal */
+            max-width: 95%; /* Para segurança em ecrãs muito pequenos */
+            padding: 15px; /* Remove padding excessivo */
+        }
+
+        #image-to-crop-container {
+            width: 100%;
+            height: 400px; /* Define a altura exata para a área de trabalho */
+            overflow: hidden; /* Garante que a imagem não transborde */
+            background-color: #222; /* Fundo escuro para melhor visualização */
+        }
+        #image-to-crop { max-width: 100%; display: block; }
+
+
+        .gallery-add-btn {
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--gray);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    background-color: #fafafa;
+    transition: all 0.2s ease;
+    font-size: 40px;
+    color: var(--dark-gray);
+    font-weight: bold;
+}
+.gallery-add-btn:hover {
+    background-color: #e9e9e9;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+
     </style>
 </head>
 <body>
@@ -105,45 +186,44 @@
             <a href="index.html" class="btn-index">Voltar para Index</a>
         </header>
         <nav class="tabs">
-            <button class="tab-button active" data-tab="scene">Criar Scenne</button>
-            <button class="tab-button" data-tab="actor">Criar Actor</button>
+            <button class="tab-button" data-tab="scene">Criar Scenne</button>
+            <button class="tab-button active" data-tab="actor">Criar Actor</button>
             <button class="tab-button" data-tab="movie">Criar Movie</button>
         </nav>
         <main>
-            <section id="scene" class="tab-content active">
+            <section id="scene" class="tab-content">
                 <h2>Criar Nova Scenne</h2>
                 <form id="form-scene">
+                    <div class="form-group"><label for="scene-title">Título da Scenne</label><input type="text" id="scene-title" required autocomplete="off"></div>
                     <div class="form-group">
-                        <label for="scenne-name">Nome da Scenne</label>
-                        <input type="text" id="scenne-name" required>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-group-header">
-                            <label for="scenne-babes-search">Pesquisar Babes</label>
-                            <button type="button" class="btn-secondary" id="btn-add-scene-by-text">Adicionar por Texto</button>
-                        </div>
+                        <label for="scene-movie-search">Movie Associado</label>
                         <div class="search-container">
-                            <input type="text" id="scenne-babes-search" placeholder="Digite para pesquisar e adicionar...">
-                            <div class="search-results" id="scenne-babes-results"></div>
+                            <input type="text" id="scene-movie-search" placeholder="Pesquisar Movie..." required autocomplete="off">
+                            <input type="hidden" id="scene-movie-id">
+                            <div class="search-results" id="scene-movie-results"></div>
                         </div>
-                        <label style="margin-top: 10px;">Babes Selecionadas:</label>
-                        <div class="selected-items-container" id="scenne-babes-selected"></div>
                     </div>
                     <div class="form-group">
-                        <label for="scenne-date">Data (dd/mm/aaaa)</label>
-                        <input type="date" id="scenne-date" required>
+                        <label for="scene-actors-search">Actores na Scenne</label>
+                        <div class="search-container">
+                            <input type="text" id="scene-actors-search" placeholder="Adicionar Actor..." autocomplete="off">
+                            <div class="search-results" id="scene-actors-results"></div>
+                        </div>
+                        <div class="selected-items-container" id="scene-actors-selected"></div>
+                        <input type="hidden" id="scene-actors-ids">
                     </div>
-                    <div class="form-group"><label for="scenne-image-url">URL da Imagem</label><input type="url" id="scenne-image-url" placeholder="https://..."></div>
-                    <div class="form-group"><label for="scenne-video-url">URL do Vídeo</label><input type="url" id="scenne-video-url" placeholder="https://..."></div>
-                    <div class="form-group"><label for="scenne-movie-assoc">Associar a Filme (Opcional)</label><select id="scenne-movie-assoc"><option value="">Carregando...</option></select></div>
+                    <div class="form-group"><label for="scene-date">Data de Lançamento (Opcional)</label><input type="date" id="scene-date"></div>
+                    <div class="form-group"><label for="scene-description">Descrição</label><textarea id="scene-description" rows="3"></textarea></div>
+                    <div class="form-group"><label for="scene-tags">Tags</label><input type="text" id="scene-tags" placeholder="Ex: tag1, tag2, tag3"><small>Separar tags por vírgulas.</small></div>
                     <button type="submit" class="btn-create">Criar Scenne</button>
                 </form>
             </section>
-            <section id="actor" class="tab-content">
+            
+            <section id="actor" class="tab-content active">
                 <h2>Criar Novo Actor</h2>
                 <form id="form-actor">
-                    <div class="form-group"><div class="form-group-header"><label>Adição Rápida por Biografia</label><button type="button" class="btn-secondary" id="btn-add-actor-by-text">Analisar Texto</button></div></div>
-                    <div class="form-group"><label for="actor-name">Nome</label><input type="text" id="actor-name" required></div>
+                    <div class="form-group"><div class="form-group-header"><label>Adição Rápida</label><button type="button" class="btn-secondary" id="btn-add-actor-by-text">Analisar Biografia</button></div></div>
+                    <div class="form-group"><label for="actor-name">Nome</label><input type="text" id="actor-name" required autocomplete="off"></div>
                     <div class="form-group">
                         <label for="actor-nationality-search">Nacionalidade</label>
                         <div class="search-container">
@@ -153,39 +233,84 @@
                         </div>
                     </div>
                     <div class="form-group"><label for="actor-birth-date">Data Nascimento (Opcional)</label><input type="date" id="actor-birth-date"></div>
+                    
+                    <div class="form-group">
+                        <label>Imagem</label>
+                        <div id="actor-image-preview"><p>A imagem selecionada aparecerá aqui.</p></div>
+                        <label style="margin-top:15px;" for="actor-image-gallery">Resultados da Pesquisa:</label>
+                        <div id="actor-image-gallery"><p>Digite um nome para carregar as imagens.</p></div>
+                        <input type="hidden" id="actor-image-url">
+                    </div>
+                    
                     <div class="form-group"><label for="actor-star">Star (0-50)</label><select id="actor-star" required></select></div>
                     <button type="submit" class="btn-create">Criar Actor</button>
                 </form>
             </section>
+            
             <section id="movie" class="tab-content">
                  <h2>Criar Novo Movie</h2>
-                <form id="form-movie">
-                    <div class="form-group"><label for="movie-name">Nome do Movie</label><input type="text" id="movie-name" required></div>
-                    <div class="form-group"><label for="movie-date">Data do Movie</label><input type="date" id="movie-date" required></div>
-                    <div class="form-group"><label>Anexar Scennes (Seleção Múltipla)</label><div id="movie-scennes-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 8px;"><p>Carregando...</p></div></div>
-                    <div class="form-group"><label for="movie-image-url">URL da Imagem de Capa</label><input type="url" id="movie-image-url" placeholder="https://..."></div>
-                    <div class="form-group"><label for="movie-url">URL do Movie (Opcional)</label><input type="url" id="movie-url" placeholder="https://..."></div>
-                    <button type="submit" class="btn-create">Gravar Movie</button>
-                </form>
+                 <form id="form-movie">
+                    <div class="form-group"><label for="movie-title">Título do Movie</label><input type="text" id="movie-title" required autocomplete="off"></div>
+                    <div class="form-group">
+                        <label for="movie-studio-search">Estúdio</label>
+                        <div class="search-container">
+                            <input type="text" id="movie-studio-search" placeholder="Pesquisar Estúdio..." autocomplete="off">
+                            <input type="hidden" id="movie-studio-id">
+                            <div class="search-results" id="movie-studio-results"></div>
+                        </div>
+                    </div>
+                     <div class="form-group"><label for="movie-director">Diretor (Opcional)</label><input type="text" id="movie-director" autocomplete="off"></div>
+                     <div class="form-group"><label for="movie-release-date">Data de Lançamento</label><input type="date" id="movie-release-date"></div>
+                     <div class="form-group"><label for="movie-synopsis">Sinopse</label><textarea id="movie-synopsis" rows="4"></textarea></div>
+                     <div class="form-group"><label for="movie-cover-url">URL da Capa</label><input type="url" id="movie-cover-url" placeholder="https://exemplo.com/imagem.jpg"></div>
+                     <div class="form-group">
+                        <label for="movie-actors-search">Actores no Movie</label>
+                        <div class="search-container">
+                            <input type="text" id="movie-actors-search" placeholder="Adicionar Actor..." autocomplete="off">
+                            <div class="search-results" id="movie-actors-results"></div>
+                        </div>
+                        <div class="selected-items-container" id="movie-actors-selected"></div>
+                        <input type="hidden" id="movie-actors-ids">
+                    </div>
+                     <button type="submit" class="btn-create">Criar Movie</button>
+                 </form>
             </section>
         </main>
     </div>
 
     <div id="text-add-modal" class="modal">
         <div class="modal-content">
-            <span class="modal-close" id="btn-close-modal">&times;</span>
+            <span class="modal-close">&times;</span>
             <h3 id="modal-title">Título do Modal</h3>
-            <div id="modal-description">Descrição do modal.</div>
+            <div id="modal-description"></div>
             <textarea id="modal-textarea" placeholder="Cole seu texto aqui..."></textarea>
-            <button type="button" class="btn-create" id="btn-modal-action">Ação</button>
+            <div class="modal-footer">
+                 <button type="button" class="btn-create" id="btn-modal-action">Ação</button>
+            </div>
         </div>
     </div>
 
+   <div id="cropper-modal" class="modal">
+    <div class="modal-content">
+        <h3>Redimensionar Imagem</h3>
+        <div id="image-to-crop-container">
+            <!-- O contentor para a imagem e para as mensagens de estado -->
+            <div id="cropper-status-message" style="display: none; color: white; text-align: center; padding-top: 150px;"></div>
+            <img id="image-to-crop" src="" alt="Imagem para recortar" style="display: none;">
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="btn-crop-cancel" class="btn-secondary">Cancelar</button>
+            <button type="button" id="btn-crop-save" class="btn-create">Gravar</button>
+        </div>
+    </div>
+</div>
+
     <script src="https://unpkg.com/compromise"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     
-    <script type="module">
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, addDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
     // --- CONFIGURAÇÃO FIREBASE ---
     const firebaseConfig = {
@@ -200,403 +325,242 @@
     const db = getFirestore(app);
     
     // --- VARIÁVEIS GLOBAIS DE ESTADO ---
-    let allBabes = [], allNations = [];
-    let tempActorBioData = {};
+    let allBabes = [], allNations = [], allMovies = [], allStudios = [];
+    let imageSearchTimeout;
+    let currentModalAction = null;
+    let cropper = null;
+    let currentObjectUrl = null; // Para guardar o URL do blob e libertar memória
     
-    // --- MAPEAMENTO DE GENTÍLICO PARA PAÍS ---
-    const demonymToCountryMap = {
-        'afghan': 'Afghanistan', 'albanian': 'Albania', 'algerian': 'Algeria', 'american': 'United States', 'andorran': 'Andorra',
-        'angolan': 'Angola', 'argentine': 'Argentina', 'armenian': 'Armenia', 'australian': 'Australia', 'austrian': 'Austria',
-        'azerbaijani': 'Azerbaijan', 'bahamian': 'Bahamas', 'bangladeshi': 'Bangladesh', 'belgian': 'Belgium', 'brazilian': 'Brazil',
-        'british': 'United Kingdom', 'canadian': 'Canada', 'colombian': 'Colombia', 'croatian': 'Croatia', 'cuban': 'Cuba',
-        'czech': 'Czech Republic', 'danish': 'Denmark', 'dutch': 'Netherlands', 'english': 'United Kingdom', 'estonian': 'Estonia',
-        'finnish': 'Finland', 'french': 'France', 'georgian': 'Georgia', 'german': 'Germany', 'greek': 'Greece', 'hungarian': 'Hungary',
-        'icelandic': 'Iceland', 'indian': 'India', 'indonesian': 'Indonesia', 'iranian': 'Iran', 'iraqi': 'Iraq', 'irish': 'Ireland',
-        'israeli': 'Israel', 'italian': 'Italy', 'japanese': 'Japan', 'latvian': 'Latvia', 'lithuanian': 'Lithuania', 'mexican': 'Mexico',
-        'moldovan': 'Moldova', 'nicaraguan': 'Nicaragua', 'norwegian': 'Norway', 'polish': 'Poland', 'portuguese': 'Portugal',
-        'romanian': 'Romania', 'russian': 'Russia', 'slovak': 'Slovakia', 'slovenian': 'Slovenia', 'spanish': 'Spain',
-        'swedish': 'Sweden', 'swiss': 'Switzerland', 'thai': 'Thailand', 'turkish': 'Turkey', 'ukrainian': 'Ukraine', 'venezuelan': 'Venezuela',
-    };
+    const demonymToCountryMap = { 'afghan': 'Afghanistan', 'albanian': 'Albania', 'algerian': 'Algeria', 'american': 'United States', 'andorran': 'Andorra', 'angolan': 'Angola', 'argentine': 'Argentina', 'armenian': 'Armenia', 'australian': 'Australia', 'austrian': 'Austria', 'azerbaijani': 'Azerbaijan', 'bahamian': 'Bahamas', 'bangladeshi': 'Bangladesh', 'belgian': 'Belgium', 'brazilian': 'Brazil', 'british': 'United Kingdom', 'canadian': 'Canada', 'colombian': 'Colombia', 'croatian': 'Croatia', 'cuban': 'Cuba', 'czech': 'Czech Republic', 'danish': 'Denmark', 'dutch': 'Netherlands', 'english': 'United Kingdom', 'estonian': 'Estonia', 'finnish': 'Finland', 'french': 'France', 'georgian': 'Georgia', 'german': 'Germany', 'greek': 'Greece', 'hungarian': 'Hungary', 'icelandic': 'Iceland', 'indian': 'India', 'indonesian': 'Indonesia', 'iranian': 'Iran', 'iraqi': 'Iraq', 'irish': 'Ireland', 'israeli': 'Israel', 'italian': 'Italy', 'japanese': 'Japan', 'latvian': 'Latvia', 'lithuanian': 'Lithuania', 'mexican': 'Mexico', 'moldovan': 'Moldova', 'nicaraguan': 'Nicaragua', 'norwegian': 'Norway', 'polish': 'Poland', 'portuguese': 'Portugal', 'romanian': 'Romania', 'russian': 'Russia', 'slovak': 'Slovakia', 'slovenian': 'Slovenia', 'spanish': 'Spain', 'swedish': 'Sweden', 'swiss': 'Switzerland', 'thai': 'Thailand', 'turkish': 'Turkey', 'ukrainian': 'Ukraine', 'venezuelan': 'Venezuela' };
 
     // --- SELETORES DE ELEMENTOS DOM ---
+    const tabs = document.querySelectorAll('.tab-button');
     const textAddModal = document.getElementById('text-add-modal');
-    const btnAddSceneByText = document.getElementById('btn-add-scene-by-text');
     const btnAddActorByText = document.getElementById('btn-add-actor-by-text');
-    const btnCloseModal = document.getElementById('btn-close-modal');
+    const textModalCloseBtn = textAddModal.querySelector('.modal-close');
     const btnModalAction = document.getElementById('btn-modal-action');
     const modalTextarea = document.getElementById('modal-textarea');
     const modalTitle = document.getElementById('modal-title');
     const modalDescription = document.getElementById('modal-description');
-    const tabs = document.querySelectorAll('.tab-button');
+    
+    const cropperModal = document.getElementById('cropper-modal');
+    const btnCropCancel = document.getElementById('btn-crop-cancel');
+    const btnCropSave = document.getElementById('btn-crop-save');
+    const actorImagePreview = document.getElementById('actor-image-preview');
 
-    // --- LÓGICA DE NAVEGAÇÃO (ABAS) ---
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(item => item.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(item => item.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.tab).classList.add('active');
-        });
+    async function fetchFromFirebase(collectionName) { try { const snapshot = await getDocs(collection(db, collectionName)); return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); } catch (error) { console.error(`Erro ao buscar '${collectionName}':`, error); return []; } }
+    async function saveToFirebase(collectionName, data) { try { const docRef = await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp() }); alert(`${collectionName.replace(/s$/, '')} criado com sucesso!`); return { success: true, id: docRef.id }; } catch (error) { console.error("Erro ao salvar:", error); alert("Erro ao salvar dados."); return { success: false, id: null }; } }
+    async function checkIfNameExists(collectionName, name) { const searchName = name.trim().toLowerCase(); if (!searchName) return false; const q = query(collection(db, collectionName), where("searchName", "==", searchName)); try { return !(await getDocs(q)).empty; } catch (error) { console.error(`Erro ao verificar:`, error); return true; } }
+
+    function setupSearchableInput(inputId, resultsId, dataArray, onSelectCallback) { const searchInput = document.getElementById(inputId); const resultsContainer = document.getElementById(resultsId); searchInput.addEventListener('input', () => { const searchTerm = searchInput.value.toLowerCase(); if (!searchTerm) { resultsContainer.classList.remove('visible'); return; } const filteredData = (dataArray || []).filter(item => (item.name || '').toLowerCase().includes(searchTerm)); resultsContainer.innerHTML = ''; if (filteredData.length > 0) { filteredData.forEach(item => { const div = document.createElement('div'); div.className = 'result-item'; div.textContent = item.name; div.addEventListener('click', () => { onSelectCallback(item); resultsContainer.classList.remove('visible'); searchInput.value = ''; }); resultsContainer.appendChild(div); }); resultsContainer.classList.add('visible'); } else { resultsContainer.classList.remove('visible'); } }); document.addEventListener('click', (e) => { if (!searchInput.parentElement.contains(e.target)) resultsContainer.classList.remove('visible'); }); }
+    function populateStarRating() { const select = document.getElementById('actor-star'); for (let i = 0; i <= 50; i++) select.innerHTML += `<option value="${i}">${i}</option>`; }
+    function resetActorForm() { document.getElementById('form-actor').reset(); document.getElementById('actor-nationality-id').value = ''; document.getElementById('actor-image-gallery').innerHTML = '<p>Digite um nome para carregar as imagens.</p>'; actorImagePreview.innerHTML = '<p>A imagem selecionada aparecerá aqui.</p>'; document.getElementById('actor-image-url').value = ''; }
+    function selectNation(nation) { document.getElementById('actor-nationality-search').value = nation.name; document.getElementById('actor-nationality-id').value = nation.id; }
+    
+    function openModal(title, description, placeholder, actionText, actionCallback) { modalTitle.textContent = title; modalDescription.innerHTML = `<p>${description}</p>`; modalTextarea.value = ''; modalTextarea.placeholder = placeholder; btnModalAction.textContent = actionText; if (currentModalAction) btnModalAction.removeEventListener('click', currentModalAction); currentModalAction = actionCallback; btnModalAction.addEventListener('click', currentModalAction); textAddModal.classList.add('visible'); }
+    function closeModal() { textAddModal.classList.remove('visible'); }
+    function processTextForActor() { const text = modalTextarea.value; if (!text.trim()) { closeModal(); return; } const extractedData = {}; const lines = text.split('\n'); const cleanValue = (val) => val ? val.replace(/\[\d+\]/g, '').replace(/\(.*\)/g, '').trim() : null; for (const line of lines) { if (line.trim()) { extractedData.name = cleanValue(line.trim()); break; } } for (let i = 0; i < lines.length; i++) { let line = lines[i]; let key = null, rawValue = null; if (line.includes('\t')) { [key, rawValue] = line.split('\t').map(p => p.trim()); } else if (line.includes(':')) { let parts = line.split(':'); key = parts.shift(); rawValue = parts.join(':').trim(); } if (!key || !rawValue) continue; const value = cleanValue(rawValue); const lowerKey = key.toLowerCase(); const months = { 'january': '01', 'february': '02', 'march': '03', 'april': '04', 'may': '05', 'june': '06', 'july': '07', 'august': '08', 'september': '09', 'october': '10', 'november': '11', 'december': '12' }; if (lowerKey.includes('born') || lowerKey.includes('date of birth')) { const yearMatch = value.match(/\b(\d{4})\b/); const monthMatch = value.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i); const dayMatch = value.match(/\b(\d{1,2})(?:st|nd|rd|th)?\b/); if (yearMatch && monthMatch && dayMatch) { const month = months[monthMatch[1].toLowerCase()]; if (month) { extractedData.birthDate = `${yearMatch[1]}-${month.padStart(2, '0')}-${dayMatch[1].padStart(2, '0')}`; } } } else if (lowerKey.includes('nationality')) { let demonym = (rawValue.match(/\((.*?)\)/)?.[1] || rawValue).split(/,| /)[0].trim().toLowerCase(); extractedData.nation = demonymToCountryMap[demonym] || demonym; } } if (extractedData.name) { document.getElementById('actor-name').value = extractedData.name; document.getElementById('actor-name').dispatchEvent(new Event('input')); } if (extractedData.birthDate) { document.getElementById('actor-birth-date').value = extractedData.birthDate; } if (extractedData.nation) { const nationFound = allNations.find(n => n.name.toLowerCase() === extractedData.nation.toLowerCase()); if (nationFound) { selectNation(nationFound); } else { document.getElementById('actor-nationality-search').value = extractedData.nation; alert(`Nacionalidade "${extractedData.nation}" não encontrada ou mapeada.`); } } closeModal(); }
+    
+    function generateImageUrls(name) { if (!name || name.trim() === '') return []; const formattedName = encodeURIComponent(name.trim()); const baseUrl = 'https://www.babepedia.com/'; const originalUrls = [ `${baseUrl}pics/${formattedName}.jpg`, ...Array.from({length: 4}, (_, i) => `${baseUrl}pics/${formattedName}${i + 2}.jpg`), `${baseUrl}user-uploads/${formattedName}.jpg`, ...Array.from({length: 6}, (_, i) => `${baseUrl}user-uploads/${formattedName}${i + 10}.jpg`) ]; return originalUrls; }
+async function updateImageGallery(name) {
+    const gallery = document.getElementById('actor-image-gallery');
+    gallery.innerHTML = ''; // Limpa a galeria completamente
+
+    // --- 1. Criar e adicionar o botão "+" ---
+    const addManualButton = document.createElement('div');
+    addManualButton.className = 'gallery-add-btn';
+    addManualButton.textContent = '+';
+    addManualButton.title = 'Adicionar imagem a partir de um URL';
+
+    addManualButton.onclick = () => {
+        const imageUrl = prompt("Por favor, cole o URL direto da imagem que deseja adicionar:", "");
+        
+        // Verifica se o utilizador inseriu um URL e não cancelou
+        if (imageUrl && imageUrl.trim() !== "") {
+            // Chama a mesma função de recorte que as outras imagens usam
+            openCropper(imageUrl.trim());
+        }
+    };
+    gallery.appendChild(addManualButton); // Adiciona o botão à galeria
+
+    // --- 2. Continuar com a lógica de pesquisa de imagens online ---
+    const statusContainer = document.createElement('div');
+    statusContainer.style.gridColumn = "1 / -1"; // Faz com que ocupe a largura toda
+    statusContainer.innerHTML = '<p>A procurar imagens...</p>';
+    gallery.appendChild(statusContainer);
+
+    const potentialUrls = generateImageUrls(name);
+    const checkImage = (url) => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ status: 'fulfilled', value: url });
+        img.onerror = () => resolve({ status: 'rejected' });
+        img.src = url;
     });
 
-    // --- FUNÇÕES DE INTERAÇÃO COM FIREBASE (CORRIGIDAS) ---
-    async function checkIfNameExists(collectionName, name) {
-        const searchName = name.trim().toLowerCase();
-        if (!searchName) return false;
-        const q = query(collection(db, collectionName), where("searchName", "==", searchName));
-        try {
-            return !(await getDocs(q)).empty;
-        } catch (error) {
-            console.error(`Erro ao verificar:`, error);
-            return true;
-        }
-    }
-    
-    async function fetchFromFirebase(collectionName) {
-        try {
-            const snapshot = await getDocs(collection(db, collectionName));
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error(`Erro ao buscar '${collectionName}':`, error);
-            return []; // Retorna array vazio em caso de erro
-        }
-    }
-    
-    async function saveToFirebase(collectionName, data) {
-        try {
-            const docRef = await addDoc(collection(db, collectionName), data);
-            alert(`${collectionName.slice(0, -1)} criado com sucesso!`);
-            return { success: true, id: docRef.id };
-        } catch (error) {
-            console.error("Erro ao salvar:", error);
-            alert("Erro ao salvar dados.");
-            return { success: false, id: null };
-        }
-    }
+    const results = await Promise.all(potentialUrls.map(checkImage));
+    const validUrls = results.filter(r => r.status === 'fulfilled').map(r => r.value);
 
-    // --- FUNÇÕES UTILITÁRIAS E DE UI (CORRIGIDAS) ---
-    function setupSearchableInput(inputId, resultsId, dataArray, onSelectCallback) {
-        const searchInput = document.getElementById(inputId);
-        const resultsContainer = document.getElementById(resultsId);
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.toLowerCase();
-            if (!searchTerm) { resultsContainer.classList.remove('visible'); return; }
-            const filteredData = dataArray.filter(item => (item.name || '').toLowerCase().includes(searchTerm));
-            resultsContainer.innerHTML = '';
-            if (filteredData.length > 0) {
-                filteredData.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'result-item';
-                    div.textContent = item.name;
-                    div.addEventListener('click', () => { onSelectCallback(item); resultsContainer.classList.remove('visible'); });
-                    resultsContainer.appendChild(div);
-                });
-                resultsContainer.classList.add('visible');
-            } else { resultsContainer.classList.remove('visible'); }
-        });
-        document.addEventListener('click', (e) => {
-            if (!searchInput.parentElement.contains(e.target)) resultsContainer.classList.remove('visible');
+    // Remove a mensagem "A procurar imagens..."
+    statusContainer.remove(); 
+
+    if (validUrls.length === 0) {
+        const noResultsMessage = document.createElement('p');
+        noResultsMessage.textContent = 'Nenhuma imagem encontrada para este nome.';
+        noResultsMessage.style.gridColumn = "1 / -1";
+        gallery.appendChild(noResultsMessage);
+    } else {
+        validUrls.forEach(url => {
+            const imgElement = document.createElement('img');
+            imgElement.src = url;
+            imgElement.className = 'gallery-img';
+            imgElement.alt = `Imagem de ${name}`;
+            gallery.appendChild(imgElement);
         });
     }
-    
-    function populateSelect(elementId, items, placeholder) {
-        const select = document.getElementById(elementId);
-        select.innerHTML = '';
-        if (placeholder) select.innerHTML += `<option value="">${placeholder}</option>`;
-        items.sort((a, b) => (a.name || '').localeCompare(b.name || '')).forEach(item => {
-            select.innerHTML += `<option value="${item.id}">${item.name || 'Sem nome'}</option>`;
-        });
-    }
-    
-    function populateStarRating() {
-        const select = document.getElementById('actor-star');
-        for (let i = 0; i <= 50; i++) select.innerHTML += `<option value="${i}">${i}</option>`;
-    }
-    
-    function addBabeToSelected(babe) {
-        const selectedContainer = document.getElementById('scenne-babes-selected');
-        if (document.querySelector(`.selected-item[data-id="${babe.id}"]`)) return;
-        const pill = document.createElement('div');
-        pill.className = 'selected-item';
-        pill.dataset.id = babe.id;
-        pill.innerHTML = `<span>${babe.name}</span><button type="button" class="remove-item">&times;</button>`;
-        pill.querySelector('.remove-item').addEventListener('click', () => pill.remove());
-        selectedContainer.appendChild(pill);
-        document.getElementById('scenne-babes-search').value = '';
-    }
-
-    function selectNation(nation) {
-        document.getElementById('actor-nationality-search').value = nation.name;
-        document.getElementById('actor-nationality-id').value = nation.id;
-    }
-
-    function resetSceneForm() { document.getElementById('form-scene').reset(); document.getElementById('scenne-babes-selected').innerHTML = ''; }
-    function resetActorForm() { document.getElementById('form-actor').reset(); document.getElementById('actor-nationality-id').value = ''; tempActorBioData = {}; }
-    function resetMovieForm() { document.getElementById('form-movie').reset(); }
-    
-    // --- LÓGICA MODAL GENÉRICA ---
-    let currentModalAction = null;
-
-    function openModal(title, description, placeholder, actionText, actionCallback) {
-        modalTextarea.style.display = 'block';
-        btnModalAction.style.display = 'block';
-        modalTitle.textContent = title;
-        modalDescription.innerHTML = `<p>${description}</p>`;
-        modalTextarea.value = '';
-        modalTextarea.placeholder = placeholder;
-        btnModalAction.textContent = actionText;
-        if (currentModalAction) btnModalAction.removeEventListener('click', currentModalAction);
-        currentModalAction = actionCallback;
-        btnModalAction.addEventListener('click', currentModalAction);
-        textAddModal.classList.add('visible');
-    }
-
-    function closeModal() {
-        textAddModal.classList.remove('visible');
-        if (currentModalAction) {
-            btnModalAction.removeEventListener('click', currentModalAction);
-            currentModalAction = null;
-        }
-    }
-
-    function findSceneTitleFromText(text) {
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-
-    // Heurística 1: Lista de "lixo" para ignorar (em minúsculas)
-    const rejectionList = [
-        'fresh porno', 'models', 'channels', 'tags', 'webcams', 'search',
-        'download', 'report', 'related video', 'dmca', 'terms', 'contacts'
-    ];
-
-    let potentialTitle = '';
-
-    for (const line of lines) {
-        const lowerLine = line.toLowerCase();
-
-        // Filtro A: Ignorar se estiver na lista de rejeição
-        if (rejectionList.some(rejected => lowerLine.includes(rejected))) {
-            continue;
-        }
-
-        // Filtro B: Ignorar se tiver poucas palavras (ex: menos de 4)
-        if (line.split(' ').length < 4) {
-            continue;
-        }
-
-        // Filtro C: Ignorar se for um parágrafo (termina com '.')
-        if (line.endsWith('.')) {
-            continue;
-        }
-
-        // Se a linha passou por todos os filtros, é nossa melhor candidata!
-        potentialTitle = line;
-        break; // Encontramos, podemos parar de procurar.
-    }
-
-    // Fallback: Se nenhuma linha passar nas heurísticas, usa a primeira linha como último recurso.
-    if (!potentialTitle && lines.length > 0) {
-        // Para o fallback, vamos garantir que não seja um item da lista de rejeição
-        if (!rejectionList.includes(lines[0].toLowerCase())) {
-            potentialTitle = lines[0];
-        }
-    }
-
-    return potentialTitle;
 }
+    // --- FUNÇÃO openCropper TOTALMENTE REFORMULADA ---
+    async function openCropper(imageUrl) {
+        const modal = document.getElementById('cropper-modal');
+        const imageElement = document.getElementById('image-to-crop');
+        const statusMessage = document.getElementById('cropper-status-message');
+        const cropSaveButton = document.getElementById('btn-crop-save');
 
-    
-    // --- LÓGICA DE SUBMISSÃO DOS FORMULÁRIOS (CORRIGIDA) ---
-    document.getElementById('form-scene').addEventListener('submit', async (e) => { e.preventDefault(); /* Adicione sua lógica de salvamento aqui */ });
-    
-    document.getElementById('form-actor').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const actorName = document.getElementById('actor-name').value;
-        if (!actorName) { alert("O nome do ator é obrigatório."); return; }
-        if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um actor com o nome "${actorName}" já existe.`); return; }
-        const nationId = document.getElementById('actor-nationality-id').value;
-        if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
-        const actorData = {
-            name: actorName, searchName: actorName.trim().toLowerCase(), nationId: nationId,
-            birthDate: document.getElementById('actor-birth-date').value || null,
-            starRating: parseInt(document.getElementById('actor-star').value, 10),
-            ...tempActorBioData, createdAt: new Date()
-        };
-        const result = await saveToFirebase('babes', actorData);
-        if (result.success) {
-            const newBabe = { id: result.id, ...actorData };
-            allBabes.push(newBabe);
-            allBabes.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            resetActorForm();
+        console.log(`[DEBUG] Abrindo cropper para: ${imageUrl}`);
+
+        // Prepara a UI do modal para o estado de carregamento
+        modal.classList.add('visible');
+        imageElement.style.display = 'none';
+        statusMessage.style.display = 'block';
+        statusMessage.textContent = 'A descarregar imagem para edição...';
+        cropSaveButton.disabled = true;
+
+        if (cropper) cropper.destroy();
+
+        try {
+            // Usamos um proxy CORS genérico para buscar a imagem
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageUrl)}`;
+            console.log(`[DEBUG] Buscando via proxy: ${proxyUrl}`);
+
+            const response = await fetch(proxyUrl);
+            if (!response.ok) {
+                throw new Error(`Falha na rede ou o proxy bloqueou o pedido (Status: ${response.status})`);
+            }
+
+            const imageBlob = await response.blob();
+
+            // Revoga o URL do objeto anterior para libertar memória
+            if (currentObjectUrl) {
+                URL.revokeObjectURL(currentObjectUrl);
+            }
+            
+            // Cria um URL local (blob) para a imagem. Isto resolve 100% dos problemas de CORS.
+            currentObjectUrl = URL.createObjectURL(imageBlob);
+            console.log(`[DEBUG] Blob URL criado: ${currentObjectUrl}`);
+            
+            imageElement.src = currentObjectUrl;
+
+            imageElement.onload = () => {
+                statusMessage.style.display = 'none';
+                imageElement.style.display = 'block';
+                cropSaveButton.disabled = false;
+                cropper = new Cropper(imageElement, {
+                    aspectRatio: 1 / 1, viewMode: 1, background: false,
+                    autoCropArea: 0.9, responsive: true, movable: true, zoomable: true
+                });
+            };
+
+        } catch (error) {
+            console.error("[ERRO CRÍTICO] Falha ao carregar a imagem via proxy:", error);
+            statusMessage.innerHTML = `<b style="color: #ffcccc;">Erro ao Carregar</b><br>Não foi possível obter a imagem. Tente outra.`;
         }
-    });
+    }
     
-    document.getElementById('form-movie').addEventListener('submit', async (e) => { e.preventDefault(); /* Adicione sua lógica de salvamento aqui */ });
-    
-    // --- EVENT LISTENERS DO MODAL ---
-    btnAddSceneByText.addEventListener('click', () => {
-        openModal( 'Analisar Texto da Cena', 'Cole o texto abaixo. O sistema irá procurar por nomes de babes existentes e pelo título da cena.', 'Cole o texto da página da cena aqui...', 'Analisar Cena', processTextForScene );
-    });
-    btnAddActorByText.addEventListener('click', () => {
-        openModal( 'Analisar Biografia do Actor', 'Cole a biografia completa do ator. O sistema tentará extrair dados automaticamente.', 'Cole o texto da biografia aqui...', 'Analisar Actor', processTextForActor );
-    });
-    btnCloseModal.addEventListener('click', closeModal);
+    // --- FUNÇÃO closeCropper ATUALIZADA ---
+    function closeCropper() { 
+        if (cropper) { 
+            cropper.destroy(); 
+            cropper = null; 
+        }
+        // Limpa o URL do blob da memória quando o modal é fechado
+        if (currentObjectUrl) {
+            URL.revokeObjectURL(currentObjectUrl);
+            currentObjectUrl = null;
+        }
+        cropperModal.classList.remove('visible'); 
+    }
+
+    tabs.forEach(tab => { tab.addEventListener('click', (e) => { tabs.forEach(item => item.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(item => item.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(e.currentTarget.dataset.tab).classList.add('active'); }); });
+    btnAddActorByText.addEventListener('click', () => { openModal('Analisar Biografia', 'Cole a biografia completa...', 'Cole o texto da biografia aqui...', 'Analisar', processTextForActor); });
+    textModalCloseBtn.addEventListener('click', closeModal);
     window.addEventListener('click', (event) => { if (event.target == textAddModal) closeModal(); });
     
-    // --- NOVAS FUNÇÕES PARA CRIAÇÃO DE ATORES A PARTIR DO MODAL ---
-    function switchToActorTabAndFillName(name) {
-        closeModal();
-        const actorTabButton = document.querySelector('.tab-button[data-tab="actor"]');
-        if (actorTabButton) actorTabButton.click();
-        const actorNameInput = document.getElementById('actor-name');
-        if (actorNameInput) {
-            actorNameInput.value = name;
-            document.getElementById('actor-nationality-search').focus();
+    btnCropCancel.addEventListener('click', closeCropper);
+
+    btnCropSave.addEventListener('click', () => {
+        if (!cropper) {
+            console.warn("Ação de Gravar bloqueada: A instância do 'cropper' é nula.");
+            return;
         }
-    }
 
-    function promptToCreateNewActors(newNames) {
-        modalTitle.textContent = 'Atores não reconhecidos foram encontrados';
-        let descriptionHtml = `<p>Os seguintes nomes foram detectados, mas não existem no banco de dados. Clique para criar um novo ator:</p><ul>`;
-        newNames.forEach(name => {
-            descriptionHtml += `<li><span>${name}</span> <button type="button" class="btn-secondary btn-create-actor-from-modal" data-name="${name}">Criar Ator</button></li>`;
-        });
-        descriptionHtml += `</ul><p>Ou feche esta janela para ignorar.</p>`;
-        modalDescription.innerHTML = descriptionHtml;
-        modalTextarea.style.display = 'none';
-        btnModalAction.style.display = 'none';
-        document.querySelectorAll('.btn-create-actor-from-modal').forEach(button => {
-            button.addEventListener('click', (e) => {
-                switchToActorTabAndFillName(e.target.dataset.name);
+        try {
+            const canvas = cropper.getCroppedCanvas({
+                width: 512, height: 512, imageSmoothingQuality: 'high'
             });
-        });
-    }
-
-    // --- PARSERS DE TEXTO INTELIGENTES ---
-  function processTextForScene() {
-    const text = modalTextarea.value;
-    if (!text.trim()) {
-        closeModal();
-        return;
-    }
-
-    // NOVA LÓGICA: Chama a função inteligente para encontrar o título.
-    const sceneTitle = findSceneTitleFromText(text);
-    if (sceneTitle) {
-        document.getElementById('scenne-name').value = sceneTitle;
-    }
-
-    // O resto da função permanece exatamente o mesmo...
-
-    // Parte 1: Encontra atores já cadastrados
-    const addedBabesNames = [];
-    allBabes.forEach(babe => {
-        const babeNameRegex = new RegExp(`\\b${babe.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'gi');
-        if (babeNameRegex.test(text)) {
-            addBabeToSelected(babe);
-            addedBabesNames.push(babe.name.toLowerCase());
+            
+            if (canvas) {
+                const croppedImageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+                document.getElementById('actor-image-url').value = croppedImageBase64;
+                actorImagePreview.innerHTML = `<img src="${croppedImageBase64}" alt="Pré-visualização da imagem de perfil"><p>Imagem de Perfil</p>`;
+                console.log("[SUCESSO] Imagem recortada e adicionada ao formulário.");
+                closeCropper();
+            }
+        } catch (error) {
+            console.error("--- EXCEÇÃO CAPTURADA AO RECORTAR ---", error);
+            alert("Ocorreu um erro inesperado ao recortar a imagem. Verifique a consola (F12) para detalhes.");
         }
     });
 
-    // Parte 2: Encontra novos nomes com compromise.js
-    const doc = window.nlp(text);
-    const peopleFound = doc.people().out('array');
-    const newPotentialNames = peopleFound
-        .map(name => name.trim().replace("'s", ""))
-        .filter(name => name.includes(' '))
-        .filter(name => !addedBabesNames.includes(name.toLowerCase()))
-        .filter(name => !allBabes.some(babe => babe.name.toLowerCase() === name.toLowerCase()));
-    
-    const uniqueNewNames = [...new Set(newPotentialNames)];
+    document.getElementById('form-actor').addEventListener('submit', async (e) => { e.preventDefault(); const submitButton = e.target.querySelector('button[type="submit"]'); submitButton.disabled = true; submitButton.textContent = 'A criar...'; try { const actorName = document.getElementById('actor-name').value.trim(); if (!actorName) { alert("O nome do ator é obrigatório."); return; } if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um ator com o nome "${actorName}" já existe.`); return; } const nationId = document.getElementById('actor-nationality-id').value; if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; } const actorData = { name: actorName, searchName: actorName.toLowerCase(), nationId: nationId, birthDate: document.getElementById('actor-birth-date').value || null, starRating: parseInt(document.getElementById('actor-star').value, 10), imageUrl: document.getElementById('actor-image-url').value || null }; const result = await saveToFirebase('babes', actorData); if (result.success) resetActorForm(); } finally { submitButton.disabled = false; submitButton.textContent = 'Criar Actor'; } });
+    document.getElementById('actor-name').addEventListener('input', (e) => { clearTimeout(imageSearchTimeout); const name = e.target.value; if (name.length > 2) { imageSearchTimeout = setTimeout(() => { updateImageGallery(name); }, 500); } });
+    document.getElementById('actor-image-gallery').addEventListener('click', (e) => { if (e.target && e.target.tagName === 'IMG') openCropper(e.target.src); });
 
-    // Parte 3: Decide o que fazer a seguir
-    if (uniqueNewNames.length > 0) {
-        promptToCreateNewActors(uniqueNewNames);
-    } else {
-        closeModal();
-    }
-}
+    document.getElementById('form-scene').addEventListener('submit', (e) => { e.preventDefault(); alert('Lógica de salvar Scenne a ser implementada.'); });
+    document.getElementById('form-movie').addEventListener('submit', (e) => { e.preventDefault(); alert('Lógica de salvar Movie a ser implementada.'); });
 
-    function processTextForActor() {
-        const text = modalTextarea.value;
-        if (!text.trim()) { closeModal(); return; }
-        tempActorBioData = {};
-        const extractedData = {};
-        const lines = text.split('\n');
-        const cleanValue = (val) => val ? val.replace(/\[\d+\]/g, '').replace(/\(.*\)/g, '').trim() : null;
-        for (const line of lines) { if (line.trim()) { extractedData.name = cleanValue(line.trim()); break; } }
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i], key = null, rawValue = null;
-            if (line.includes('\t')) [key, rawValue] = line.split('\t').map(p => p.trim());
-            else if (line.includes(':')) [key, ...rawValue] = line.split(':'), rawValue = rawValue.join(':').trim();
-            if (!rawValue && lines[i + 1] && !lines[i + 1].includes('\t') && !lines[i + 1].includes(':')) { rawValue = lines[i + 1].trim(); }
-            if (!key) continue;
-            const value = cleanValue(rawValue);
-            const lowerKey = key.toLowerCase();
-            const months = { 'january': '01', 'february': '02', 'march': '03', 'april': '04', 'may': '05', 'june': '06', 'july': '07', 'august': '08', 'september': '09', 'october': '10', 'november': '11', 'december': '12' };
-            switch (lowerKey) {
-              case 'born': case 'date of birth':
-    if (value) {
-        // Tenta extrair o ano (4 dígitos)
-        const yearMatch = value.match(/\b(\d{4})\b/);
-        
-        // Tenta extrair o nome completo de um mês
-        const monthMatch = value.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i);
-        
-        // Tenta extrair o dia (1 ou 2 dígitos), ignorando sufixos como "st", "nd", "rd", "th"
-        const dayMatch = value.match(/\b(\d{1,2})(?:st|nd|rd|th)?\b/);
-
-        // Se encontrou todos os três componentes, monta a data no formato YYYY-MM-DD
-        if (yearMatch && monthMatch && dayMatch) {
-            const year = yearMatch[1];
-            const monthStr = monthMatch[1].toLowerCase();
-            const day = dayMatch[1];
-
-            // Converte o nome do mês para número
-            const month = months[monthStr];
-            
-            if (month) {
-                // Formata e armazena a data
-                extractedData.birthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            }
-        }
-    }
-    break;
-                case 'nationality':
-                    let demonym = (rawValue.match(/\((.*?)\)/)?.[1] || rawValue).split(',')[0].trim().toLowerCase();
-                    extractedData.nation = demonymToCountryMap[demonym] || demonym;
-                    break;
-            }
-        }
-        if (extractedData.name) document.getElementById('actor-name').value = extractedData.name;
-        if (extractedData.birthDate) document.getElementById('actor-birth-date').value = extractedData.birthDate;
-        if (extractedData.nation) {
-            const nationFound = allNations.find(n => n.name.toLowerCase() === extractedData.nation.toLowerCase());
-            if (nationFound) {
-                document.getElementById('actor-nationality-search').value = nationFound.name;
-                document.getElementById('actor-nationality-id').value = nationFound.id;
-            } else {
-                document.getElementById('actor-nationality-search').value = extractedData.nation;
-                alert(`Nacionalidade "${extractedData.nation}" não encontrada/mapeada.`);
-            }
-        }
-        closeModal();
-    }
-    
-    // --- FUNÇÃO DE INICIALIZAÇÃO PRINCIPAL ---
     async function initializePage() {
-        const [babes, nations, movies, scennes] = await Promise.all([
+        let [babes, nations, movies, studios] = await Promise.all([
             fetchFromFirebase('babes'), fetchFromFirebase('nations'),
-            fetchFromFirebase('movies'), fetchFromFirebase('scennes')
+            fetchFromFirebase('movies'),
+            fetchFromFirebase('studios')
         ]);
-        allBabes = babes.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-        allNations = nations.sort((a, b) => (a.name || '').localeCompare(b.name || ''));;
-        setupSearchableInput('scenne-babes-search', 'scenne-babes-results', allBabes, addBabeToSelected);
-        setupSearchableInput('actor-nationality-search', 'actor-nationality-results', allNations, selectNation);
-        populateSelect('scenne-movie-assoc', movies, 'Nenhum');
+        allBabes = babes || []; allNations = nations || []; allMovies = movies || []; allStudios = studios || [];
+
         populateStarRating();
+        setupSearchableInput('actor-nationality-search', 'actor-nationality-results', allNations, selectNation);
+        
+        setupSearchableInput('scene-movie-search', 'scene-movie-results', allMovies, (item) => {
+            document.getElementById('scene-movie-search').value = item.name;
+            document.getElementById('scene-movie-id').value = item.id;
+        });
+        setupSearchableInput('movie-studio-search', 'movie-studio-results', allStudios, (item) => {
+            document.getElementById('movie-studio-search').value = item.name;
+            document.getElementById('movie-studio-id').value = item.id;
+        });
+
+        const addActorToSelection = (actor, containerId) => {
+            const container = document.getElementById(containerId);
+            const pill = document.createElement('div');
+            pill.className = 'selected-item';
+            pill.dataset.id = actor.id;
+            pill.innerHTML = `<span>${actor.name}</span><button type="button">&times;</button>`;
+            pill.querySelector('button').onclick = () => pill.remove();
+            container.appendChild(pill);
+        };
+        setupSearchableInput('scene-actors-search', 'scene-actors-results', allBabes, (actor) => addActorToSelection(actor, 'scene-actors-selected'));
+        setupSearchableInput('movie-actors-search', 'movie-actors-results', allBabes, (actor) => addActorToSelection(actor, 'movie-actors-selected'));
     }
 
     initializePage();
-    </script>
+</script>
 </body>
 </html>
