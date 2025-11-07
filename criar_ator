@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Ator - Babefire</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        :root { --primary-color: #007BFF; --primary-hover: #0056b3; --light-gray: #f4f4f4; --gray: #ccc; --dark-gray: #555; --background-color: #ffffff; --text-color: #333; --border-radius: 8px; }
+        body { font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; background-color: var(--light-gray); color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { width: 100%; max-width: 800px; background-color: var(--background-color); padding: 25px; border-radius: var(--border-radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray); padding-bottom: 15px; margin-bottom: 15px; }
+        header h1 { margin: 0; font-size: 24px; color: var(--dark-gray); }
+        .tabs { display: flex; border-bottom: 2px solid var(--gray); margin-bottom: 20px; }
+        .tab-button { padding: 10px 20px; cursor: pointer; border: none; background-color: transparent; font-size: 16px; font-weight: 500; color: var(--dark-gray); border-bottom: 3px solid transparent; transition: all 0.3s ease; text-decoration: none; }
+        .tab-button.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+        .tab-button:hover { background-color: #e9e9e9; }
+        .tab-content { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        form { display: flex; flex-direction: column; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .form-group label { font-weight: 500; }
+        .form-group input[type="text"], .form-group input[type="date"], .form-group input[type="url"], .form-group select { width: 100%; padding: 10px; border: 1px solid var(--gray); border-radius: var(--border-radius); font-size: 16px; box-sizing: border-box; }
+        .search-container { position: relative; }
+        .search-results { position: absolute; top: 100%; left: 0; right: 0; background-color: white; border: 1px solid var(--gray); border-top: none; border-radius: 0 0 var(--border-radius) var(--border-radius); max-height: 200px; overflow-y: auto; z-index: 1000; display: none; }
+        .search-results.visible { display: block; }
+        .result-item { padding: 10px; cursor: pointer; }
+        .result-item:hover { background-color: var(--light-gray); }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal.visible { display: flex; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: var(--border-radius); position: relative; }
+        .modal-content h3 { margin-top: 0; }
+        .modal-close { position: absolute; top: 10px; right: 15px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        #modal-textarea { width: 100%; height: 200px; box-sizing: border-box; padding: 10px; font-family: inherit; font-size: 14px; border: 1px solid var(--gray); border-radius: var(--border-radius); margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Painel de Criação</h1>
+        </header>
+        <nav class="tabs">
+            <a href="criar_scenne.html" class="tab-button">Criar Scenne</a>
+            <a href="criar_ator.html" class="tab-button active">Criar Actor</a>
+            <a href="criar_movie.html" class="tab-button">Criar Movie</a>
+        </nav>
+        <main>
+            <section id="actor" class="tab-content">
+                <h2>Criar Novo Actor</h2>
+                <form id="form-actor">
+                    <div class="form-group"><div class="form-group-header"><label>Adição Rápida por Biografia</label><button type="button" class="btn-secondary" id="btn-add-actor-by-text">Analisar Texto</button></div></div>
+                    <div class="form-group"><label for="actor-name">Nome</label><input type="text" id="actor-name" required></div>
+                    <div class="form-group">
+                        <label for="actor-nationality-search">Nacionalidade</label>
+                        <div class="search-container">
+                            <input type="text" id="actor-nationality-search" placeholder="Digite para pesquisar..." required autocomplete="off">
+                            <input type="hidden" id="actor-nationality-id" name="nationId">
+                            <div class="search-results" id="actor-nationality-results"></div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label for="actor-birth-date">Data Nascimento (Opcional)</label><input type="date" id="actor-birth-date"></div>
+                    <div class="form-group"><label for="actor-star">Star (0-50)</label><select id="actor-star" required></select></div>
+                    <button type="submit" class="btn-create">Criar Actor</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <div id="text-add-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="btn-close-modal">&times;</span>
+            <h3 id="modal-title">Título do Modal</h3>
+            <div id="modal-description">Descrição do modal.</div>
+            <textarea id="modal-textarea" placeholder="Cole seu texto aqui..."></textarea>
+            <button type="button" class="btn-create" id="btn-modal-action">Ação</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+        // --- CONFIGURAÇÃO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA",
+            authDomain: "babefire-cc191.firebaseapp.com",
+            projectId: "babefire-cc191",
+            storageBucket: "babefire-cc191.appspot.com",
+            messagingSenderId: "574351844261",
+            appId: "1:574351844261:web:b2d038682b18f5d9b43e4c"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // --- VARIÁVEIS GLOBAIS DE ESTADO ---
+        let allBabes = [], allNations = [];
+        let tempActorBioData = {};
+        
+        // --- MAPEAMENTO DE GENTÍLICO PARA PAÍS ---
+        const demonymToCountryMap = {
+            'afghan': 'Afghanistan', 'albanian': 'Albania', 'algerian': 'Algeria', 'american': 'United States', 'andorran': 'Andorra',
+            'angolan': 'Angola', 'argentine': 'Argentina', 'armenian': 'Armenia', 'australian': 'Australia', 'austrian': 'Austria',
+            'azerbaijani': 'Azerbaijan', 'bahamian': 'Bahamas', 'bangladeshi': 'Bangladesh', 'belgian': 'Belgium', 'brazilian': 'Brazil',
+            'british': 'United Kingdom', 'canadian': 'Canada', 'colombian': 'Colombia', 'croatian': 'Croatia', 'cuban': 'Cuba',
+            'czech': 'Czech Republic', 'danish': 'Denmark', 'dutch': 'Netherlands', 'english': 'United Kingdom', 'estonian': 'Estonia',
+            'finnish': 'Finland', 'french': 'France', 'georgian': 'Georgia', 'german': 'Germany', 'greek': 'Greece', 'hungarian': 'Hungary',
+            'icelandic': 'Iceland', 'indian': 'India', 'indonesian': 'Indonesia', 'iranian': 'Iran', 'iraqi': 'Iraq', 'irish': 'Ireland',
+            'israeli': 'Israel', 'italian': 'Italy', 'japanese': 'Japan', 'latvian': 'Latvia', 'lithuanian': 'Lithuania', 'mexican': 'Mexico',
+            'moldovan': 'Moldova', 'nicaraguan': 'Nicaragua', 'norwegian': 'Norway', 'polish': 'Poland', 'portuguese': 'Portugal',
+            'romanian': 'Romania', 'russian': 'Russia', 'slovak': 'Slovakia', 'slovenian': 'Slovenia', 'spanish': 'Spain',
+            'swedish': 'Sweden', 'swiss': 'Switzerland', 'thai': 'Thailand', 'turkish': 'Turkey', 'ukrainian': 'Ukraine', 'venezuelan': 'Venezuela',
+        };
+
+        // --- SELETORES DE ELEMENTOS DOM ---
+        const textAddModal = document.getElementById('text-add-modal');
+        const btnAddActorByText = document.getElementById('btn-add-actor-by-text');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnModalAction = document.getElementById('btn-modal-action');
+        const modalTextarea = document.getElementById('modal-textarea');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDescription = document.getElementById('modal-description');
+
+        // --- FUNÇÕES DE INTERAÇÃO COM FIREBASE ---
+        async function checkIfNameExists(collectionName, name) {
+            const searchName = name.trim().toLowerCase();
+            if (!searchName) return false;
+            const q = query(collection(db, collectionName), where("searchName", "==", searchName));
+            try {
+                return !(await getDocs(q)).empty;
+            } catch (error) {
+                console.error(`Erro ao verificar:`, error);
+                return true;
+            }
+        }
+        
+        async function fetchFromFirebase(collectionName) {
+            try {
+                const snapshot = await getDocs(collection(db, collectionName));
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } catch (error) {
+                console.error(`Erro ao buscar '${collectionName}':`, error);
+                return [];
+            }
+        }
+        
+        async function saveToFirebase(collectionName, data) {
+            try {
+                const docRef = await addDoc(collection(db, collectionName), data);
+                alert(`${collectionName.slice(0, -1)} criado com sucesso!`);
+                return { success: true, id: docRef.id };
+            } catch (error) {
+                console.error("Erro ao salvar:", error);
+                alert("Erro ao salvar dados.");
+                return { success: false, id: null };
+            }
+        }
+
+        // --- FUNÇÕES UTILITÁRIAS E DE UI ---
+        function setupSearchableInput(inputId, resultsId, dataArray, onSelectCallback) {
+            const searchInput = document.getElementById(inputId);
+            const resultsContainer = document.getElementById(resultsId);
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                if (!searchTerm) { resultsContainer.classList.remove('visible'); return; }
+                const filteredData = dataArray.filter(item => (item.name || '').toLowerCase().includes(searchTerm));
+                resultsContainer.innerHTML = '';
+                if (filteredData.length > 0) {
+                    filteredData.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.textContent = item.name;
+                        div.addEventListener('click', () => { onSelectCallback(item); resultsContainer.classList.remove('visible'); });
+                        resultsContainer.appendChild(div);
+                    });
+                    resultsContainer.classList.add('visible');
+                } else { resultsContainer.classList.remove('visible'); }
+            });
+            document.addEventListener('click', (e) => {
+                if (!searchInput.parentElement.contains(e.target)) resultsContainer.classList.remove('visible');
+            });
+        }
+        
+        function populateStarRating() {
+            const select = document.getElementById('actor-star');
+            for (let i = 0; i <= 50; i++) select.innerHTML += `<option value="${i}">${i}</option>`;
+        }
+        
+        function selectNation(nation) {
+            document.getElementById('actor-nationality-search').value = nation.name;
+            document.getElementById('actor-nationality-id').value = nation.id;
+        }
+
+        function resetActorForm() { 
+            document.getElementById('form-actor').reset(); 
+            document.getElementById('actor-nationality-id').value = ''; 
+            tempActorBioData = {}; 
+        }
+        
+        // --- LÓGICA MODAL GENÉRICA ---
+        let currentModalAction = null;
+
+        function openModal(title, description, placeholder, actionText, actionCallback) {
+            modalTextarea.style.display = 'block';
+            btnModalAction.style.display = 'block';
+            modalTitle.textContent = title;
+            modalDescription.innerHTML = `<p>${description}</p>`;
+            modalTextarea.value = '';
+            modalTextarea.placeholder = placeholder;
+            btnModalAction.textContent = actionText;
+            if (currentModalAction) btnModalAction.removeEventListener('click', currentModalAction);
+            currentModalAction = actionCallback;
+            btnModalAction.addEventListener('click', currentModalAction);
+            textAddModal.classList.add('visible');
+        }
+
+        function closeModal() {
+            textAddModal.classList.remove('visible');
+            if (currentModalAction) {
+                btnModalAction.removeEventListener('click', currentModalAction);
+                currentModalAction = null;
+            }
+        }
+        
+        // --- LÓGICA DE SUBMISSÃO E EVENTOS ---
+        document.getElementById('form-actor').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const actorName = document.getElementById('actor-name').value;
+            if (!actorName) { alert("O nome do ator é obrigatório."); return; }
+            if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um actor com o nome "${actorName}" já existe.`); return; }
+            const nationId = document.getElementById('actor-nationality-id').value;
+            if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
+            const actorData = {
+                name: actorName, 
+                searchName: actorName.trim().toLowerCase(), 
+                nationId: nationId,
+                birthDate: document.getElementById('actor-birth-date').value || null,
+                starRating: parseInt(document.getElementById('actor-star').value, 10),
+                ...tempActorBioData, 
+                createdAt: new Date()
+            };
+            const result = await saveToFirebase('babes', actorData);
+            if (result.success) {
+                const newBabe = { id: result.id, ...actorData };
+                allBabes.push(newBabe);
+                allBabes.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                resetActorForm();
+            }
+        });
+        
+        btnAddActorByText.addEventListener('click', () => {
+            openModal( 'Analisar Biografia do Actor', 'Cole a biografia completa do ator. O sistema tentará extrair dados automaticamente.', 'Cole o texto da biografia aqui...', 'Analisar Actor', processTextForActor );
+        });
+        
+        btnCloseModal.addEventListener('click', closeModal);
+        window.addEventListener('click', (event) => { if (event.target == textAddModal) closeModal(); });
+        
+        // --- PARSER DE TEXTO PARA ATOR ---
+        function processTextForActor() {
+            const text = modalTextarea.value;
+            if (!text.trim()) { closeModal(); return; }
+            tempActorBioData = {};
+            const extractedData = {};
+            const lines = text.split('\n');
+            const cleanValue = (val) => val ? val.replace(/\[\d+\]/g, '').replace(/\(.*\)/g, '').trim() : null;
+            for (const line of lines) { if (line.trim()) { extractedData.name = cleanValue(line.trim()); break; } }
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i], key = null, rawValue = null;
+                if (line.includes('\t')) [key, rawValue] = line.split('\t').map(p => p.trim());
+                else if (line.includes(':')) [key, ...rawValue] = line.split(':'), rawValue = rawValue.join(':').trim();
+                if (!rawValue && lines[i + 1] && !lines[i + 1].includes('\t') && !lines[i + 1].includes(':')) { rawValue = lines[i + 1].trim(); }
+                if (!key) continue;
+                const value = cleanValue(rawValue);
+                const lowerKey = key.toLowerCase();
+                const months = { 'january': '01', 'february': '02', 'march': '03', 'april': '04', 'may': '05', 'june': '06', 'july': '07', 'august': '08', 'september': '09', 'october': '10', 'november': '11', 'december': '12' };
+                
+                switch (lowerKey) {
+                    case 'born': 
+                    case 'date of birth':
+                        if (value) {
+                            const yearMatch = value.match(/\b(\d{4})\b/);
+                            const monthMatch = value.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i);
+                            const dayMatch = value.match(/\b(\d{1,2})(?:st|nd|rd|th)?\b/);
+                            if (yearMatch && monthMatch && dayMatch) {
+                                const year = yearMatch[1];
+                                const monthStr = monthMatch[1].toLowerCase();
+                                const day = dayMatch[1];
+                                const month = months[monthStr];
+                                if (month) {
+                                    extractedData.birthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                                }
+                            }
+                        }
+                        break;
+                    case 'nationality':
+                        let demonym = (rawValue.match(/\((.*?)\)/)?.[1] || rawValue).split(',')[0].trim().toLowerCase();
+                        extractedData.nation = demonymToCountryMap[demonym] || demonym;
+                        break;
+                }
+            }
+
+            if (extractedData.name) document.getElementById('actor-name').value = extractedData.name;
+            if (extractedData.birthDate) document.getElementById('actor-birth-date').value = extractedData.birthDate;
+            if (extractedData.nation) {
+                const nationFound = allNations.find(n => n.name.toLowerCase() === extractedData.nation.toLowerCase());
+                if (nationFound) {
+                    document.getElementById('actor-nationality-search').value = nationFound.name;
+                    document.getElementById('actor-nationality-id').value = nationFound.id;
+                } else {
+                    document.getElementById('actor-nationality-search').value = extractedData.nation;
+                    alert(`Nacionalidade "${extractedData.nation}" não encontrada/mapeada.`);
+                }
+            }
+            closeModal();
+        }
+        
+        // --- FUNÇÃO DE INICIALIZAÇÃO PRINCIPAL ---
+        async function initializePage() {
+            // Verifica se um nome foi passado via URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const actorNameFromUrl = urlParams.get('name');
+            if (actorNameFromUrl) {
+                document.getElementById('actor-name').value = actorNameFromUrl;
+                document.getElementById('actor-nationality-search').focus();
+            }
+
+            const [babes, nations] = await Promise.all([
+                fetchFromFirebase('babes'), fetchFromFirebase('nations')
+            ]);
+            allBabes = babes.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            allNations = nations.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            
+            setupSearchableInput('actor-nationality-search', 'actor-nationality-results', allNations, selectNation);
+            populateStarRating();
+        }
+
+        initializePage();
+    </script>
+</body>
+</html>
