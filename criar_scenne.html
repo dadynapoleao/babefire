@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Scenne - Babefire</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        
+        :root {
+            --primary-color: #007BFF;
+            --primary-hover: #0056b3;
+            --light-gray: #f4f4f4;
+            --gray: #ccc;
+            --dark-gray: #555;
+            --background-color: #ffffff;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--background-color);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, .1);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--dark-gray);
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--gray);
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--dark-gray);
+            border-bottom: 3px solid transparent;
+            transition: all .3s ease;
+            text-decoration: none;
+        }
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        .tab-button:hover {
+            background-color: #e9e9e9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn .5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0 }
+            to { opacity: 1 }
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .form-group label {
+            font-weight: 500;
+        }
+        .form-group input[type=text],
+        .form-group input[type=date],
+        .form-group input[type=url],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--gray);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .search-container {
+            position: relative;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            border: 1px solid var(--gray);
+            border-top: none;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .search-results.visible {
+            display: block;
+        }
+        .result-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .result-item:hover {
+            background-color: var(--light-gray);
+        }
+        .selected-items-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            border: 1px solid var(--gray);
+            border-radius: var(--border-radius);
+            min-height: 40px;
+            background-color: #fafafa;
+        }
+        .selected-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        .remove-item {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            border: none;
+            background: 0 0;
+            color: #fff;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, .5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.visible {
+            display: flex;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--border-radius);
+            position: relative;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+        }
+        .modal-content ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .modal-content li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        #modal-textarea {
+            width: 100%;
+            height: 200px;
+            box-sizing: border-box;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            border: 1px solid var(--gray);
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Painel de Criação</h1>
+        </header>
+        <nav class="tabs">
+            <a href="criar_scenne.html" class="tab-button active">Criar Scenne</a>
+            <a href="criar_ator.html" class="tab-button">Criar Actor</a>
+            <a href="criar_movie.html" class="tab-button">Criar Movie</a>
+        </nav>
+        <main>
+            <section id="scene" class="tab-content active">
+                <h2>Criar Nova Scenne</h2>
+                <form id="form-scene">
+                    <div class="form-group">
+                        <label for="scenne-name">Nome da Scenne</label>
+                        <input type="text" id="scenne-name" required>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-group-header">
+                            <label for="scenne-babes-search">Pesquisar Babes</label>
+                            <button type="button" class="btn-secondary" id="btn-add-scene-by-text">Adicionar por Texto</button>
+                        </div>
+                        <div class="search-container">
+                            <input type="text" id="scenne-babes-search" placeholder="Digite para pesquisar e adicionar...">
+                            <div class="search-results" id="scenne-babes-results"></div>
+                        </div>
+                        <label style="margin-top: 10px;">Babes Selecionadas:</label>
+                        <div class="selected-items-container" id="scenne-babes-selected"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="scenne-date">Data (dd/mm/aaaa)</label>
+                        <input type="date" id="scenne-date" required>
+                    </div>
+                    <div class="form-group"><label for="scenne-image-url">URL da Imagem</label><input type="url" id="scenne-image-url" placeholder="https://..."></div>
+                    <div class="form-group"><label for="scenne-video-url">URL do Vídeo</label><input type="url" id="scenne-video-url" placeholder="https://..."></div>
+                    <div class="form-group"><label for="scenne-movie-assoc">Associar a Filme (Opcional)</label><select id="scenne-movie-assoc"><option value="">Carregando...</option></select></div>
+                    <button type="submit" class="btn-create">Criar Scenne</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <div id="text-add-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="btn-close-modal">&times;</span>
+            <h3 id="modal-title">Título do Modal</h3>
+            <div id="modal-description">Descrição do modal.</div>
+            <textarea id="modal-textarea" placeholder="Cole seu texto aqui..."></textarea>
+            <button type="button" class="btn-create" id="btn-modal-action">Ação</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/compromise"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        
+        // --- CONFIGURAÇÃO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA",
+            authDomain: "babefire-cc191.firebaseapp.com",
+            projectId: "babefire-cc191",
+            storageBucket: "babefire-cc191.appspot.com",
+            messagingSenderId: "574351844261",
+            appId: "1:574351844261:web:b2d038682b18f5d9b43e4c"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // --- VARIÁVEIS GLOBAIS DE ESTADO ---
+        let allBabes = [];
+        let allMovies = [];
+
+        // --- SELETORES DE ELEMENTOS DOM ---
+        const textAddModal = document.getElementById("text-add-modal");
+        const btnAddSceneByText = document.getElementById("btn-add-scene-by-text");
+        const btnCloseModal = document.getElementById("btn-close-modal");
+        const btnModalAction = document.getElementById("btn-modal-action");
+        const modalTextarea = document.getElementById("modal-textarea");
+        const modalTitle = document.getElementById("modal-title");
+        const modalDescription = document.getElementById("modal-description");
+        const formScene = document.getElementById("form-scene");
+
+        // --- FUNÇÕES DE INTERAÇÃO COM FIREBASE ---
+        async function fetchFromFirebase(collectionName) {
+            try {
+                const snapshot = await getDocs(collection(db, collectionName));
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } catch (error) {
+                console.error(`Erro ao buscar '${collectionName}':`, error);
+                return [];
+            }
+        }
+
+        async function saveToFirebase(collectionName, data) {
+            try {
+                const docRef = await addDoc(collection(db, collectionName), data);
+                const singularName = collectionName.slice(0, -1);
+                alert(`${singularName.charAt(0).toUpperCase() + singularName.slice(1)} criada com sucesso!`);
+                return { success: true, id: docRef.id };
+            } catch (error) {
+                console.error("Erro ao salvar:", error);
+                alert("Erro ao salvar dados.");
+                return { success: false, id: null };
+            }
+        }
+        
+        async function checkIfNameExists(collectionName, name) {
+            const searchName = name.trim().toLowerCase();
+            if (!searchName) return false;
+            const q = query(collection(db, collectionName), where("searchName", "==", searchName));
+            try {
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (error) {
+                console.error(`Erro ao verificar existência:`, error);
+                return true; 
+            }
+        }
+
+        // --- FUNÇÕES DE UI E UTILITÁRIAS ---
+        function setupSearchableInput(inputId, resultsId, dataArray, onSelectCallback) {
+            const searchInput = document.getElementById(inputId);
+            const resultsContainer = document.getElementById(resultsId);
+            searchInput.addEventListener("input", () => {
+                const searchTerm = searchInput.value.toLowerCase();
+                if (!searchTerm) {
+                    resultsContainer.classList.remove("visible");
+                    return;
+                }
+                const filteredData = dataArray.filter(item => (item.name || "").toLowerCase().includes(searchTerm));
+                resultsContainer.innerHTML = "";
+                if (filteredData.length > 0) {
+                    filteredData.forEach(item => {
+                        const div = document.createElement("div");
+                        div.className = "result-item";
+                        div.textContent = item.name;
+                        div.addEventListener("click", () => {
+                            onSelectCallback(item);
+                            resultsContainer.classList.remove("visible");
+                        });
+                        resultsContainer.appendChild(div);
+                    });
+                    resultsContainer.classList.add("visible");
+                } else {
+                    resultsContainer.classList.remove("visible");
+                }
+            });
+            document.addEventListener("click", (e) => {
+                if (!searchInput.parentElement.contains(e.target)) {
+                    resultsContainer.classList.remove("visible");
+                }
+            });
+        }
+
+        function populateSelect(elementId, items, placeholder) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = "";
+            if (placeholder) {
+                select.innerHTML += `<option value="">${placeholder}</option>`;
+            }
+            items.sort((a, b) => (a.name || "").localeCompare(b.name || "")).forEach(item => {
+                select.innerHTML += `<option value="${item.id}">${item.name || "Sem nome"}</option>`;
+            });
+        }
+
+        function addBabeToSelected(babe) {
+            const selectedContainer = document.getElementById("scenne-babes-selected");
+            if (document.querySelector(`.selected-item[data-id="${babe.id}"]`)) return;
+            const pill = document.createElement("div");
+            pill.className = "selected-item";
+            pill.dataset.id = babe.id;
+            pill.innerHTML = `<span>${babe.name}</span><button type="button" class="remove-item">&times;</button>`;
+            pill.querySelector(".remove-item").addEventListener("click", () => pill.remove());
+            selectedContainer.appendChild(pill);
+            document.getElementById("scenne-babes-search").value = "";
+        }
+
+        // --- LÓGICA DO MODAL ---
+        let currentModalAction = null;
+        function openModal(title, description, placeholder, actionText, actionCallback) {
+            modalTextarea.style.display = "block";
+            btnModalAction.style.display = "block";
+            modalTitle.textContent = title;
+            modalDescription.innerHTML = `<p>${description}</p>`;
+            modalTextarea.value = "";
+            modalTextarea.placeholder = placeholder;
+            btnModalAction.textContent = actionText;
+            if (currentModalAction) {
+                btnModalAction.removeEventListener("click", currentModalAction);
+            }
+            currentModalAction = actionCallback;
+            btnModalAction.addEventListener("click", currentModalAction);
+            textAddModal.classList.add("visible");
+        }
+
+        function closeModal() {
+            textAddModal.classList.remove("visible");
+            if (currentModalAction) {
+                btnModalAction.removeEventListener("click", currentModalAction);
+                currentModalAction = null;
+            }
+        }
+
+        // --- PARSERS DE TEXTO ---
+        function findSceneTitleFromText(text) {
+            const lines = text.split("\n").map(l => l.trim()).filter(l => l);
+            const rejectionList = ["fresh porno", "models", "channels", "tags", "webcams", "search", "download", "report", "related video", "dmca", "terms", "contacts"];
+            let potentialTitle = "";
+            for (const line of lines) {
+                const lowerLine = line.toLowerCase();
+                if (rejectionList.some(rejected => lowerLine.includes(rejected)) || line.split(" ").length < 4 || line.endsWith(".")) {
+                    continue;
+                }
+                potentialTitle = line;
+                break;
+            }
+            if (!potentialTitle && lines.length > 0 && !rejectionList.includes(lines[0].toLowerCase())) {
+                potentialTitle = lines[0];
+            }
+            return potentialTitle;
+        }
+
+        function promptToCreateNewActors(newNames) {
+            modalTitle.textContent = "Atores não reconhecidos foram encontrados";
+            let descriptionHtml = `<p>Os seguintes nomes foram detectados, mas não existem no banco de dados. Clique para criar um novo ator:</p><ul>`;
+            newNames.forEach(name => {
+                descriptionHtml += `<li><span>${name}</span> <button type="button" class="btn-secondary btn-create-actor-from-modal" data-name="${name}">Criar Ator</button></li>`;
+            });
+            descriptionHtml += `</ul><p>Ou feche esta janela para ignorar.</p>`;
+            modalDescription.innerHTML = descriptionHtml;
+            modalTextarea.style.display = "none";
+            btnModalAction.style.display = "none";
+            document.querySelectorAll(".btn-create-actor-from-modal").forEach(button => {
+                button.addEventListener("click", (e) => {
+                    window.location.href = `criar_ator.html?name=${encodeURIComponent(e.target.dataset.name)}`;
+                });
+            });
+        }
+        
+        function processTextForScene() {
+            console.clear();
+            console.log("================ INICIANDO ANÁLISE DE TEXTO DA SCENNE ================");
+            const text = modalTextarea.value;
+            if (!text.trim()) {
+                console.warn("Nenhum texto para analisar. Fechando modal.");
+                closeModal();
+                return;
+            }
+            console.log("[PASSO 1] Texto recebido para análise:", text);
+            console.log("\n[PASSO 2] Procurando pelo título da scenne...");
+            const sceneTitle = findSceneTitleFromText(text);
+            if (sceneTitle) {
+                document.getElementById("scenne-name").value = sceneTitle;
+                console.log(`[SUCESSO] Título encontrado e preenchido: "${sceneTitle}"`);
+            } else {
+                console.log("[AVISO] Nenhum título adequado foi encontrado no texto.");
+            }
+            console.log("\n[PASSO 3] Procurando pela data...");
+            console.log("[INFO] A extração de data do texto não está implementada. O campo 'Data' deve ser preenchido manualmente.");
+            console.log("\n[PASSO 4] Procurando por Babes existentes no banco de dados...");
+            const addedBabesNames = [];
+            allBabes.forEach(babe => {
+                const babeNameRegex = new RegExp(`\\b${babe.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`, "gi");
+                if (babeNameRegex.test(text)) {
+                    addBabeToSelected(babe);
+                    addedBabesNames.push(babe.name.toLowerCase());
+                    console.log(`[SUCESSO] Babe existente encontrada: "${babe.name}". Adicionada à lista de 'Selecionadas'.`);
+                }
+            });
+            if (addedBabesNames.length === 0) {
+                console.log("[INFO] Nenhuma Babe existente foi encontrada no texto.");
+            }
+            console.log("[EXPLICAÇÃO] O campo 'Pesquisar Babes' é uma ferramenta de entrada manual. Atores encontrados automaticamente são adicionados diretamente à caixa 'Babes Selecionadas'.");
+            console.log("\n[PASSO 5] Usando IA (compromise.js) para encontrar nomes de pessoas não cadastradas...");
+            const doc = window.nlp(text);
+            const peopleFound = doc.people().out("array");
+            console.log("[IA] Nomes de pessoas detectados (bruto):", peopleFound);
+            const newPotentialNames = peopleFound.map(name => name.trim().replace("'s", "")).filter(name => name.includes(" ")).filter(name => !addedBabesNames.includes(name.toLowerCase())).filter(name => !allBabes.some(babe => babe.name.toLowerCase() === name.toLowerCase()));
+            const uniqueNewNames = [...new Set(newPotentialNames)];
+            console.log("[IA] Nomes novos e únicos encontrados (após filtragem):", uniqueNewNames);
+            console.log("\n[PASSO 6] Decidindo a ação final...");
+            if (uniqueNewNames.length > 0) {
+                console.log("[AÇÃO] Nomes novos foram encontrados. Exibindo modal para criar novos atores.");
+                promptToCreateNewActors(uniqueNewNames);
+            } else {
+                console.log("[AÇÃO] Nenhum nome novo encontrado. Fechando o modal de análise.");
+                closeModal();
+            }
+            console.log("================ FIM DA ANÁLISE ================");
+        }
+
+        // --- LÓGICA DE SUBMISSÃO E EVENTOS ---
+        if (formScene) {
+            formScene.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const sceneName = document.getElementById('scenne-name').value.trim();
+                const sceneDate = document.getElementById('scenne-date').value;
+                const imageUrl = document.getElementById('scenne-image-url').value.trim();
+                const videoUrl = document.getElementById('scenne-video-url').value.trim();
+                const movieId = document.getElementById('scenne-movie-assoc').value;
+                const selectedBabes = document.querySelectorAll('#scenne-babes-selected .selected-item');
+                const babeIds = Array.from(selectedBabes).map(babe => babe.dataset.id);
+
+                if (!sceneName || !sceneDate || babeIds.length === 0) {
+                    alert("Por favor, preencha o Nome, a Data e selecione pelo menos uma Babe.");
+                    return;
+                }
+                if (await checkIfNameExists('scennes', sceneName)) {
+                    alert(`ERRO: Uma scenne com o nome "${sceneName}" já existe.`);
+                    return;
+                }
+                const sceneData = {
+                    name: sceneName, searchName: sceneName.toLowerCase(), date: sceneDate,
+                    imageUrl: imageUrl || null, videoUrl: videoUrl || null, movieId: movieId || null,
+                    babeIds: babeIds, createdAt: new Date()
+                };
+                const result = await saveToFirebase('scennes', sceneData);
+                if (result.success) {
+                    formScene.reset();
+                    document.getElementById('scenne-babes-selected').innerHTML = '';
+                }
+            });
+        } else {
+            console.error("ERRO CRÍTICO: O formulário com id 'form-scene' não foi encontrado.");
+        }
+
+        if (btnAddSceneByText) {
+            btnAddSceneByText.addEventListener("click", () => {
+                openModal("Analisar Texto da Cena", "Cole o texto abaixo. O sistema irá procurar por nomes de babes existentes e pelo título da cena.", "Cole o texto da página da cena aqui...", "Analisar Cena", processTextForScene);
+            });
+        } else {
+            console.error("ERRO CRÍTICO: O botão com id 'btn-add-scene-by-text' não foi encontrado.");
+        }
+
+        if (btnCloseModal) {
+            btnCloseModal.addEventListener("click", closeModal);
+        } else {
+            console.error("ERRO CRÍTICO: O botão com id 'btn-close-modal' não foi encontrado.");
+        }
+        
+        window.addEventListener("click", (event) => {
+            if (event.target == textAddModal) {
+                closeModal();
+            }
+        });
+        
+        // --- FUNÇÃO DE INICIALIZAÇÃO DA PÁGINA ---
+        async function initializePage() {
+            const [babes, movies] = await Promise.all([
+                fetchFromFirebase("babes"),
+                fetchFromFirebase("movies")
+            ]);
+            allBabes = babes.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+            allMovies = movies;
+            setupSearchableInput("scenne-babes-search", "scenne-babes-results", allBabes, addBabeToSelected);
+            populateSelect("scenne-movie-assoc", allMovies, "Nenhum");
+        }
+
+        initializePage();
+    </script>
+</body>
+</html>
