@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página de Criação Avançada - Babefire</title>
+    <title>Criar Actor - Babefire</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     
@@ -15,10 +15,10 @@
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray); padding-bottom: 15px; margin-bottom: 15px; }
         header h1 { margin: 0; font-size: 24px; color: var(--dark-gray); }
         .tabs { display: flex; border-bottom: 2px solid var(--gray); margin-bottom: 20px; }
-        .tab-button { padding: 10px 20px; cursor: pointer; border: none; background-color: transparent; font-size: 16px; font-weight: 500; color: var(--dark-gray); border-bottom: 3px solid transparent; transition: all 0.3s ease; }
+        .tab-button { padding: 10px 20px; cursor: pointer; border: none; background-color: transparent; font-size: 16px; font-weight: 500; color: var(--dark-gray); border-bottom: 3px solid transparent; transition: all 0.3s ease; text-decoration: none; }
         .tab-button.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+        .tab-button:hover { background-color: #e9e9e9; }
+        .tab-content { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         form { display: flex; flex-direction: column; gap: 18px; }
         .form-group { display: flex; flex-direction: column; }
@@ -41,14 +41,10 @@
         .btn-create:hover { background-color: var(--primary-hover); }
         .btn-secondary { background-color: #6c757d; color: white; }
         .btn-secondary:hover { background-color: #5a6268; }
-        
-        /* --- ESTILOS PARA NOVOS ELEMENTOS --- */
         .image-gallery-header { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
         #btn-add-external-image { padding: 2px 8px; font-size: 20px; line-height: 1; font-weight: bold; }
         #external-image-container { display: none; gap: 10px; margin-top: 10px; }
         #external-image-container input { flex-grow: 1; }
-        /* --- FIM DOS NOVOS ESTILOS --- */
-        
         #actor-image-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; padding: 10px; border: 1px solid var(--gray); border-radius: var(--border-radius); min-height: 140px; max-height: 280px; overflow-y: auto; background-color: #fafafa; }
         .gallery-img { width: 100%; height: 120px; object-fit: cover; border-radius: var(--border-radius); cursor: pointer; border: 3px solid transparent; transition: border-color 0.3s ease; }
         .gallery-img:hover { border-color: var(--primary-color); }
@@ -64,15 +60,16 @@
         <header>
             <h1>Painel de Criação</h1>
         </header>
+        
+        <!-- NAVEGAÇÃO ATUALIZADA -->
         <nav class="tabs">
-            <button class="tab-button" data-tab="scene">Criar Scenne</button>
-            <button class="tab-button active" data-tab="actor">Criar Actor</button>
-            <button class="tab-button" data-tab="movie">Criar Movie</button>
+            <a href="criar_scenne.html" class="tab-button">Criar Scenne</a>
+            <a href="#" class="tab-button active">Criar Actor</a>
+            <a href="criar_movie.html" class="tab-button">Criar Movie</a>
         </nav>
+
         <main>
-            <section id="scene" class="tab-content"></section>
-            
-            <section id="actor" class="tab-content active">
+            <section id="actor" class="tab-content">
                 <h2>Criar Novo Actor</h2>
                 <form id="form-actor" autocomplete="off">
                     <div class="form-group"><div class="form-group-header"><label>Adição Rápida por Biografia</label><button type="button" class="btn-secondary" id="btn-add-actor-by-text">Analisar Texto</button></div></div>
@@ -85,19 +82,14 @@
                     <div class="form-group">
                         <label>Imagem de Perfil</label>
                         <div id="actor-image-preview"><p>A imagem selecionada aparecerá aqui.</p></div>
-                        
-                        <!-- NOVO: CABEÇALHO DA GALERIA COM BOTÃO + -->
                         <div class="image-gallery-header">
                             <label>Resultados da Pesquisa de Imagens:</label>
                             <button type="button" class="btn-secondary" id="btn-add-external-image" title="Adicionar imagem por URL">+</button>
                         </div>
-                        
-                        <!-- NOVO: CAMPO PARA INSERIR URL EXTERNO (INICIALMENTE OCULTO) -->
                         <div id="external-image-container">
                             <input type="url" id="external-image-url" placeholder="Cole o URL da imagem aqui...">
                             <button type="button" class="btn-create" id="btn-load-external-image">Carregar</button>
                         </div>
-
                         <div id="actor-image-gallery"><p>Digite um nome para carregar as imagens.</p></div>
                         <input type="hidden" id="actor-image-url">
                     </div>
@@ -105,8 +97,6 @@
                     <button type="submit" class="btn-create">Criar Actor</button>
                 </form>
             </section>
-            
-            <section id="movie" class="tab-content"></section>
         </main>
     </div>
 
@@ -129,7 +119,6 @@
     
     const demonymToCountryMap = { 'american': 'United States', 'brazilian': 'Brazil', 'russian': 'Russia', /* etc. */ };
 
-    // --- SELETORES DE ELEMENTOS DOM ---
     const textAddModal = document.getElementById('text-add-modal');
     const btnAddActorByText = document.getElementById('btn-add-actor-by-text');
     const btnCloseTextModal = document.getElementById('btn-close-text-modal');
@@ -139,13 +128,11 @@
     const btnCropCancel = document.getElementById('btn-crop-cancel');
     const btnCropSave = document.getElementById('btn-crop-save');
     const actorImagePreview = document.getElementById('actor-image-preview');
-    // NOVOS seletores
     const btnAddExternalImage = document.getElementById('btn-add-external-image');
     const externalImageContainer = document.getElementById('external-image-container');
     const externalImageUrlInput = document.getElementById('external-image-url');
     const btnLoadExternalImage = document.getElementById('btn-load-external-image');
 
-    // --- FUNÇÕES DE FIREBASE E UTILITÁRIOS ---
     async function fetchFromFirebase(collectionName) { try { const snapshot = await getDocs(collection(db, collectionName)); return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); } catch (error) { console.error(`Erro ao buscar '${collectionName}':`, error); return []; } }
     async function saveToFirebase(collectionName, data) { try { const docRef = await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp() }); alert(`${collectionName.replace(/s$/, '')} criado com sucesso!`); return { success: true, id: docRef.id }; } catch (error) { console.error("Erro ao salvar:", error); alert("Erro ao salvar dados."); return { success: false, id: null }; } }
     async function checkIfNameExists(collectionName, name) { const searchName = name.trim().toLowerCase(); if (!searchName) return false; const q = query(collection(db, collectionName), where("searchName", "==", searchName)); try { return !(await getDocs(q)).empty; } catch (error) { console.error(`Erro ao verificar:`, error); return true; } }
@@ -154,20 +141,16 @@
     function resetActorForm() { document.getElementById('form-actor').reset(); document.getElementById('actor-nationality-id').value = ''; document.getElementById('actor-image-gallery').innerHTML = '<p>Digite um nome para carregar as imagens.</p>'; actorImagePreview.innerHTML = '<p>A imagem selecionada aparecerá aqui.</p>'; document.getElementById('actor-image-url').value = ''; externalImageContainer.style.display = 'none'; }
     function selectNation(nation) { document.getElementById('actor-nationality-search').value = nation.name; document.getElementById('actor-nationality-id').value = nation.id; }
     
-    // --- LÓGICA DO MODAL DE ANÁLISE DE TEXTO ---
     function openTextModal() { modalTextarea.value = ''; textAddModal.classList.add('visible'); }
     function closeTextModal() { textAddModal.classList.remove('visible'); }
     function processTextForActor() { const text = modalTextarea.value; if (!text.trim()) { closeTextModal(); return; } const extractedData = {}; const lines = text.split('\n'); const cleanValue = (val) => val ? val.replace(/\[\d+\]/g, '').replace(/\(.*\)/g, '').trim() : null; for (const line of lines) { if (line.trim()) { extractedData.name = cleanValue(line.trim()); break; } } for (let i = 0; i < lines.length; i++) { let line = lines[i], key = null, rawValue = null; if (line.includes('\t')) [key, rawValue] = line.split('\t').map(p => p.trim()); else if (line.includes(':')) [key, ...rawValue] = line.split(':'), rawValue = rawValue.join(':').trim(); if (!rawValue && lines[i + 1] && !lines[i + 1].includes('\t') && !lines[i + 1].includes(':')) rawValue = lines[i + 1].trim(); if (!key) continue; const value = cleanValue(rawValue); const lowerKey = key.toLowerCase(); const months = { 'january': '01', 'february': '02', 'march': '03', 'april': '04', 'may': '05', 'june': '06', 'july': '07', 'august': '08', 'september': '09', 'october': '10', 'november': '11', 'december': '12' }; if (lowerKey.includes('born') || lowerKey.includes('date of birth')) { const yearMatch = value.match(/\b(\d{4})\b/); const monthMatch = value.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i); const dayMatch = value.match(/\b(\d{1,2})(?:st|nd|rd|th)?\b/); if (yearMatch && monthMatch && dayMatch) { const month = months[monthMatch[1].toLowerCase()]; if (month) extractedData.birthDate = `${yearMatch[1]}-${month.padStart(2, '0')}-${dayMatch[1].padStart(2, '0')}`; } } else if (lowerKey.includes('nationality')) { let demonym = (rawValue.match(/\((.*?)\)/)?.[1] || rawValue).split(/,| /)[0].trim().toLowerCase(); extractedData.nation = demonymToCountryMap[demonym] || demonym; } } if (extractedData.name) { document.getElementById('actor-name').value = extractedData.name; document.getElementById('actor-name').dispatchEvent(new Event('input')); } if (extractedData.birthDate) document.getElementById('actor-birth-date').value = extractedData.birthDate; if (extractedData.nation) { const nationFound = allNations.find(n => n.name.toLowerCase() === extractedData.nation.toLowerCase()); if (nationFound) selectNation(nationFound); else { document.getElementById('actor-nationality-search').value = extractedData.nation; alert(`Nacionalidade "${extractedData.nation}" não encontrada.`); } } closeTextModal(); }
 
-    // --- LÓGICA DE BUSCA E RECORTE DE IMAGEM ---
     function generateImageUrls(name) { if (!name || name.trim() === '') return []; const formattedName = encodeURIComponent(name.trim()); const baseUrl = 'https://www.babepedia.com/'; return [ `${baseUrl}pics/${formattedName}.jpg`, ...Array.from({length: 4}, (_, i) => `${baseUrl}pics/${formattedName}${i + 2}.jpg`), `${baseUrl}user-uploads/${formattedName}.jpg`, ...Array.from({length: 6}, (_, i) => `${baseUrl}user-uploads/${formattedName}${i + 10}.jpg`) ]; }
     async function updateImageGallery(name) { const gallery = document.getElementById('actor-image-gallery'); gallery.innerHTML = '<p>A procurar imagens...</p>'; const potentialUrls = generateImageUrls(name); const checkImage = (url) => new Promise(resolve => { const img = new Image(); img.onload = () => resolve({ status: 'fulfilled', value: url }); img.onerror = () => resolve({ status: 'rejected' }); img.src = url; }); const results = await Promise.allSettled(potentialUrls.map(checkImage)); const validUrls = results.filter(r => r.status === 'fulfilled' && r.value.status === 'fulfilled').map(r => r.value.value); if (validUrls.length === 0) { gallery.innerHTML = '<p>Nenhuma imagem encontrada para este nome.</p>'; } else { gallery.innerHTML = ''; validUrls.forEach(url => { const imgElement = document.createElement('img'); imgElement.src = url; imgElement.className = 'gallery-img'; imgElement.alt = `Imagem de ${name}`; gallery.appendChild(imgElement); }); } }
     async function openCropper(imageUrl) { cropperModal.classList.add('visible'); if (cropper) cropper.destroy(); try { const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageUrl)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`Falha na rede (Status: ${response.status})`); const imageBlob = await response.blob(); if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = URL.createObjectURL(imageBlob); const imageElement = document.getElementById('image-to-crop'); imageElement.src = currentObjectUrl; cropper = new Cropper(imageElement, { aspectRatio: 1 / 1, viewMode: 1, background: false, autoCropArea: 0.9, responsive: true }); } catch (error) { console.error("Falha ao carregar a imagem via proxy:", error); alert("Erro ao carregar imagem. Verifique o URL ou tente outra."); closeCropper(); } }
     function closeCropper() { if (cropper) { cropper.destroy(); cropper = null; } if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; } cropperModal.classList.remove('visible'); }
 
     // --- EVENT LISTENERS E INICIALIZAÇÃO ---
-    document.querySelectorAll('.tab-button').forEach(tab => { tab.addEventListener('click', (e) => { document.querySelectorAll('.tab-button, .tab-content').forEach(item => item.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(e.currentTarget.dataset.tab).classList.add('active'); }); });
-    
     btnAddActorByText.addEventListener('click', openTextModal);
     btnModalAction.addEventListener('click', processTextForActor);
     btnCloseTextModal.addEventListener('click', closeTextModal);
@@ -175,20 +158,8 @@
     btnCropCancel.addEventListener('click', closeCropper);
     btnCropSave.addEventListener('click', () => { if (!cropper) return; const canvas = cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' }); const croppedImageBase64 = canvas.toDataURL('image/jpeg', 0.9); document.getElementById('actor-image-url').value = croppedImageBase64; actorImagePreview.innerHTML = `<img src="${croppedImageBase64}" alt="Pré-visualização"><p>Imagem de Perfil</p>`; closeCropper(); });
     
-    // NOVO: Event listeners para a funcionalidade de imagem externa
-    btnAddExternalImage.addEventListener('click', () => {
-        const isVisible = externalImageContainer.style.display === 'flex';
-        externalImageContainer.style.display = isVisible ? 'none' : 'flex';
-    });
-    btnLoadExternalImage.addEventListener('click', () => {
-        const imageUrl = externalImageUrlInput.value.trim();
-        if (imageUrl) {
-            openCropper(imageUrl);
-            externalImageUrlInput.value = ''; // Limpa o campo após o uso
-        } else {
-            alert('Por favor, insira um URL de imagem válido.');
-        }
-    });
+    btnAddExternalImage.addEventListener('click', () => { const isVisible = externalImageContainer.style.display === 'flex'; externalImageContainer.style.display = isVisible ? 'none' : 'flex'; });
+    btnLoadExternalImage.addEventListener('click', () => { const imageUrl = externalImageUrlInput.value.trim(); if (imageUrl) { openCropper(imageUrl); externalImageUrlInput.value = ''; } else { alert('Por favor, insira um URL de imagem válido.'); } });
 
     window.addEventListener('click', (event) => { if (event.target == textAddModal) closeTextModal(); if (event.target == cropperModal) closeCropper(); });
 
