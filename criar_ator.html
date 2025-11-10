@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     
     <style>
+        /* O seu CSS permanece exatamente o mesmo */
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
         :root { --primary-color: #007BFF; --primary-hover: #0056b3; --light-gray: #f4f4f4; --gray: #ccc; --dark-gray: #555; --background-color: #ffffff; --text-color: #333; --border-radius: 8px; }
         body { font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; background-color: var(--light-gray); color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
@@ -56,12 +57,12 @@
     </style>
 </head>
 <body>
+    <!-- O seu HTML do BODY permanece o mesmo, incluindo o botão "Procurar" -->
     <div class="container">
         <header>
             <h1>Painel de Criação</h1>
         </header>
         
-        <!-- NAVEGAÇÃO ATUALIZADA -->
         <nav class="tabs">
             <a href="criar_scenne.html" class="tab-button">Criar Scenne</a>
             <a href="#" class="tab-button active">Criar Actor</a>
@@ -73,7 +74,15 @@
                 <h2>Criar Novo Actor</h2>
                 <form id="form-actor" autocomplete="off">
                     <div class="form-group"><div class="form-group-header"><label>Adição Rápida por Biografia</label><button type="button" class="btn-secondary" id="btn-add-actor-by-text">Analisar Texto</button></div></div>
-                    <div class="form-group"><label for="actor-name">Nome</label><input type="text" id="actor-name" required></div>
+                    
+                    <div class="form-group">
+                        <label for="actor-name">Nome</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="actor-name" required style="flex-grow: 1;">
+                            <button type="button" class="btn-secondary" id="btn-fetch-babepedia" style="flex-shrink: 0;">Procurar</button>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label for="actor-nationality-search">Nacionalidade</label>
                         <div class="search-container"><input type="text" id="actor-nationality-search" placeholder="Digite para pesquisar..." required><input type="hidden" id="actor-nationality-id"><div class="search-results" id="actor-nationality-results"></div></div>
@@ -105,12 +114,16 @@
     <div id="cropper-modal" class="modal"><div class="modal-content"><h3>Redimensionar Imagem</h3><div id="image-to-crop-container"><img id="image-to-crop" src="" alt="Imagem para recortar" style="max-width:100%;"></div><div class="modal-footer"><button type="button" id="btn-crop-cancel" class="btn-secondary">Cancelar</button><button type="button" id="btn-crop-save" class="btn-create">Gravar</button></div></div></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <!-- REMOVIDA A IMPORTAÇÃO ANTIGA E INCORRETA DO CHEERIO -->
     
-  <script type="module">
+   <script type="module">
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-    // ... (todo o seu código de configuração do Firebase e seletores de DOM permanece igual)
+    // O resto do seu código permanece praticamente o mesmo, com a função de scraping
+    // usando a variável 'cheerio' que acabámos de importar.
+
     const firebaseConfig = { apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA", authDomain: "babefire-cc191.firebaseapp.com", projectId: "babefire-cc191", storageBucket: "babefire-cc191.appspot.com", messagingSenderId: "574351844261", appId: "1:574351844261:web:b2d038682b18f5d9b43e4c" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -133,8 +146,8 @@
     const externalImageContainer = document.getElementById('external-image-container');
     const externalImageUrlInput = document.getElementById('external-image-url');
     const btnLoadExternalImage = document.getElementById('btn-load-external-image');
+    const btnFetchBabepedia = document.getElementById('btn-fetch-babepedia');
 
-    // ... (todas as suas funções utilitárias como fetchFromFirebase, setupSearchableInput, etc., permanecem iguais)
     async function fetchFromFirebase(collectionName) { try { const snapshot = await getDocs(collection(db, collectionName)); return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); } catch (error) { console.error(`Erro ao buscar '${collectionName}':`, error); return []; } }
     async function saveToFirebase(collectionName, data) { try { const docRef = await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp() }); alert(`${collectionName.replace(/s$/, '')} criado com sucesso!`); return { success: true, id: docRef.id }; } catch (error) { console.error("Erro ao salvar:", error); alert("Erro ao salvar dados."); return { success: false, id: null }; } }
     async function checkIfNameExists(collectionName, name) { const searchName = name.trim().toLowerCase(); if (!searchName) return false; const q = query(collection(db, collectionName), where("searchName", "==", searchName)); try { return !(await getDocs(q)).empty; } catch (error) { console.error(`Erro ao verificar:`, error); return true; } }
@@ -142,18 +155,67 @@
     function populateStarRating() { const select = document.getElementById('actor-star'); for (let i = 0; i <= 50; i++) select.innerHTML += `<option value="${i}">${i}</option>`; }
     function resetActorForm() { document.getElementById('form-actor').reset(); document.getElementById('actor-nationality-id').value = ''; document.getElementById('actor-image-gallery').innerHTML = '<p>Digite um nome para carregar as imagens.</p>'; actorImagePreview.innerHTML = '<p>A imagem selecionada aparecerá aqui.</p>'; document.getElementById('actor-image-url').value = ''; externalImageContainer.style.display = 'none'; }
     function selectNation(nation) { document.getElementById('actor-nationality-search').value = nation.name; document.getElementById('actor-nationality-id').value = nation.id; }
+    
     function openTextModal() { modalTextarea.value = ''; textAddModal.classList.add('visible'); }
     function closeTextModal() { textAddModal.classList.remove('visible'); }
     function processTextForActor() { const text = modalTextarea.value; if (!text.trim()) { closeTextModal(); return; } const extractedData = {}; const lines = text.split('\n'); const cleanValue = (val) => val ? val.replace(/\[\d+\]/g, '').replace(/\(.*\)/g, '').trim() : null; for (const line of lines) { if (line.trim()) { extractedData.name = cleanValue(line.trim()); break; } } for (let i = 0; i < lines.length; i++) { let line = lines[i], key = null, rawValue = null; if (line.includes('\t')) [key, rawValue] = line.split('\t').map(p => p.trim()); else if (line.includes(':')) [key, ...rawValue] = line.split(':'), rawValue = rawValue.join(':').trim(); if (!rawValue && lines[i + 1] && !lines[i + 1].includes('\t') && !lines[i + 1].includes(':')) rawValue = lines[i + 1].trim(); if (!key) continue; const value = cleanValue(rawValue); const lowerKey = key.toLowerCase(); const months = { 'january': '01', 'february': '02', 'march': '03', 'april': '04', 'may': '05', 'june': '06', 'july': '07', 'august': '08', 'september': '09', 'october': '10', 'november': '11', 'december': '12' }; if (lowerKey.includes('born') || lowerKey.includes('date of birth')) { const yearMatch = value.match(/\b(\d{4})\b/); const monthMatch = value.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i); const dayMatch = value.match(/\b(\d{1,2})(?:st|nd|rd|th)?\b/); if (yearMatch && monthMatch && dayMatch) { const month = months[monthMatch[1].toLowerCase()]; if (month) extractedData.birthDate = `${yearMatch[1]}-${month.padStart(2, '0')}-${dayMatch[1].padStart(2, '0')}`; } } else if (lowerKey.includes('nationality')) { let demonym = (rawValue.match(/\((.*?)\)/)?.[1] || rawValue).split(/,| /)[0].trim().toLowerCase(); extractedData.nation = demonymToCountryMap[demonym] || demonym; } } if (extractedData.name) { document.getElementById('actor-name').value = extractedData.name; document.getElementById('actor-name').dispatchEvent(new Event('input')); } if (extractedData.birthDate) document.getElementById('actor-birth-date').value = extractedData.birthDate; if (extractedData.nation) { const nationFound = allNations.find(n => n.name.toLowerCase() === extractedData.nation.toLowerCase()); if (nationFound) selectNation(nationFound); else { document.getElementById('actor-nationality-search').value = extractedData.nation; alert(`Nacionalidade "${extractedData.nation}" não encontrada.`); } } closeTextModal(); }
+
     function generateImageUrls(name) { if (!name || name.trim() === '') return []; const formattedName = encodeURIComponent(name.trim()); const baseUrl = 'https://www.babepedia.com/'; return [ `${baseUrl}pics/${formattedName}.jpg`, ...Array.from({length: 4}, (_, i) => `${baseUrl}pics/${formattedName}${i + 2}.jpg`), `${baseUrl}user-uploads/${formattedName}.jpg`, ...Array.from({length: 6}, (_, i) => `${baseUrl}user-uploads/${formattedName}${i + 10}.jpg`) ]; }
     async function updateImageGallery(name) { const gallery = document.getElementById('actor-image-gallery'); gallery.innerHTML = '<p>A procurar imagens...</p>'; const potentialUrls = generateImageUrls(name); const checkImage = (url) => new Promise(resolve => { const img = new Image(); img.onload = () => resolve({ status: 'fulfilled', value: url }); img.onerror = () => resolve({ status: 'rejected' }); img.src = url; }); const results = await Promise.allSettled(potentialUrls.map(checkImage)); const validUrls = results.filter(r => r.status === 'fulfilled' && r.value.status === 'fulfilled').map(r => r.value.value); if (validUrls.length === 0) { gallery.innerHTML = '<p>Nenhuma imagem encontrada para este nome.</p>'; } else { gallery.innerHTML = ''; validUrls.forEach(url => { const imgElement = document.createElement('img'); imgElement.src = url; imgElement.className = 'gallery-img'; imgElement.alt = `Imagem de ${name}`; gallery.appendChild(imgElement); }); } }
     async function openCropper(imageUrl) { cropperModal.classList.add('visible'); if (cropper) cropper.destroy(); try { const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageUrl)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`Falha na rede (Status: ${response.status})`); const imageBlob = await response.blob(); if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = URL.createObjectURL(imageBlob); const imageElement = document.getElementById('image-to-crop'); imageElement.src = currentObjectUrl; cropper = new Cropper(imageElement, { aspectRatio: 1 / 1, viewMode: 1, background: false, autoCropArea: 0.9, responsive: true }); } catch (error) { console.error("Falha ao carregar a imagem via proxy:", error); alert("Erro ao carregar imagem. Verifique o URL ou tente outra."); closeCropper(); } }
     function closeCropper() { if (cropper) { cropper.destroy(); cropper = null; } if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; } cropperModal.classList.remove('visible'); }
 
+async function fetchAndFillActorData() {
+    const nameInput = document.getElementById('actor-name');
+    let actorName = nameInput.value.trim();
+    if (!actorName) {
+        alert('Por favor, insira um nome de ator para procurar.');
+        return;
+    }
+    const formattedName = actorName.replace(/\s+/g, '_');
+    
+    // O URL aponta para a NOSSA PRÓPRIA FUNÇÃO (o caminho relativo funciona após o deploy)
+    const apiUrl = `/.netlify/functions/scrapeBabepedia?name=${formattedName}`;
+
+    btnFetchBabepedia.textContent = 'A procurar...';
+    btnFetchBabepedia.disabled = true;
+
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro desconhecido');
+
+        console.log("Dados recebidos da API Netlify:", data);
+
+        // O código de preenchimento do formulário permanece o mesmo
+        if (data.birthDate) document.getElementById('actor-birth-date').value = data.birthDate;
+        if (data.nation) {
+            const nationFound = allNations.find(n => n.name.toLowerCase() === data.nation.toLowerCase());
+            if (nationFound) {
+                selectNation(nationFound);
+            } else {
+                document.getElementById('actor-nationality-search').value = data.nation;
+                alert(`Nacionalidade "${data.nation}" preenchida, mas não encontrada na sua base de dados.`);
+            }
+        }
+        if (data.mainImageUrl) {
+            nameInput.dispatchEvent(new Event('input', { bubbles: true })); 
+            openCropper(data.mainImageUrl);
+        }
+        
+    } catch (error) {
+        alert(`Erro ao procurar dados: ${error.message}`);
+    } finally {
+        btnFetchBabepedia.textContent = 'Procurar';
+        btnFetchBabepedia.disabled = false;
+    }
+}
+
     // --- EVENT LISTENERS E INICIALIZAÇÃO ---
     btnAddActorByText.addEventListener('click', openTextModal);
     btnModalAction.addEventListener('click', processTextForActor);
     btnCloseTextModal.addEventListener('click', closeTextModal);
+    btnFetchBabepedia.addEventListener('click', fetchAndFillActorData);
     
     btnCropCancel.addEventListener('click', closeCropper);
     btnCropSave.addEventListener('click', () => { if (!cropper) return; const canvas = cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' }); const croppedImageBase64 = canvas.toDataURL('image/jpeg', 0.9); document.getElementById('actor-image-url').value = croppedImageBase64; actorImagePreview.innerHTML = `<img src="${croppedImageBase64}" alt="Pré-visualização"><p>Imagem de Perfil</p>`; closeCropper(); });
@@ -163,8 +225,6 @@
 
     window.addEventListener('click', (event) => { if (event.target == textAddModal) closeTextModal(); if (event.target == cropperModal) closeCropper(); });
 
-
-    // --- FUNÇÃO DE SUBMISSÃO MODIFICADA ---
     document.getElementById('form-actor').addEventListener('submit', async (e) => {
         e.preventDefault();
         const submitButton = e.target.querySelector('button[type="submit"]');
@@ -172,61 +232,30 @@
         submitButton.textContent = 'A criar...';
         try {
             const actorName = document.getElementById('actor-name').value.trim();
-            if (!actorName) {
-                alert("O nome do ator é obrigatório.");
-                return;
-            }
-            if (await checkIfNameExists('babes', actorName)) {
-                alert(`ERRO: Um ator com o nome "${actorName}" já existe.`);
-                return;
-            }
+            if (!actorName) { alert("O nome do ator é obrigatório."); return; }
+            if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um ator com o nome "${actorName}" já existe.`); return; }
             const nationId = document.getElementById('actor-nationality-id').value;
-            if (!nationId) {
-                alert("Por favor, selecione uma nacionalidade da lista.");
-                return;
-            }
-            const actorData = {
-                name: actorName,
-                searchName: actorName.toLowerCase(),
-                nationId: nationId,
-                birthDate: document.getElementById('actor-birth-date').value || null,
-                starRating: parseInt(document.getElementById('actor-star').value, 10),
-                imageUrl: document.getElementById('actor-image-url').value || null
-            };
-
+            if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
+            const actorData = { name: actorName, searchName: actorName.toLowerCase(), nationId: nationId, birthDate: document.getElementById('actor-birth-date').value || null, starRating: parseInt(document.getElementById('actor-star').value, 10), imageUrl: document.getElementById('actor-image-url').value || null };
+            
             const result = await saveToFirebase('babes', actorData);
 
-            // --- INÍCIO DA NOVA LÓGICA DE TRANSMISSÃO ---
             if (result.success) {
-                // 1. Cria ou conecta-se ao canal de comunicação
                 const actorChannel = new BroadcastChannel('canal_de_atores');
-                
-                // 2. Prepara o objeto completo do novo ator para enviar
                 const newActor = { id: result.id, ...actorData };
-
-                // 3. Envia (transmite) os dados do novo ator pelo canal
                 actorChannel.postMessage(newActor);
-                console.log("[BroadcastChannel] Dados do novo ator enviados:", newActor);
-
-                // 4. Fecha o canal (boa prática)
                 actorChannel.close();
-
-                // 5. Fecha este separador automaticamente
                 window.close();
             }
-            // --- FIM DA NOVA LÓGICA DE TRANSMISSÃO ---
-
         } finally {
-            // Este código só será executado se ocorrer um erro antes de window.close()
             submitButton.disabled = false;
             submitButton.textContent = 'Criar Actor';
         }
     });
-
+    
     document.getElementById('actor-name').addEventListener('input', (e) => { clearTimeout(imageSearchTimeout); const name = e.target.value; if (name.length > 2) { imageSearchTimeout = setTimeout(() => updateImageGallery(name), 500); } });
     document.getElementById('actor-image-gallery').addEventListener('click', (e) => { if (e.target?.tagName === 'IMG') openCropper(e.target.src); });
 
-    // --- FUNÇÃO DE INICIALIZAÇÃO MODIFICADA ---
     async function initializePage() {
         const [babes, nations] = await Promise.all([ fetchFromFirebase('babes'), fetchFromFirebase('nations') ]);
         allBabes = babes.sort((a,b) => (a.name || '').localeCompare(b.name || ''));
@@ -234,18 +263,14 @@
         populateStarRating();
         setupSearchableInput('actor-nationality-search', 'actor-nationality-results', allNations, selectNation);
 
-        // --- INÍCIO DA NOVA LÓGICA PARA LER A URL ---
-        // Procura por parâmetros na URL da página
         const urlParams = new URLSearchParams(window.location.search);
         const actorNameFromUrl = urlParams.get('name');
 
         if (actorNameFromUrl) {
             const nameInput = document.getElementById('actor-name');
             nameInput.value = actorNameFromUrl;
-            // Dispara o evento 'input' para que a busca de imagens seja acionada
             nameInput.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        // --- FIM DA NOVA LÓGICA PARA LER A URL ---
     }
 
     initializePage();
