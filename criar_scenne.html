@@ -453,74 +453,183 @@
             return potentialTitle;
         }
 
-        function promptToCreateNewActors(newNames) {
-            modalTitle.textContent = "Atores não reconhecidos foram encontrados";
-            let descriptionHtml = `<p>Os seguintes nomes foram detectados, mas não existem no banco de dados. Clique para criar um novo ator:</p><ul>`;
-            newNames.forEach(name => {
-                descriptionHtml += `<li><span>${name}</span> <button type="button" class="btn-secondary btn-create-actor-from-modal" data-name="${name}">Criar Ator</button></li>`;
-            });
-            descriptionHtml += `</ul><p>Ou feche esta janela para ignorar.</p>`;
-            modalDescription.innerHTML = descriptionHtml;
-            modalTextarea.style.display = "none";
-            btnModalAction.style.display = "none";
-            document.querySelectorAll(".btn-create-actor-from-modal").forEach(button => {
-                button.addEventListener("click", (e) => {
-                    window.location.href = `criar_ator.html?name=${encodeURIComponent(e.target.dataset.name)}`;
-                });
-            });
-        }
+      function promptToCreateNewActors(newNames) {
+    modalTitle.textContent = "Atores não reconhecidos foram encontrados";
+    let descriptionHtml = `<p>Os seguintes nomes foram detectados, mas não existem no banco de dados. Clique para criar um novo ator:</p><ul>`;
+    newNames.forEach(name => {
+        descriptionHtml += `<li><span>${name}</span> <button type="button" class="btn-secondary btn-create-actor-from-modal" data-name="${name}">Criar Ator</button></li>`;
+    });
+    descriptionHtml += `</ul><p>Ou feche esta janela para ignorar.</p>`;
+    modalDescription.innerHTML = descriptionHtml;
+    modalTextarea.style.display = "none";
+    btnModalAction.style.display = "none";
+
+    document.querySelectorAll(".btn-create-actor-from-modal").forEach(button => {
+        button.addEventListener("click", (e) => {
+            // Guarda o texto da análise atual para podermos re-executar mais tarde
+            sessionStorage.setItem('currentAnalysisText', modalTextarea.value);
+
+            // Abre a página de criação num NOVO SEPARADOR
+            const url = `criar_ator.html?name=${encodeURIComponent(e.target.dataset.name)}`;
+            window.open(url, '_blank');
+        });
+    });
+}
+
+async function restoreStateFromSession() {
+    // Verifica se um ator foi recém-criado
+    const newlyCreatedActorJSON = sessionStorage.getItem('newlyCreatedActor');
+    if (newlyCreatedActorJSON) {
+        const newActor = JSON.parse(newlyCreatedActorJSON);
         
-        function processTextForScene() {
-            console.clear();
-            console.log("================ INICIANDO ANÁLISE DE TEXTO DA SCENNE ================");
-            const text = modalTextarea.value;
-            if (!text.trim()) {
-                console.warn("Nenhum texto para analisar. Fechando modal.");
-                closeModal();
-                return;
-            }
-            console.log("[PASSO 1] Texto recebido para análise:", text);
-            console.log("\n[PASSO 2] Procurando pelo título da scenne...");
-            const sceneTitle = findSceneTitleFromText(text);
-            if (sceneTitle) {
-                document.getElementById("scenne-name").value = sceneTitle;
-                console.log(`[SUCESSO] Título encontrado e preenchido: "${sceneTitle}"`);
-            } else {
-                console.log("[AVISO] Nenhum título adequado foi encontrado no texto.");
-            }
-            console.log("\n[PASSO 3] Procurando pela data...");
-            console.log("[INFO] A extração de data do texto não está implementada. O campo 'Data' deve ser preenchido manualmente.");
-            console.log("\n[PASSO 4] Procurando por Babes existentes no banco de dados...");
-            const addedBabesNames = [];
-            allBabes.forEach(babe => {
-                const babeNameRegex = new RegExp(`\\b${babe.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`, "gi");
-                if (babeNameRegex.test(text)) {
-                    addBabeToSelected(babe);
-                    addedBabesNames.push(babe.name.toLowerCase());
-                    console.log(`[SUCESSO] Babe existente encontrada: "${babe.name}". Adicionada à lista de 'Selecionadas'.`);
-                }
-            });
-            if (addedBabesNames.length === 0) {
-                console.log("[INFO] Nenhuma Babe existente foi encontrada no texto.");
-            }
-            console.log("[EXPLICAÇÃO] O campo 'Pesquisar Babes' é uma ferramenta de entrada manual. Atores encontrados automaticamente são adicionados diretamente à caixa 'Babes Selecionadas'.");
-            console.log("\n[PASSO 5] Usando IA (compromise.js) para encontrar nomes de pessoas não cadastradas...");
-            const doc = window.nlp(text);
-            const peopleFound = doc.people().out("array");
-            console.log("[IA] Nomes de pessoas detectados (bruto):", peopleFound);
-            const newPotentialNames = peopleFound.map(name => name.trim().replace("'s", "")).filter(name => name.includes(" ")).filter(name => !addedBabesNames.includes(name.toLowerCase())).filter(name => !allBabes.some(babe => babe.name.toLowerCase() === name.toLowerCase()));
-            const uniqueNewNames = [...new Set(newPotentialNames)];
-            console.log("[IA] Nomes novos e únicos encontrados (após filtragem):", uniqueNewNames);
-            console.log("\n[PASSO 6] Decidindo a ação final...");
-            if (uniqueNewNames.length > 0) {
-                console.log("[AÇÃO] Nomes novos foram encontrados. Exibindo modal para criar novos atores.");
-                promptToCreateNewActors(uniqueNewNames);
-            } else {
-                console.log("[AÇÃO] Nenhum nome novo encontrado. Fechando o modal de análise.");
-                closeModal();
-            }
-            console.log("================ FIM DA ANÁLISE ================");
+        // Adiciona o novo ator à lista global e à UI
+        if (!allBabes.some(babe => babe.id === newActor.id)) {
+            allBabes.push(newActor);
+            // Re-ordena a lista para manter a ordem alfabética
+            allBabes.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         }
+        addBabeToSelected(newActor);
+
+        // Limpa o item para não ser processado novamente
+        sessionStorage.removeItem('newlyCreatedActor');
+    }
+
+    // Verifica se há um estado de criação de cena guardado
+    const savedStateJSON = sessionStorage.getItem('sceneCreationState');
+    if (savedStateJSON) {
+        const savedState = JSON.parse(savedStateJSON);
+
+        // Restaura os valores do formulário
+        document.getElementById('scenne-name').value = savedState.sceneName || '';
+        document.getElementById('scenne-date').value = savedState.sceneDate || '';
+        document.getElementById('scenne-image-url').value = savedState.imageUrl || '';
+        document.getElementById('scenne-video-url').value = savedState.videoUrl || '';
+        
+        // Reabre o modal e re-executa a análise
+        if (savedState.analysisText) {
+            openModal(
+                "Analisar Texto da Cena",
+                "Análise re-executada após criação de ator.",
+                "Cole o texto da página da cena aqui...",
+                "Analisar Cena",
+                processTextForScene
+            );
+            modalTextarea.value = savedState.analysisText;
+            processTextForScene(); // Re-executa a análise
+        }
+
+        // Limpa o estado para não ser processado novamente
+        sessionStorage.removeItem('sceneCreationState');
+    }
+}
+
+
+function handleNewActorMessage(newActor) {
+    console.log("[BroadcastChannel] Novo ator recebido:", newActor);
+    
+    // 1. Adiciona o novo ator à lista global de 'babes'
+    if (!allBabes.some(babe => babe.id === newActor.id)) {
+        allBabes.push(newActor);
+        allBabes.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+
+    // 2. Adiciona o novo ator diretamente à caixa de "Babes Selecionadas"
+    addBabeToSelected(newActor);
+
+    // 3. Re-executa a análise do texto para atualizar o modal
+    const currentText = sessionStorage.getItem('currentAnalysisText');
+    if (currentText) {
+        modalTextarea.value = currentText;
+        processTextForScene(); // Re-executa a análise
+    }
+}
+        
+ function processTextForScene() {
+    console.clear();
+    console.log("================ INICIANDO ANÁLISE DE TEXTO DA SCENNE ================");
+    const text = modalTextarea.value;
+    if (!text.trim()) {
+        closeModal();
+        return;
+    }
+    console.log("[PASSO 1] Texto recebido para análise:", text);
+    
+    console.log("\n[PASSO 2] Procurando pelo título da scenne...");
+    const sceneTitle = findSceneTitleFromText(text);
+    if (sceneTitle) {
+        document.getElementById("scenne-name").value = sceneTitle;
+        console.log(`[SUCESSO] Título encontrado e preenchido: "${sceneTitle}"`);
+    } else {
+        console.log("[AVISO] Nenhum título adequado foi encontrado no texto.");
+    }
+
+    console.log("\n[PASSO 3] Procurando pela data...");
+    console.log("[INFO] A extração de data do texto não está implementada.");
+
+    console.log("\n[PASSO 4] Procurando por Babes existentes no banco de dados...");
+    const addedBabesNames = [];
+    allBabes.forEach(babe => {
+        const babeNameRegex = new RegExp(`\\b${babe.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`, "gi");
+        if (babeNameRegex.test(text)) {
+            addBabeToSelected(babe);
+            addedBabesNames.push(babe.name.toLowerCase());
+            console.log(`[SUCESSO] Babe existente encontrada: "${babe.name}".`);
+        }
+    });
+
+    console.log("\n[PASSO 5] Usando método HÍBRIDO para encontrar nomes não cadastrados...");
+
+    const doc = window.nlp(text);
+    const peopleFoundByAI = doc.people().out("array");
+    const nameRegex = /([A-Z][a-z'-]+)\s([A-Z][a-z'-]+)/g; // Regex ligeiramente melhorado para nomes com apóstrofo/hífen
+    const peopleFoundByRegex = (text.match(nameRegex) || []);
+    const allPotentialNames = [...peopleFoundByAI, ...peopleFoundByRegex];
+
+    const cleanedNames = allPotentialNames.map(name =>
+        name.trim()
+        .replace(/'s/g, '')
+        .replace(/[.,"`’]/g, '')
+        .replace(/\d+/g, '')
+        .trim()
+    );
+
+    // --- SEÇÃO DE FILTRAGEM FINAL E EXPANDIDA ---
+
+    const rejectionList = [
+        "go top", "play scene", "nav studio", "no profile", "all scenes"
+    ];
+    
+    // Lista de palavras comuns expandida para cobrir estúdios, categorias, etc.
+    const commonFirstWordsToReject = new Set([
+        'The', 'Scene', 'Download', 'Porn', 'Membership', 'Black', 'Training', 'White',
+        'Family', 'Play', 'Devil\'s', 'Real', 'Continue', 'Show'
+    ]);
+
+    const potentialNewNames = cleanedNames
+        .filter(name => name.length > 3)
+        .filter(name => name.includes(" "))
+        .filter(name => !rejectionList.includes(name.toLowerCase()))
+        .filter(name => !commonFirstWordsToReject.has(name.split(' ')[0]))
+        .filter(name => !addedBabesNames.includes(name.toLowerCase()))
+        .filter(name => !allBabes.some(babe => babe.name.toLowerCase() === name.toLowerCase()));
+        
+    // --- FIM DA SEÇÃO DE FILTRAGEM ---
+
+    const uniqueNewNames = [...new Set(potentialNewNames)];
+    console.log("[HÍBRIDO] Nomes novos e únicos encontrados (após filtragem final):", uniqueNewNames);
+
+    console.log("\n[PASSO 6] Decidindo a ação final...");
+    if (uniqueNewNames.length > 0) {
+        console.log("[AÇÃO] Nomes novos foram encontrados. Exibindo modal para criar novos atores.");
+        promptToCreateNewActors(uniqueNewNames);
+    } else {
+        console.log("[AÇÃO] Nenhum nome novo encontrado ou todos já foram adicionados. Fechando o modal de análise.");
+        closeModal();
+    }
+    console.log("================ FIM DA ANÁLISE ================");
+}
+
+
 
         // --- LÓGICA DE SUBMISSÃO E EVENTOS ---
         if (formScene) {
@@ -578,16 +687,31 @@
         });
         
         // --- FUNÇÃO DE INICIALIZAÇÃO DA PÁGINA ---
-        async function initializePage() {
-            const [babes, movies] = await Promise.all([
-                fetchFromFirebase("babes"),
-                fetchFromFirebase("movies")
-            ]);
-            allBabes = babes.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-            allMovies = movies;
-            setupSearchableInput("scenne-babes-search", "scenne-babes-results", allBabes, addBabeToSelected);
-            populateSelect("scenne-movie-assoc", allMovies, "Nenhum");
-        }
+   async function initializePage() {
+    // A lógica existente permanece a mesma
+    const [babes, movies] = await Promise.all([
+        fetchFromFirebase("babes"),
+        fetchFromFirebase("movies")
+    ]);
+    allBabes = babes.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    allMovies = movies;
+    setupSearchableInput("scenne-babes-search", "scenne-babes-results", allBabes, addBabeToSelected);
+    populateSelect("scenne-movie-assoc", allMovies, "Nenhum");
+
+    // --- INÍCIO DA NOVA LÓGICA DE ESCUTA ---
+    // Cria um canal de comunicação com um nome único
+    const actorChannel = new BroadcastChannel('canal_de_atores');
+
+    // Define o que fazer quando uma mensagem for recebida
+    actorChannel.onmessage = (event) => {
+        // 'event.data' contém o objeto enviado pelo outro separador
+        const newActor = event.data;
+        handleNewActorMessage(newActor);
+    };
+
+    console.log("[BroadcastChannel] Página de cena está agora a escutar por novos atores.");
+    // --- FIM DA NOVA LÓGICA DE ESCUTA ---
+}
 
         initializePage();
     </script>
