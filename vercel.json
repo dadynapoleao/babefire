@@ -1,16 +1,16 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "memory": 1024
-    }
-  },
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/node",
-      "config": {
-        "installCommand": "apt-get update && apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 libgbm1 libasound2"
-      }
-    }
-  ]
+    "version": 2,
+    "builds": [
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "installCommand": "apt-get update && apt-get install -y libnss3 libasound2 libatk-bridge2.0-0 libgtk-3-0 libgbm-dev"
+            }
+        },
+        {
+            "src": "/api/**/*.js",
+            "use": "@vercel/node"
+        }
+    ]
 }
