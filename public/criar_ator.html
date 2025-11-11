@@ -176,7 +176,7 @@ async function fetchAndFillActorData() {
     const formattedName = actorName.replace(/\s+/g, '_');
     
     // O URL aponta para a NOSSA PRÓPRIA FUNÇÃO (o caminho relativo funciona após o deploy)
-    const apiUrl = `/.netlify/functions/scrapeBabepedia?name=${formattedName}`;
+    const apiUrl =/api/scrapeBabepedia?name=${formattedName};
 
     btnFetchBabepedia.textContent = 'A procurar...';
     btnFetchBabepedia.disabled = true;
