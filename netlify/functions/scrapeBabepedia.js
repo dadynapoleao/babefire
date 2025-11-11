@@ -1,3 +1,5 @@
+// Ficheiro: /netlify/functions/scrapeBabepedia.js (VERSÃO FINAL CORRIGIDA)
+
 const axios = require('axios');
 const cheerio = require('cheerio');
 
@@ -8,28 +10,27 @@ exports.handler = async function(event, context) {
     if (!name) return { statusCode: 400, body: JSON.stringify({ error: 'O nome é obrigatório.' }) };
 
     const targetUrl = `https://www.babepedia.com/babe/${name}`;
-    
-    // --- MUDANÇA CRÍTICA AQUI: Usar o endpoint /content ---
     const browserlessUrl = `https://production-sfo.browserless.io/content?token=${BROWSERLESS_API_KEY}`;
 
     try {
-        // --- MUDANÇA CRÍTICA AQUI: O corpo do pedido é mais simples ---
         const response = await axios.post(browserlessUrl, {
             url: targetUrl,
-            // Adiciona uma espera para garantir que o JavaScript da Cloudflare executa
-            waitFor: 5000 // 5 segundos
-        }, { timeout: 30000 }); // Aumenta o timeout para dar tempo ao browserless de carregar
+            // --- CORREÇÃO IMPORTANTE AQUI ---
+            // A opção 'waitFor' deve estar dentro de um objeto 'gotoOptions'
+            gotoOptions: {
+                waitUntil: 'networkidle2', // Espera até que a rede esteja "calma", um bom sinal de que a página carregou
+                timeout: 30000 // Timeout de 30 segundos para a navegação
+            }
+        }, { timeout: 45000 }); // Aumenta o timeout geral do axios para 45 segundos
 
-        // --- MUDANÇA CRÍTICA AQUI: A resposta HTML vem diretamente ---
         const html = response.data;
         const $ = cheerio.load(html);
         const actorData = {};
 
-        // --- LÓGICA DE SCRAPING (mantida da tentativa anterior) ---
+        // Lógica de scraping (mantém-se)
         const imageUrl = $('#profimg picture img').attr('src');
         if (imageUrl) actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
 
-        // Procura por todos os elementos de texto na biografia
         $('div.col-sm-6').each((i, elem) => {
             const text = $(elem).text().trim();
             if (text.startsWith('Born:')) {
@@ -44,9 +45,8 @@ exports.handler = async function(event, context) {
             }
         });
         
-        // Se depois de tudo, o objeto estiver vazio, pode ser que a página não exista
         if (Object.keys(actorData).length === 0) {
-            console.log("Nenhum dado extraído. A página pode não existir ou o layout mudou novamente.");
+            console.log("Nenhum dado extraído. Verifique o HTML no log se o problema persistir.");
         }
 
         return { statusCode: 200, body: JSON.stringify(actorData) };
