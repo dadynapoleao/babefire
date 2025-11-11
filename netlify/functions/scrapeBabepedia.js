@@ -1,5 +1,3 @@
-// Ficheiro: /netlify/functions/scrapeBabepedia.js (VERSÃO FINAL CORRIGIDA)
-
 const axios = require('axios');
 const cheerio = require('cheerio');
 
@@ -15,40 +13,36 @@ exports.handler = async function(event, context) {
     try {
         const response = await axios.post(browserlessUrl, {
             url: targetUrl,
-            // --- CORREÇÃO IMPORTANTE AQUI ---
-            // A opção 'waitFor' deve estar dentro de um objeto 'gotoOptions'
             gotoOptions: {
-                waitUntil: 'networkidle2', // Espera até que a rede esteja "calma", um bom sinal de que a página carregou
-                timeout: 30000 // Timeout de 30 segundos para a navegação
+                waitUntil: 'networkidle2',
+                timeout: 30000
             }
-        }, { timeout: 45000 }); // Aumenta o timeout geral do axios para 45 segundos
+        }, { timeout: 45000 });
 
         const html = response.data;
+        
+        // --- MISSÃO DE RECONHECIMENTO: Imprimir o HTML final ---
+        console.log("--- INÍCIO DO HTML FINAL RECEBIDO (PÓS-CLOUDFLARE) ---");
+        console.log(html);
+        console.log("--- FIM DO HTML FINAL RECEBIDO (PÓS-CLOUDFLARE) ---");
+
         const $ = cheerio.load(html);
         const actorData = {};
 
-        // Lógica de scraping (mantém-se)
         const imageUrl = $('#profimg picture img').attr('src');
         if (imageUrl) actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
 
         $('div.col-sm-6').each((i, elem) => {
             const text = $(elem).text().trim();
             if (text.startsWith('Born:')) {
-                const bornText = text.replace('Born:', '').trim();
-                const dateMatch = bornText.match(/(\w+\s\d{1,2}),\s(\d{4})/);
-                if (dateMatch) {
-                    actorData.birthDate = new Date(dateMatch[0]).toISOString().split('T')[0];
-                }
+                actorData.birthDate = "ENCONTRADO"; // Apenas para teste
             } else if (text.startsWith('Nationality:')) {
-                const nationalityText = text.replace('Nationality:', '').trim();
-                actorData.nation = nationalityText.split('(')[0].trim();
+                actorData.nation = "ENCONTRADO"; // Apenas para teste
             }
         });
-        
-        if (Object.keys(actorData).length === 0) {
-            console.log("Nenhum dado extraído. Verifique o HTML no log se o problema persistir.");
-        }
 
+        console.log("RESULTADO DA TENTATIVA DE SCRAPING:", JSON.stringify(actorData));
+        
         return { statusCode: 200, body: JSON.stringify(actorData) };
 
     } catch (error) {
@@ -56,7 +50,7 @@ exports.handler = async function(event, context) {
         return { 
             statusCode: 500, 
             body: JSON.stringify({ 
-                error: `Falha ao obter dados para "${name}". Verifique o log da função na Netlify.` 
+                error: `Falha ao obter dados para "${name}".`
             }) 
         };
     }
