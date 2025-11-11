@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/scrapeBabepedia.js": {
+      "maxDuration": 30
+    }
+  }
+}
