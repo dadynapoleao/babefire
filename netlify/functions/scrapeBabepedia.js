@@ -3,18 +3,6 @@ const cheerio = require('cheerio');
 
 const BROWSERLESS_API_KEY = '2TOmpeyz8SObBMse465d63aa39c8019b41c0a273ab1461c29';
 
-// Função auxiliar para extrair texto depois de um rótulo
-function getTextAfterLabel($, label) {
-    // Encontra o elemento que contém o texto do rótulo (ex: "Born:")
-    // e depois pega o texto do nó seguinte a ele, que é o valor.
-    const element = $(`div.col-sm-6:contains("${label}")`);
-    if (element.length) {
-        // Limpa o rótulo do texto completo para obter apenas o valor
-        return element.text().replace(label, '').trim();
-    }
-    return null;
-}
-
 exports.handler = async function(event, context) {
     const { name } = event.queryStringParameters;
     if (!name) return { statusCode: 400, body: JSON.stringify({ error: 'O nome é obrigatório.' }) };
@@ -27,34 +15,51 @@ exports.handler = async function(event, context) {
             url: targetUrl,
             elements: [{ selector: 'body' }]
         });
+        
+        // Verifica se a estrutura da resposta está correta
+        if (!response.data || !response.data.data || !response.data.data[0] || !response.data.data[0].results || !response.data.data[0].results[0]) {
+             console.error("ERRO: A estrutura da resposta do Browserless mudou ou está vazia.");
+             console.log("Resposta completa do Browserless:", JSON.stringify(response.data, null, 2));
+             return { statusCode: 500, body: JSON.stringify({ error: "Resposta inválida do serviço de scraping." }) };
+        }
+        
         const html = response.data.data[0].results[0].html;
+
+        // --- LINHA MAIS IMPORTANTE DESTA DEPURAÇÃO ---
+        // Imprime o HTML completo que o scraper está a receber.
+        console.log("--- INÍCIO DO HTML RECEBIDO ---");
+        console.log(html);
+        console.log("--- FIM DO HTML RECEBIDO ---");
+
         const $ = cheerio.load(html);
         const actorData = {};
 
-        // --- LÓGICA DA IMAGEM (permanece a mesma, está a funcionar bem) ---
-        const imageUrl = $('#profimg picture img').attr('src') || $('div.profile-pic img').attr('src');
+        // A lógica de scraping fica aqui por enquanto, para vermos se produz algum erro
+        const imageUrl = $('#profimg picture img').attr('src');
         if (imageUrl) actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
-        
-        // --- NOVA LÓGICA PARA EXTRAIR DADOS DA BIOGRAFIA ---
-        // A biografia agora está em divs com a classe 'col-sm-6'
-        const bornText = getTextAfterLabel($, 'Born:');
-        if (bornText) {
-            const dateMatch = bornText.match(/(\w+\s\d{1,2}),\s(\d{4})/);
-            if (dateMatch) {
-                actorData.birthDate = new Date(dateMatch[0]).toISOString().split('T')[0];
-            }
-        }
 
-        const nationalityText = getTextAfterLabel($, 'Nationality:');
-        if (nationalityText) {
-            // Extrai apenas o nome do país, removendo o "(American)" se existir
-            actorData.nation = nationalityText.split('(')[0].trim();
-        }
+        // Tentativa de extrair dados com a lógica anterior, para ver o que acontece
+        $('div.col-sm-6').each((i, elem) => {
+            const text = $(elem).text().trim();
+            if (text.startsWith('Born:')) {
+                const bornText = text.replace('Born:', '').trim();
+                const dateMatch = bornText.match(/(\w+\s\d{1,2}),\s(\d{4})/);
+                if (dateMatch) {
+                    actorData.birthDate = new Date(dateMatch[0]).toISOString().split('T')[0];
+                }
+            } else if (text.startsWith('Nationality:')) {
+                const nationalityText = text.replace('Nationality:', '').trim();
+                actorData.nation = nationalityText.split('(')[0].trim();
+            }
+        });
+
+        // Imprime o que foi extraído (provavelmente um objeto vazio)
+        console.log("DADOS FINAIS EXTRAÍDOS:", JSON.stringify(actorData));
         
         return { statusCode: 200, body: JSON.stringify(actorData) };
 
     } catch (error) {
-        console.error("ERRO DETALHADO DENTRO DA FUNÇÃO:", error);
+        console.error("ERRO DETALHADO DENTRO DA FUNÇÃO:", error.response ? error.response.data : error.message);
         return { 
             statusCode: 500, 
             body: JSON.stringify({ 
