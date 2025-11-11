@@ -31,12 +31,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'O parâmetro "name" é obrigatório.' });
     }
 
-    // --- CÓDIGO DE INICIALIZAÇÃO CORRIGIDO ---
+    // --- CONFIGURAÇÃO ROBUSTA PARA AMBIENTES SERVERLESS ---
+    // Adiciona uma fonte mínima para evitar erros de renderização
+    await chromium.font('https://raw.githack.com/googlei18n/noto-cjk/main/NotoSansJP-Regular.otf');
+
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-software-rasterizer',
+        '--disable-dev-shm-usage'
+      ],
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath, // CORREÇÃO: Removidos os parênteses ()
-      headless: chromium.headless,
+      executablePath: await chromium.executablePath(), // Nota: O () é necessário aqui.
+      headless: 'new', // Força o novo modo headless que é mais estável
+      ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
@@ -68,9 +76,7 @@ export default async function handler(req, res) {
 
       return { birthDate, nation, mainImageUrl: imageUrl };
     });
-
-    await browser.close();
-
+    
     const finalData = {
       birthDate: formatDate(scrapedData.birthDate),
       nation: scrapedData.nation,
@@ -80,8 +86,11 @@ export default async function handler(req, res) {
     res.status(200).json(finalData);
 
   } catch (error) {
-    if (browser) await browser.close();
     console.error('ERRO NA API DE SCRAPING:', error.message);
     res.status(500).json({ error: 'Falha ao obter os dados do ator.' });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 }
