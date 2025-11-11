@@ -1,8 +1,10 @@
+// Ficheiro: /netlify/functions/scrapeBabepedia.js (VERSÃO FINAL E CORRIGIDA)
+
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-// --- COLOQUE A SUA API KEY DO SCRAPINGBEE AQUI ---
-const SCRAPINGBEE_API_KEY = '7K1NTEJ9B2W24NWKURGISDG9YDIA4P8ROJAJE3Z3WF1Z5GLRB0ACVN3749HM8QVXOIK1WUG8K67HPICV'; 
+// --- VERIFIQUE SE A SUA API KEY DO SCRAPINGBEE ESTÁ AQUI ---
+const SCRAPINGBEE_API_KEY = '2TOmpeyz8SObBMse465d63aa39c8019b41c0a273ab1461c29'; 
 
 exports.handler = async function(event, context) {
     const { name } = event.queryStringParameters;
@@ -18,30 +20,40 @@ exports.handler = async function(event, context) {
                 'url': targetUrl,
                 'render_js': 'true',
                 'premium_proxy': 'true',
-                'wait_for': '#profimg'
+                'wait_for': '#profimg' 
             },
             timeout: 60000
         });
 
         const html = response.data;
-        
-        // --- MISSÃO DE RECONHECIMENTO: Imprimir o HTML final que recebemos ---
-        console.log("--- INÍCIO DO HTML FINAL RECEBIDO (DO SCRAPINGBEE) ---");
-        console.log(html);
-        console.log("--- FIM DO HTML FINAL RECEBIDO (DO SCRAPINGBEE) ---");
-
-        // O resto do código vai tentar extrair e provavelmente falhar,
-        // mas o importante é o log que gerámos acima.
         const $ = cheerio.load(html);
         const actorData = {};
 
-        const imageUrl = $('#profimg picture img').attr('src');
-        if (imageUrl) actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
+        // --- LÓGICA DE SCRAPING FINAL E CORRIGIDA ---
 
-        $('div.col-sm-6').each((i, elem) => {
-            const text = $(elem).text().trim();
-            if (text.startsWith('Born:')) actorData.birthDate = "ENCONTRADO";
-            else if (text.startsWith('Nationality:')) actorData.nation = "ENCONTRADO";
+        // 1. Extrair a imagem principal
+        const imageUrl = $('#profimg picture img').attr('src') || $('#profimg img').attr('src');
+        if (imageUrl) {
+            actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
+        }
+
+        // 2. Extrair os dados da biografia
+        // Percorre todas as divs com a classe 'info-item' dentro do bloco de informação pessoal
+        $('#personal-info-block .info-grid .info-item').each((i, elem) => {
+            // Pega o texto do rótulo (ex: "Born:") e o texto do valor
+            const label = $(elem).find('span.label').text().trim().toLowerCase();
+            const value = $(elem).find('span.value').text().trim();
+            
+            if (label.includes('born')) {
+                // Se o rótulo for "born", extrai a data
+                const dateMatch = value.match(/(\w+\s\d{1,2}),\s(\d{4})/);
+                if (dateMatch) {
+                    actorData.birthDate = new Date(dateMatch[0]).toISOString().split('T')[0];
+                }
+            } else if (label.includes('nationality')) {
+                // Se o rótulo for "nationality", extrai o nome do país
+                 actorData.nation = $(elem).find('span.value').text().replace(/\(.*\)/g, '').trim();
+            }
         });
         
         return { statusCode: 200, body: JSON.stringify(actorData) };
@@ -50,7 +62,9 @@ exports.handler = async function(event, context) {
         console.error("ERRO DETALHADO (ScrapingBee):", error.response ? error.response.data : error.message);
         return { 
             statusCode: 500, 
-            body: JSON.stringify({ error: `Falha ao obter dados para "${name}".` }) 
+            body: JSON.stringify({ 
+                error: `Falha ao obter dados para "${name}".`
+            }) 
         };
     }
 };
