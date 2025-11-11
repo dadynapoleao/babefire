@@ -230,33 +230,53 @@ async function fetchAndFillActorData() {
     window.addEventListener('click', (event) => { if (event.target == textAddModal) closeTextModal(); if (event.target == cropperModal) closeCropper(); });
 
     document.getElementById('form-actor').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitButton = e.target.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'A criar...';
-        try {
-            const actorName = document.getElementById('actor-name').value.trim();
-            if (!actorName) { alert("O nome do ator é obrigatório."); return; }
-            if (await checkIfNameExists('babes', actorName)) { alert(`ERRO: Um ator com o nome "${actorName}" já existe.`); return; }
-            const nationId = document.getElementById('actor-nationality-id').value;
-            if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
-            const actorData = { name: actorName, searchName: actorName.toLowerCase(), nationId: nationId, birthDate: document.getElementById('actor-birth-date').value || null, starRating: parseInt(document.getElementById('actor-star').value, 10), imageUrl: document.getElementById('actor-image-url').value || null };
-...extraActorData 
-            };
-            const result = await saveToFirebase('babes', actorData);
-
-            if (result.success) {
-                const actorChannel = new BroadcastChannel('canal_de_atores');
-                const newActor = { id: result.id, ...actorData };
-                actorChannel.postMessage(newActor);
-                actorChannel.close();
-                window.close();
-            }
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Criar Actor';
+    e.preventDefault();
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = 'A criar...';
+    try {
+        const actorName = document.getElementById('actor-name').value.trim();
+        if (!actorName) {
+            alert("O nome do ator é obrigatório.");
+            return;
         }
-    });
+        if (await checkIfNameExists('babes', actorName)) {
+            alert(`ERRO: Um ator com o nome "${actorName}" já existe.`);
+            return;
+        }
+        const nationId = document.getElementById('actor-nationality-id').value;
+        if (!nationId) {
+            alert("Por favor, selecione uma nacionalidade da lista.");
+            return;
+        }
+
+        const actorData = {
+            name: actorName,
+            searchName: actorName.toLowerCase(),
+            nationId: nationId,
+            birthDate: document.getElementById('actor-birth-date').value || null,
+            starRating: parseInt(document.getElementById('actor-star').value, 10),
+            imageUrl: document.getElementById('actor-image-url').value || null,
+            
+            // --- A CORREÇÃO É AQUI ---
+            // O '...' deve estar DENTRO do objeto, separado por uma vírgula.
+            ...extraActorData
+        }; // <--- O objeto agora fecha corretamente aqui.
+
+        const result = await saveToFirebase('babes', actorData);
+
+        if (result.success) {
+            const actorChannel = new BroadcastChannel('canal_de_atores');
+            const newActor = { id: result.id, ...actorData };
+            actorChannel.postMessage(newActor);
+            actorChannel.close();
+            window.close();
+        }
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Criar Actor';
+    }
+});
     
     document.getElementById('actor-name').addEventListener('input', (e) => { clearTimeout(imageSearchTimeout); const name = e.target.value; if (name.length > 2) { imageSearchTimeout = setTimeout(() => updateImageGallery(name), 500); } });
     document.getElementById('actor-image-gallery').addEventListener('click', (e) => { if (e.target?.tagName === 'IMG') openCropper(e.target.src); });
