@@ -27,41 +27,62 @@ exports.handler = async function(event, context) {
         const $ = cheerio.load(html);
         const actorData = {};
 
-        // 1. Extrair a imagem principal (Já estava a funcionar)
+        // 1. Extrair a imagem principal
         const imageUrl = $('#profimg picture img').attr('src') || $('#profimg img').attr('src');
         if (imageUrl) {
             actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
         }
 
-        // 2. Extrair os dados da biografia
+        // 2. Extrair todos os dados da biografia
         $('#personal-info-block .info-grid .info-item').each((i, elem) => {
             const label = $(elem).find('span.label').text().trim().toLowerCase();
+            const value = $(elem).find('span.value').text().trim();
             
             if (label.includes('born')) {
-                const valueText = $(elem).find('span.value').text().trim();
-                
-                // --- CORREÇÃO CRÍTICA AQUI ---
-                // Regex para capturar as partes da data: dia, mês, ano
-                const dateParts = valueText.match(/(\d{1,2}).*?of (\w+) (\d{4})/);
-                
+                const dateParts = value.match(/(\d{1,2}).*?of (\w+) (\d{4})/);
                 if (dateParts && dateParts.length === 4) {
-                    // dateParts será: ["18th of December 1988", "18", "December", "1988"]
                     const day = dateParts[1];
                     const month = dateParts[2];
                     const year = dateParts[3];
-                    
-                    // Monta uma string segura que new Date() entende: "December 18, 1988"
                     const safeDateString = `${month} ${day}, ${year}`;
-                    
-                    // Converte para o formato YYYY-MM-DD
                     actorData.birthDate = new Date(safeDateString).toISOString().split('T')[0];
                 }
             } else if (label.includes('birthplace')) {
-                // Lógica da nacionalidade (já estava correta)
                 const country = $(elem).find('span.value a').last().text().trim();
                 if (country) {
                     actorData.nation = country;
                 }
+            } 
+            // --- NOVOS CAMPOS ADICIONADOS AQUI ---
+            else if (label.includes('hair color')) {
+                actorData.hairColor = value;
+            } 
+            else if (label.includes('height')) {
+                const heightMatch = value.match(/\((\d+)\s*cm\)/); // Captura o valor em cm
+                if (heightMatch && heightMatch[1]) {
+                    actorData.height = parseInt(heightMatch[1], 10);
+                }
+            } 
+            else if (label.includes('eye color')) {
+                actorData.eyeColor = value;
+            } 
+            else if (label.includes('weight')) {
+                const weightMatch = value.match(/\((\d+)\s*kg\)/); // Captura o valor em kg
+                if (weightMatch && weightMatch[1]) {
+                    actorData.weight = parseInt(weightMatch[1], 10);
+                }
+            } 
+            else if (label.includes('years active')) {
+                const yearMatch = value.match(/^\d{4}/); // Captura o primeiro ano (ex: 2021)
+                if (yearMatch) {
+                    actorData.yearsActive = yearMatch[0];
+                }
+            } 
+            else if (label.includes('ethnicity')) {
+                actorData.ethnicity = value;
+            } 
+            else if (label.includes('measurements')) {
+                actorData.measurements = value;
             }
         });
         
