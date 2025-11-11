@@ -175,23 +175,30 @@ async function fetchAndFillActorData() {
     }
     const formattedName = actorName.replace(/\s+/g, '_');
     
-    // O URL aponta para a NOSSA PRÓPRIA FUNÇÃO (o caminho relativo funciona após o deploy)
-    const apiUrl =/api/scrapeBabepedia?name=${formattedName};
+    // --- CORREÇÃO CRÍTICA AQUI ---
+    // O URL deve ser o endereço completo da sua função na Vercel.
+    // O comentário que estava aqui (que provavelmente causou o erro de sintaxe) foi removido.
+    const apiUrl = `https://babefire.vercel.app/api/scrapeBabepedia?name=${formattedName}`;
 
     btnFetchBabepedia.textContent = 'A procurar...';
     btnFetchBabepedia.disabled = true;
 
     try {
         const response = await fetch(apiUrl);
+        
+        // Adiciona verificação de erro mais robusta
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido no servidor.' }));
+            throw new Error(errorData.error || `Erro HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Erro desconhecido');
 
-        console.log("Dados recebidos da API Netlify:", data);
+        console.log("Dados recebidos da API Vercel:", data);
 
-         extraActorData = {}; 
+        extraActorData = {}; 
         extraActorData = { ...data };
         
-        // O código de preenchimento do formulário permanece o mesmo
         if (data.birthDate) document.getElementById('actor-birth-date').value = data.birthDate;
         if (data.nation) {
             const nationFound = allNations.find(n => n.name.toLowerCase() === data.nation.toLowerCase());
@@ -199,7 +206,7 @@ async function fetchAndFillActorData() {
                 selectNation(nationFound);
             } else {
                 document.getElementById('actor-nationality-search').value = data.nation;
-                alert(`Nacionalidade "${data.nation}" preenchida, mas não encontrada na sua base de dados.`);
+                // Não mostre um alerta aqui, apenas preencha o campo
             }
         }
         if (data.mainImageUrl) {
@@ -209,6 +216,7 @@ async function fetchAndFillActorData() {
         
     } catch (error) {
         alert(`Erro ao procurar dados: ${error.message}`);
+        console.error("Erro detalhado no fetch:", error);
     } finally {
         btnFetchBabepedia.textContent = 'Procurar';
         btnFetchBabepedia.disabled = false;
