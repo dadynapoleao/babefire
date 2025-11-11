@@ -1,7 +1,6 @@
 import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
 
-// Função auxiliar para formatar a data
 function formatDate(dateString) {
   if (!dateString) return null;
   const cleanString = dateString.split('(')[0].trim();
@@ -15,7 +14,6 @@ function formatDate(dateString) {
   return null;
 }
 
-// A função principal que a Vercel executa
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://dadynapoleao.github.io');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -33,35 +31,27 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'O parâmetro "name" é obrigatório.' });
     }
 
-    // Configura e lança o navegador
+    // --- CÓDIGO DE INICIALIZAÇÃO CORRIGIDO ---
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-      ignoreHTTPSErrors: true,
+      headless: chromium.headless, // A nova versão lida com isto automaticamente
     });
 
     const page = await browser.newPage();
-    
-    // Simula um navegador real
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36');
-
-    const targetUrl = `https://www.babepedia.com/babe/${name}`;
     
-    // Navega para a página e espera que a rede fique inativa (sinal de que tudo carregou)
+    const targetUrl = `https://www.babepedia.com/babe/${name}`;
     await page.goto(targetUrl, { waitUntil: 'networkidle0' });
     
-    // Extrai os dados da página renderizada
     const scrapedData = await page.evaluate(() => {
-      // Esta função corre dentro do contexto do navegador
       const infoContainer = document.querySelector('#babe-info');
       if (!infoContainer) return { birthDate: null, nation: null, mainImageUrl: null };
 
       let birthDate = null;
       let nation = null;
       
-      // Procura pelos 'td' para encontrar os dados
       const tableCells = infoContainer.querySelectorAll('td');
       for (let i = 0; i < tableCells.length; i++) {
         const cell = tableCells[i];
@@ -76,17 +66,11 @@ export default async function handler(req, res) {
       const imageElement = document.querySelector('#profpic img');
       const imageUrl = imageElement ? imageElement.getAttribute('src') : null;
 
-      return {
-        birthDate: birthDate, // A formatação será feita depois
-        nation: nation,
-        mainImageUrl: imageUrl,
-      };
+      return { birthDate, nation, mainImageUrl: imageUrl };
     });
 
-    // Fecha o navegador
     await browser.close();
 
-    // Formata os dados depois de os ter extraído
     const finalData = {
       birthDate: formatDate(scrapedData.birthDate),
       nation: scrapedData.nation,
