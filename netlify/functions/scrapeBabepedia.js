@@ -27,30 +27,37 @@ exports.handler = async function(event, context) {
         const $ = cheerio.load(html);
         const actorData = {};
 
-        // --- LÓGICA DE SCRAPING FINALÍSSIMA ---
-
         // 1. Extrair a imagem principal (Já estava a funcionar)
         const imageUrl = $('#profimg picture img').attr('src') || $('#profimg img').attr('src');
         if (imageUrl) {
             actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
         }
 
-        // 2. Extrair os dados da biografia (LÓGICA CORRIGIDA)
+        // 2. Extrair os dados da biografia
         $('#personal-info-block .info-grid .info-item').each((i, elem) => {
             const label = $(elem).find('span.label').text().trim().toLowerCase();
             
             if (label.includes('born')) {
                 const valueText = $(elem).find('span.value').text().trim();
-                // Tenta extrair a data do texto (ex: "Sunday 18th of December 1988")
-                const dateMatch = valueText.match(/(\d{1,2})th of (\w+) (\d{4})|(\w+\s\d{1,2},?\s\d{4})/);
-                if (dateMatch) {
-                    // Limpa o "th", "st", "nd", "rd" para o new Date() funcionar bem
-                    const cleanDateString = dateMatch[0].replace(/(st|nd|rd|th)/, '');
-                    actorData.birthDate = new Date(cleanDateString).toISOString().split('T')[0];
+                
+                // --- CORREÇÃO CRÍTICA AQUI ---
+                // Regex para capturar as partes da data: dia, mês, ano
+                const dateParts = valueText.match(/(\d{1,2}).*?of (\w+) (\d{4})/);
+                
+                if (dateParts && dateParts.length === 4) {
+                    // dateParts será: ["18th of December 1988", "18", "December", "1988"]
+                    const day = dateParts[1];
+                    const month = dateParts[2];
+                    const year = dateParts[3];
+                    
+                    // Monta uma string segura que new Date() entende: "December 18, 1988"
+                    const safeDateString = `${month} ${day}, ${year}`;
+                    
+                    // Converte para o formato YYYY-MM-DD
+                    actorData.birthDate = new Date(safeDateString).toISOString().split('T')[0];
                 }
             } else if (label.includes('birthplace')) {
-                // CORREÇÃO: A nacionalidade está no campo "birthplace"
-                // Pega o texto do último link '<a>', que é o país.
+                // Lógica da nacionalidade (já estava correta)
                 const country = $(elem).find('span.value a').last().text().trim();
                 if (country) {
                     actorData.nation = country;
