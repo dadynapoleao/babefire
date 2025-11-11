@@ -118,11 +118,8 @@
     
    <script type="module">
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-
-    // O resto do seu código permanece praticamente o mesmo, com a função de scraping
-    // usando a variável 'cheerio' que acabámos de importar.
 
     const firebaseConfig = { apiKey: "AIzaSyBDC20JK4dajBqexSS0YMgn3zPwfwPAjhA", authDomain: "babefire-cc191.firebaseapp.com", projectId: "babefire-cc191", storageBucket: "babefire-cc191.appspot.com", messagingSenderId: "574351844261", appId: "1:574351844261:web:b2d038682b18f5d9b43e4c" };
     const app = initializeApp(firebaseConfig);
@@ -166,47 +163,59 @@
     async function openCropper(imageUrl) { cropperModal.classList.add('visible'); if (cropper) cropper.destroy(); try { const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageUrl)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`Falha na rede (Status: ${response.status})`); const imageBlob = await response.blob(); if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = URL.createObjectURL(imageBlob); const imageElement = document.getElementById('image-to-crop'); imageElement.src = currentObjectUrl; cropper = new Cropper(imageElement, { aspectRatio: 1 / 1, viewMode: 1, background: false, autoCropArea: 0.9, responsive: true }); } catch (error) { console.error("Falha ao carregar a imagem via proxy:", error); alert("Erro ao carregar imagem. Verifique o URL ou tente outra."); closeCropper(); } }
     function closeCropper() { if (cropper) { cropper.destroy(); cropper = null; } if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; } cropperModal.classList.remove('visible'); }
 
-async function fetchAndFillActorData() {
-    const nameInput = document.getElementById('actor-name');
-    let actorName = nameInput.value.trim();
-    if (!actorName) {
-        alert('Por favor, insira um nome de ator para procurar.');
-        return;
+    async function fetchAndFillActorData() {
+        const nameInput = document.getElementById('actor-name');
+        let actorName = nameInput.value.trim();
+        if (!actorName) {
+            alert('Por favor, insira um nome de ator para procurar.');
+            return;
+        }
+        const formattedName = actorName.replace(/\s+/g, '_');
+        const apiUrl = `https://babefire.vercel.app/api/scrapeBabepedia?name=${formattedName}`;
+
+        btnFetchBabepedia.textContent = 'A procurar...';
+        btnFetchBabepedia.disabled = true;
+
+        try {
+            const response = await fetch(apiUrl);
+            
+            // Adiciona verificação de erro mais robusta
+            if (!response.ok) {
+                // Tenta ler o corpo da resposta como JSON para obter a mensagem de erro da API
+                const errorData = await response.json().catch(() => ({ error: 'O servidor retornou um erro, mas sem detalhes em JSON.' }));
+                throw new Error(errorData.message || errorData.error || `Erro HTTP ${response.status}`);
+            }
+            
+            // Se a resposta for OK, processa como JSON
+            const data = await response.json();
+
+            console.log("Dados recebidos da API Vercel:", data);
+
+            extraActorData = {}; 
+            extraActorData = { ...data };
+            
+            if (data.birthDate) document.getElementById('actor-birth-date').value = data.birthDate;
+            if (data.nation) {
+                const nationFound = allNations.find(n => n.name.toLowerCase() === data.nation.toLowerCase());
+                if (nationFound) {
+                    selectNation(nationFound);
+                } else {
+                    document.getElementById('actor-nationality-search').value = data.nation;
+                }
+            }
+            if (data.mainImageUrl) {
+                nameInput.dispatchEvent(new Event('input', { bubbles: true })); 
+                openCropper(data.mainImageUrl);
+            }
+            
+        } catch (error) {
+            alert(`Erro ao procurar dados: ${error.message}`);
+            console.error("Erro detalhado no fetch:", error);
+        } finally {
+            btnFetchBabepedia.textContent = 'Procurar';
+            btnFetchBabepedia.disabled = false;
+        }
     }
-    const formattedName = actorName.replace(/\s+/g, '_');
-    
-    // --- CORREÇÃO CRÍTICA AQUI ---
-    // O URL deve ser o endereço completo da sua função na Vercel.
-    // O comentário que estava aqui (que provavelmente causou o erro de sintaxe) foi removido.
-    const apiUrl = `https://babefire.vercel.app/api/scrapeBabepedia?name=${formattedName}`;
-
-    btnFetchBabepedia.textContent = 'A procurar...';
-    btnFetchBabepedia.disabled = true;
-
- try {
-    const response = await fetch(apiUrl);
-    
-    // --- CÓDIGO DE DEPURAÇÃO PARA O FRONT-END ---
-    // Lê a resposta como texto simples em vez de JSON
-    const htmlText = await response.text(); 
-    
-    // Imprime o HTML completo na consola para podermos analisar
-    console.log("--- HTML RECEBIDO DA API ---");
-    console.log(htmlText);
-    console.log("--- FIM DO HTML ---");
-    
-    // Mostra um alerta para sabermos que terminou
-    alert("Depuração concluída! Verifique a consola para o código HTML.");
-    // --- FIM DO CÓDIGO DE DEPURAÇÃO ---
-
-} catch (error) {
-        alert(`Erro ao procurar dados: ${error.message}`);
-        console.error("Erro detalhado no fetch:", error);
-    } finally {
-        btnFetchBabepedia.textContent = 'Procurar';
-        btnFetchBabepedia.disabled = false;
-    }
-}
 
     // --- EVENT LISTENERS E INICIALIZAÇÃO ---
     btnAddActorByText.addEventListener('click', openTextModal);
@@ -223,53 +232,50 @@ async function fetchAndFillActorData() {
     window.addEventListener('click', (event) => { if (event.target == textAddModal) closeTextModal(); if (event.target == cropperModal) closeCropper(); });
 
     document.getElementById('form-actor').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitButton = e.target.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
-    submitButton.textContent = 'A criar...';
-    try {
-        const actorName = document.getElementById('actor-name').value.trim();
-        if (!actorName) {
-            alert("O nome do ator é obrigatório.");
-            return;
-        }
-        if (await checkIfNameExists('babes', actorName)) {
-            alert(`ERRO: Um ator com o nome "${actorName}" já existe.`);
-            return;
-        }
-        const nationId = document.getElementById('actor-nationality-id').value;
-        if (!nationId) {
-            alert("Por favor, selecione uma nacionalidade da lista.");
-            return;
-        }
+        e.preventDefault();
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'A criar...';
+        try {
+            const actorName = document.getElementById('actor-name').value.trim();
+            if (!actorName) {
+                alert("O nome do ator é obrigatório.");
+                return;
+            }
+            if (await checkIfNameExists('babes', actorName)) {
+                alert(`ERRO: Um ator com o nome "${actorName}" já existe.`);
+                return;
+            }
+            const nationId = document.getElementById('actor-nationality-id').value;
+            if (!nationId) {
+                alert("Por favor, selecione uma nacionalidade da lista.");
+                return;
+            }
 
-        const actorData = {
-            name: actorName,
-            searchName: actorName.toLowerCase(),
-            nationId: nationId,
-            birthDate: document.getElementById('actor-birth-date').value || null,
-            starRating: parseInt(document.getElementById('actor-star').value, 10),
-            imageUrl: document.getElementById('actor-image-url').value || null,
-            
-            // --- A CORREÇÃO É AQUI ---
-            // O '...' deve estar DENTRO do objeto, separado por uma vírgula.
-            ...extraActorData
-        }; // <--- O objeto agora fecha corretamente aqui.
+            const actorData = {
+                name: actorName,
+                searchName: actorName.toLowerCase(),
+                nationId: nationId,
+                birthDate: document.getElementById('actor-birth-date').value || null,
+                starRating: parseInt(document.getElementById('actor-star').value, 10),
+                imageUrl: document.getElementById('actor-image-url').value || null,
+                ...extraActorData
+            };
 
-        const result = await saveToFirebase('babes', actorData);
+            const result = await saveToFirebase('babes', actorData);
 
-        if (result.success) {
-            const actorChannel = new BroadcastChannel('canal_de_atores');
-            const newActor = { id: result.id, ...actorData };
-            actorChannel.postMessage(newActor);
-            actorChannel.close();
-            window.close();
+            if (result.success) {
+                const actorChannel = new BroadcastChannel('canal_de_atores');
+                const newActor = { id: result.id, ...actorData };
+                actorChannel.postMessage(newActor);
+                actorChannel.close();
+                window.close();
+            }
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Criar Actor';
         }
-    } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Criar Actor';
-    }
-});
+    });
     
     document.getElementById('actor-name').addEventListener('input', (e) => { clearTimeout(imageSearchTimeout); const name = e.target.value; if (name.length > 2) { imageSearchTimeout = setTimeout(() => updateImageGallery(name), 500); } });
     document.getElementById('actor-image-gallery').addEventListener('click', (e) => { if (e.target?.tagName === 'IMG') openCropper(e.target.src); });
