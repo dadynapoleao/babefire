@@ -130,7 +130,8 @@
     
     let allBabes = [], allNations = [];
     let imageSearchTimeout, cropper = null, currentObjectUrl = null;
-    
+    let extraActorData = {};
+       
     const demonymToCountryMap = { 'american': 'United States', 'brazilian': 'Brazil', 'russian': 'Russia', /* etc. */ };
 
     const textAddModal = document.getElementById('text-add-modal');
@@ -187,6 +188,9 @@ async function fetchAndFillActorData() {
 
         console.log("Dados recebidos da API Netlify:", data);
 
+         extraActorData = {}; 
+        extraActorData = { ...data };
+        
         // O código de preenchimento do formulário permanece o mesmo
         if (data.birthDate) document.getElementById('actor-birth-date').value = data.birthDate;
         if (data.nation) {
@@ -237,7 +241,8 @@ async function fetchAndFillActorData() {
             const nationId = document.getElementById('actor-nationality-id').value;
             if (!nationId) { alert("Por favor, selecione uma nacionalidade da lista."); return; }
             const actorData = { name: actorName, searchName: actorName.toLowerCase(), nationId: nationId, birthDate: document.getElementById('actor-birth-date').value || null, starRating: parseInt(document.getElementById('actor-star').value, 10), imageUrl: document.getElementById('actor-image-url').value || null };
-            
+...extraActorData 
+            };
             const result = await saveToFirebase('babes', actorData);
 
             if (result.success) {
