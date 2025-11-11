@@ -10,7 +10,7 @@ exports.handler = async function(event, context) {
     if (!name) return { statusCode: 400, body: JSON.stringify({ error: 'O nome é obrigatório.' }) };
 
     const targetUrl = `https://www.babepedia.com/babe/${name}`;
-    const browserlessUrl = `https://chrome.browserless.io/scrape?token=${BROWSERLESS_API_KEY}`;
+    const browserlessUrl = `https://production-sfo.browserless.io/scrape?token=${BROWSERLESS_API_KEY}`;
 
     try {
         const response = await axios.post(browserlessUrl, {
