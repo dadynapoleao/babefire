@@ -1,24 +1,16 @@
 {
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "path/to/your/other/files/**"
+      "includeFiles": "node_modules/**"
     }
   },
   "builds": [
     {
-      "src": "/api/scrapeBabepedia.js",
-      "use": "@vercel/node",
+      "src": "package.json",
+      "use": "@vercel/static-build",
       "config": {
-        "includeFiles": ["../path/to/your/other/files/**"],
-        "external": ["chrome-aws-lambda"]
+        "installCommand": "apt-get update && apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 libgbm1 libasound2"
       }
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/scrapeBabepedia",
-      "dest": "/api/scrapeBabepedia.js"
-    }
-  ],
-  "installCommand": "yum install -y alsa-lib.x86_64 atk.x86_64 cups-libs.x86_64 gtk3.x86_64 ipa-gothic-fonts libXcomposite.x86_64 libXcursor.x86_64 libXdamage.x86_64 libXext.x86_64 libXi.x86_64 libXrandr.x86_64 libXScrnSaver.x86_64 libXtst.x86_64 pango.x86_64 xorg-x11-fonts-100dpi xorg-x11-fonts-75dpi xorg-x11-fonts-cyrillic xorg-x11-fonts-misc xorg-x11-fonts-Type1 xorg-x11-utils && yum clean all"
+  ]
 }
