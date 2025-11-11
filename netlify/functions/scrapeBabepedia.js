@@ -8,37 +8,28 @@ exports.handler = async function(event, context) {
     if (!name) return { statusCode: 400, body: JSON.stringify({ error: 'O nome é obrigatório.' }) };
 
     const targetUrl = `https://www.babepedia.com/babe/${name}`;
-    const browserlessUrl = `https://production-sfo.browserless.io/scrape?token=${BROWSERLESS_API_KEY}`;
+    
+    // --- MUDANÇA CRÍTICA AQUI: Usar o endpoint /content ---
+    const browserlessUrl = `https://production-sfo.browserless.io/content?token=${BROWSERLESS_API_KEY}`;
 
     try {
+        // --- MUDANÇA CRÍTICA AQUI: O corpo do pedido é mais simples ---
         const response = await axios.post(browserlessUrl, {
             url: targetUrl,
-            elements: [{ selector: 'body' }]
-        });
-        
-        // Verifica se a estrutura da resposta está correta
-        if (!response.data || !response.data.data || !response.data.data[0] || !response.data.data[0].results || !response.data.data[0].results[0]) {
-             console.error("ERRO: A estrutura da resposta do Browserless mudou ou está vazia.");
-             console.log("Resposta completa do Browserless:", JSON.stringify(response.data, null, 2));
-             return { statusCode: 500, body: JSON.stringify({ error: "Resposta inválida do serviço de scraping." }) };
-        }
-        
-        const html = response.data.data[0].results[0].html;
+            // Adiciona uma espera para garantir que o JavaScript da Cloudflare executa
+            waitFor: 5000 // 5 segundos
+        }, { timeout: 30000 }); // Aumenta o timeout para dar tempo ao browserless de carregar
 
-        // --- LINHA MAIS IMPORTANTE DESTA DEPURAÇÃO ---
-        // Imprime o HTML completo que o scraper está a receber.
-        console.log("--- INÍCIO DO HTML RECEBIDO ---");
-        console.log(html);
-        console.log("--- FIM DO HTML RECEBIDO ---");
-
+        // --- MUDANÇA CRÍTICA AQUI: A resposta HTML vem diretamente ---
+        const html = response.data;
         const $ = cheerio.load(html);
         const actorData = {};
 
-        // A lógica de scraping fica aqui por enquanto, para vermos se produz algum erro
+        // --- LÓGICA DE SCRAPING (mantida da tentativa anterior) ---
         const imageUrl = $('#profimg picture img').attr('src');
         if (imageUrl) actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
 
-        // Tentativa de extrair dados com a lógica anterior, para ver o que acontece
+        // Procura por todos os elementos de texto na biografia
         $('div.col-sm-6').each((i, elem) => {
             const text = $(elem).text().trim();
             if (text.startsWith('Born:')) {
@@ -52,10 +43,12 @@ exports.handler = async function(event, context) {
                 actorData.nation = nationalityText.split('(')[0].trim();
             }
         });
-
-        // Imprime o que foi extraído (provavelmente um objeto vazio)
-        console.log("DADOS FINAIS EXTRAÍDOS:", JSON.stringify(actorData));
         
+        // Se depois de tudo, o objeto estiver vazio, pode ser que a página não exista
+        if (Object.keys(actorData).length === 0) {
+            console.log("Nenhum dado extraído. A página pode não existir ou o layout mudou novamente.");
+        }
+
         return { statusCode: 200, body: JSON.stringify(actorData) };
 
     } catch (error) {
