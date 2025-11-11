@@ -183,38 +183,23 @@ async function fetchAndFillActorData() {
     btnFetchBabepedia.textContent = 'A procurar...';
     btnFetchBabepedia.disabled = true;
 
-    try {
-        const response = await fetch(apiUrl);
-        
-        // Adiciona verificação de erro mais robusta
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido no servidor.' }));
-            throw new Error(errorData.error || `Erro HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
+ try {
+    const response = await fetch(apiUrl);
+    
+    // --- CÓDIGO DE DEPURAÇÃO PARA O FRONT-END ---
+    // Lê a resposta como texto simples em vez de JSON
+    const htmlText = await response.text(); 
+    
+    // Imprime o HTML completo na consola para podermos analisar
+    console.log("--- HTML RECEBIDO DA API ---");
+    console.log(htmlText);
+    console.log("--- FIM DO HTML ---");
+    
+    // Mostra um alerta para sabermos que terminou
+    alert("Depuração concluída! Verifique a consola para o código HTML.");
+    // --- FIM DO CÓDIGO DE DEPURAÇÃO ---
 
-        console.log("Dados recebidos da API Vercel:", data);
-
-        extraActorData = {}; 
-        extraActorData = { ...data };
-        
-        if (data.birthDate) document.getElementById('actor-birth-date').value = data.birthDate;
-        if (data.nation) {
-            const nationFound = allNations.find(n => n.name.toLowerCase() === data.nation.toLowerCase());
-            if (nationFound) {
-                selectNation(nationFound);
-            } else {
-                document.getElementById('actor-nationality-search').value = data.nation;
-                // Não mostre um alerta aqui, apenas preencha o campo
-            }
-        }
-        if (data.mainImageUrl) {
-            nameInput.dispatchEvent(new Event('input', { bubbles: true })); 
-            openCropper(data.mainImageUrl);
-        }
-        
-    } catch (error) {
+} catch (error) {
         alert(`Erro ao procurar dados: ${error.message}`);
         console.error("Erro detalhado no fetch:", error);
     } finally {
