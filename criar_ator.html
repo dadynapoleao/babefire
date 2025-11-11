@@ -163,59 +163,52 @@
     async function openCropper(imageUrl) { cropperModal.classList.add('visible'); if (cropper) cropper.destroy(); try { const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageUrl)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`Falha na rede (Status: ${response.status})`); const imageBlob = await response.blob(); if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = URL.createObjectURL(imageBlob); const imageElement = document.getElementById('image-to-crop'); imageElement.src = currentObjectUrl; cropper = new Cropper(imageElement, { aspectRatio: 1 / 1, viewMode: 1, background: false, autoCropArea: 0.9, responsive: true }); } catch (error) { console.error("Falha ao carregar a imagem via proxy:", error); alert("Erro ao carregar imagem. Verifique o URL ou tente outra."); closeCropper(); } }
     function closeCropper() { if (cropper) { cropper.destroy(); cropper = null; } if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; } cropperModal.classList.remove('visible'); }
 
-    async function fetchAndFillActorData() {
-        const nameInput = document.getElementById('actor-name');
-        let actorName = nameInput.value.trim();
-        if (!actorName) {
-            alert('Por favor, insira um nome de ator para procurar.');
-            return;
-        }
-        const formattedName = actorName.replace(/\s+/g, '_');
-        const apiUrl = `https://babefire.vercel.app/api/scrapeBabepedia?name=${formattedName}`;
-
-        btnFetchBabepedia.textContent = 'A procurar...';
-        btnFetchBabepedia.disabled = true;
-
-        try {
-            const response = await fetch(apiUrl);
-            
-            // Adiciona verificação de erro mais robusta
-            if (!response.ok) {
-                // Tenta ler o corpo da resposta como JSON para obter a mensagem de erro da API
-                const errorData = await response.json().catch(() => ({ error: 'O servidor retornou um erro, mas sem detalhes em JSON.' }));
-                throw new Error(errorData.message || errorData.error || `Erro HTTP ${response.status}`);
-            }
-            
-            // Se a resposta for OK, processa como JSON
-            const data = await response.json();
-
-            console.log("Dados recebidos da API Vercel:", data);
-
-            extraActorData = {}; 
-            extraActorData = { ...data };
-            
-            if (data.birthDate) document.getElementById('actor-birth-date').value = data.birthDate;
-            if (data.nation) {
-                const nationFound = allNations.find(n => n.name.toLowerCase() === data.nation.toLowerCase());
-                if (nationFound) {
-                    selectNation(nationFound);
-                } else {
-                    document.getElementById('actor-nationality-search').value = data.nation;
-                }
-            }
-            if (data.mainImageUrl) {
-                nameInput.dispatchEvent(new Event('input', { bubbles: true })); 
-                openCropper(data.mainImageUrl);
-            }
-            
-        } catch (error) {
-            alert(`Erro ao procurar dados: ${error.message}`);
-            console.error("Erro detalhado no fetch:", error);
-        } finally {
-            btnFetchBabepedia.textContent = 'Procurar';
-            btnFetchBabepedia.disabled = false;
-        }
+   async function fetchAndFillActorData() {
+    const nameInput = document.getElementById('actor-name');
+    let actorName = nameInput.value.trim();
+    if (!actorName) {
+        alert('Por favor, insira um nome de ator para procurar.');
+        return;
     }
+    const formattedName = actorName.replace(/\s+/g, '_');
+    const apiUrl = `https://babefire.vercel.app/api/scrapeBabepedia?name=${formattedName}`;
+
+    btnFetchBabepedia.textContent = 'A procurar...';
+    btnFetchBabepedia.disabled = true;
+
+    try {
+        const response = await fetch(apiUrl);
+        
+        // --- CÓDIGO DE DEPURAÇÃO VISUAL ---
+        // Lê a resposta como texto simples
+        const htmlText = await response.text();
+        
+        // Procura por uma área de texto de depuração, ou cria uma se não existir
+        let debugArea = document.getElementById('debug-html-area');
+        if (!debugArea) {
+            debugArea = document.createElement('textarea');
+            debugArea.id = 'debug-html-area';
+            debugArea.style.width = '98%';
+            debugArea.style.height = '400px';
+            debugArea.style.marginTop = '20px';
+            // Adiciona a área de texto ao final do conteúdo principal
+            document.querySelector('.container main').appendChild(debugArea);
+        }
+        
+        // Coloca o HTML completo dentro da área de texto
+        debugArea.value = htmlText;
+        
+        alert('HTML de depuração carregado na caixa de texto abaixo. Por favor, copie TODO o texto (Ctrl+A, Ctrl+C) e cole na nossa conversa.');
+        // --- FIM DO CÓDIGO DE DEPURAÇÃO VISUAL ---
+        
+    } catch (error) {
+        alert(`Erro ao procurar dados: ${error.message}`);
+        console.error("Erro detalhado no fetch:", error);
+    } finally {
+        btnFetchBabepedia.textContent = 'Procurar';
+        btnFetchBabepedia.disabled = false;
+    }
+}
 
     // --- EVENT LISTENERS E INICIALIZAÇÃO ---
     btnAddActorByText.addEventListener('click', openTextModal);
