@@ -1,5 +1,3 @@
-// Ficheiro: /netlify/functions/scrapeBabepedia.js (VERSÃO FINAL E CORRIGIDA)
-
 const axios = require('axios');
 const cheerio = require('cheerio');
 
@@ -29,30 +27,34 @@ exports.handler = async function(event, context) {
         const $ = cheerio.load(html);
         const actorData = {};
 
-        // --- LÓGICA DE SCRAPING FINAL E CORRIGIDA ---
+        // --- LÓGICA DE SCRAPING FINALÍSSIMA ---
 
-        // 1. Extrair a imagem principal
+        // 1. Extrair a imagem principal (Já estava a funcionar)
         const imageUrl = $('#profimg picture img').attr('src') || $('#profimg img').attr('src');
         if (imageUrl) {
             actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
         }
 
-        // 2. Extrair os dados da biografia
-        // Percorre todas as divs com a classe 'info-item' dentro do bloco de informação pessoal
+        // 2. Extrair os dados da biografia (LÓGICA CORRIGIDA)
         $('#personal-info-block .info-grid .info-item').each((i, elem) => {
-            // Pega o texto do rótulo (ex: "Born:") e o texto do valor
             const label = $(elem).find('span.label').text().trim().toLowerCase();
-            const value = $(elem).find('span.value').text().trim();
             
             if (label.includes('born')) {
-                // Se o rótulo for "born", extrai a data
-                const dateMatch = value.match(/(\w+\s\d{1,2}),\s(\d{4})/);
+                const valueText = $(elem).find('span.value').text().trim();
+                // Tenta extrair a data do texto (ex: "Sunday 18th of December 1988")
+                const dateMatch = valueText.match(/(\d{1,2})th of (\w+) (\d{4})|(\w+\s\d{1,2},?\s\d{4})/);
                 if (dateMatch) {
-                    actorData.birthDate = new Date(dateMatch[0]).toISOString().split('T')[0];
+                    // Limpa o "th", "st", "nd", "rd" para o new Date() funcionar bem
+                    const cleanDateString = dateMatch[0].replace(/(st|nd|rd|th)/, '');
+                    actorData.birthDate = new Date(cleanDateString).toISOString().split('T')[0];
                 }
-            } else if (label.includes('nationality')) {
-                // Se o rótulo for "nationality", extrai o nome do país
-                 actorData.nation = $(elem).find('span.value').text().replace(/\(.*\)/g, '').trim();
+            } else if (label.includes('birthplace')) {
+                // CORREÇÃO: A nacionalidade está no campo "birthplace"
+                // Pega o texto do último link '<a>', que é o país.
+                const country = $(elem).find('span.value a').last().text().trim();
+                if (country) {
+                    actorData.nation = country;
+                }
             }
         });
         
