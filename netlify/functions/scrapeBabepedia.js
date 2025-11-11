@@ -1,7 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const BROWSERLESS_API_KEY = 'SUA_CHAVE_DE_API_AQUI'; 
+const BROWSERLESS_API_KEY = '2TOmpeyz8SObBMse465d63aa39c8019b41c0a273ab1461c29'; 
 
 exports.handler = async function(event, context) {
     const { name } = event.queryStringParameters;
