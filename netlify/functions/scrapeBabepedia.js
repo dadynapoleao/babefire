@@ -1,7 +1,9 @@
+// Ficheiro: /netlify/functions/scrapeBabepedia.js
+
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const BROWSERLESS_API_KEY = '2TOmpeyz8SObBMse465d63aa39c8019b41c0a273ab1461c29'; 
+const BROWSERLESS_API_KEY = '2TOmpeyz8SObBMse465d63aa39c8019b41c0a273ab1461c29'; // Verifique se a sua chave ainda está correta
 
 exports.handler = async function(event, context) {
     const { name } = event.queryStringParameters;
@@ -34,7 +36,17 @@ exports.handler = async function(event, context) {
         });
         
         return { statusCode: 200, body: JSON.stringify(actorData) };
+
     } catch (error) {
-        return { statusCode: 500, body: JSON.stringify({ error: `Falha ao obter dados para "${name}".` }) };
+        // --- ADIÇÃO CRÍTICA AQUI ---
+        // Força a impressão do erro detalhado no log da Netlify
+        console.error("ERRO DETALHADO DENTRO DA FUNÇÃO:", error);
+        
+        return { 
+            statusCode: 500, 
+            body: JSON.stringify({ 
+                error: `Falha ao obter dados para "${name}". Verifique o log da função na Netlify.` 
+            }) 
+        };
     }
 };
