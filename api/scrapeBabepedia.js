@@ -1,100 +1,36 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
+export default async function handler(req, res) {
+  // --- INÍCIO DO CÓDIGO CORS ---
+  // Define que o seu site pode aceder a esta API.
+  // Para mais segurança, substitua '*' pelo URL do seu site: 'https://dadynapoleao.github.io'
+  res.setHeader('Access-Control-Allow-Origin', '*'); 
+  
+  // Define os métodos HTTP permitidos
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  
+  // Define os cabeçalhos permitidos
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept');
 
-// --- VERIFIQUE SE A SUA API KEY DO SCRAPINGBEE ESTÁ AQUI ---
-const SCRAPINGBEE_API_KEY = process.env.SCRAPINGBEE_API_KEY;
+  // O navegador envia um pedido "OPTIONS" antes do "GET" para verificar a permissão.
+  // Se for esse o caso, apenas respondemos com sucesso.
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  // --- FIM DO CÓDIGO CORS ---
 
-exports.handler = async function(event, context) {
-    const { name } = event.queryStringParameters;
-    if (!name) return { statusCode: 400, body: JSON.stringify({ error: 'O nome é obrigatório.' }) };
+  // --- O SEU CÓDIGO EXISTENTE VAI AQUI ---
+  // É uma boa prática envolver o seu código num bloco try...catch
+  try {
+    const { name } = req.query;
 
-    const targetUrl = `https://www.babepedia.com/babe/${name}`;
-    const scrapingBeeUrl = 'https://app.scrapingbee.com/api/v1/';
+    // ... a sua lógica de scraping continua aqui ...
+    
+    // Exemplo de resposta de sucesso
+    const scrapedData = { /* dados que você obteve */ };
+    res.status(200).json(scrapedData);
 
-    try {
-        const response = await axios.get(scrapingBeeUrl, {
-            params: {
-                'api_key': SCRAPINGBEE_API_KEY,
-                'url': targetUrl,
-                'render_js': 'true',
-                'premium_proxy': 'true',
-                'wait_for': '#profimg' 
-            },
-            timeout: 60000
-        });
-
-        const html = response.data;
-        const $ = cheerio.load(html);
-        const actorData = {};
-
-        // 1. Extrair a imagem principal
-        const imageUrl = $('#profimg picture img').attr('src') || $('#profimg img').attr('src');
-        if (imageUrl) {
-            actorData.mainImageUrl = `https://www.babepedia.com${imageUrl}`;
-        }
-
-        // 2. Extrair todos os dados da biografia
-        $('#personal-info-block .info-grid .info-item').each((i, elem) => {
-            const label = $(elem).find('span.label').text().trim().toLowerCase();
-            const value = $(elem).find('span.value').text().trim();
-            
-            if (label.includes('born')) {
-                const dateParts = value.match(/(\d{1,2}).*?of (\w+) (\d{4})/);
-                if (dateParts && dateParts.length === 4) {
-                    const day = dateParts[1];
-                    const month = dateParts[2];
-                    const year = dateParts[3];
-                    const safeDateString = `${month} ${day}, ${year}`;
-                    actorData.birthDate = new Date(safeDateString).toISOString().split('T')[0];
-                }
-            } else if (label.includes('birthplace')) {
-                const country = $(elem).find('span.value a').last().text().trim();
-                if (country) {
-                    actorData.nation = country;
-                }
-            } 
-            // --- NOVOS CAMPOS ADICIONADOS AQUI ---
-            else if (label.includes('hair color')) {
-                actorData.hairColor = value;
-            } 
-            else if (label.includes('height')) {
-                const heightMatch = value.match(/\((\d+)\s*cm\)/); // Captura o valor em cm
-                if (heightMatch && heightMatch[1]) {
-                    actorData.height = parseInt(heightMatch[1], 10);
-                }
-            } 
-            else if (label.includes('eye color')) {
-                actorData.eyeColor = value;
-            } 
-            else if (label.includes('weight')) {
-                const weightMatch = value.match(/\((\d+)\s*kg\)/); // Captura o valor em kg
-                if (weightMatch && weightMatch[1]) {
-                    actorData.weight = parseInt(weightMatch[1], 10);
-                }
-            } 
-            else if (label.includes('years active')) {
-                const yearMatch = value.match(/^\d{4}/); // Captura o primeiro ano (ex: 2021)
-                if (yearMatch) {
-                    actorData.yearsActive = yearMatch[0];
-                }
-            } 
-            else if (label.includes('ethnicity')) {
-                actorData.ethnicity = value;
-            } 
-            else if (label.includes('measurements')) {
-                actorData.measurements = value;
-            }
-        });
-        
-        return { statusCode: 200, body: JSON.stringify(actorData) };
-
-    } catch (error) {
-        console.error("ERRO DETALHADO (ScrapingBee):", error.response ? error.response.data : error.message);
-        return { 
-            statusCode: 500, 
-            body: JSON.stringify({ 
-                error: `Falha ao obter dados para "${name}".`
-            }) 
-        };
-    }
-};
+  } catch (error) {
+    // Se ocorrer um erro, envie uma resposta de erro clara
+    console.error("Erro na API de scraping:", error); // Isto aparecerá nos logs da Vercel
+    res.status(500).json({ error: 'Ocorreu um erro ao processar o seu pedido.' });
+  }
+}
