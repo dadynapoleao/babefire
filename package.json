@@ -4,9 +4,10 @@
   "description": "API for babefire project",
   "main": "index.js",
   "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+ "scripts": {
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "build": "echo 'Build script running...'"
+},
   "dependencies": {
     "@sparticuz/chromium": "121.0.0",
     "puppeteer-core": "21.5.0"
