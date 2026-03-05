@@ -68,6 +68,58 @@
         .scene-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .scene-table th { text-align: left; border-bottom: 1px solid var(--glow); font-size: 0.7rem; opacity: 0.7; padding: 5px; }
         .scene-table td { padding: 8px 5px; border-bottom: 1px solid rgba(0, 255, 65, 0.1); font-size: 0.8rem; }
+
+
+        .cast-link { 
+    color: var(--glow); 
+    text-decoration: underline; 
+    font-weight: bold; 
+    cursor: pointer;
+}
+.cast-link:hover {
+    background: var(--glow);
+    color: #000;
+}
+
+.scene-link { 
+    color: var(--glow); 
+    text-decoration: underline; 
+    cursor: pointer; 
+}
+.scene-link:hover { 
+    background: var(--glow); 
+    color: #000; 
+}
+
+.external-link { 
+    color: #888; /* Cor mais discreta para indicar que é externo */
+    font-size: 0.7rem;
+    text-decoration: none;
+    margin-left: 5px;
+    border: 1px solid #444;
+    padding: 0 4px;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+.external-link:hover { 
+    background: #ff9900; /* Laranja Babepedia ao passar o mouse */
+    color: #000;
+    border-color: #ff9900;
+}
+
+.btn-primary-search {
+    border-color: #00ffff !important;
+    color: #00ffff !important;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+.btn-primary-search:hover {
+    background: #00ffff !important;
+    color: #000 !important;
+}
+
+
     </style>
 </head>
 <body>
@@ -300,71 +352,124 @@
         function openProfile(n) { window.location.hash = `profile=${encodeURIComponent(n)}`; }
         function openScene(n) { window.location.hash = `scene=${n}`; }
 
-        function showProfilePage(p) {
-            document.getElementById('main-page').classList.add('hidden');
-            document.getElementById('profile-page').style.display = 'block';
+      function showProfilePage(p) {
+    document.getElementById('main-page').classList.add('hidden');
+    document.getElementById('scene-detail-page').style.display = 'none'; // Esconde página de cena se estiver aberta
+    document.getElementById('profile-page').style.display = 'block';
 
-            // Filtrar cenas da atriz
-            let related = sceneDatabase.filter(s => s.Cast && s.Cast.toLowerCase().includes(p.Name.toLowerCase()));
-            related.sort((a,b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
+    // Filtrar cenas da atriz no banco de dados de cenas
+    let related = sceneDatabase.filter(s => s.Cast && s.Cast.toLowerCase().includes(p.Name.toLowerCase()));
+    
+    // Ordenar por data (Recente -> Antigo)
+    related.sort((a,b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
 
-            let scenesHtml = `<table class="scene-table"><thead><tr><th>SCENE</th><th>DATE</th><th>SEARCH</th></tr></thead><tbody>`;
-            related.forEach(s => {
-                const q = encodeURIComponent(`${s.Cast} ${s.Name}`);
-                scenesHtml += `<tr><td>${s.Name}</td><td>${s["Release date"]}</td><td>
+    let scenesHtml = `
+        <table class="scene-table">
+            <thead>
+                <tr>
+                    <th>SCENE NAME</th>
+                    <th>DATE</th>
+                    <th>SEARCH</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+related.forEach(s => {
+        const qFull = encodeURIComponent(`${s.Cast} ${s.Name}`);
+        const qTitle = s.Name.trim().replace(/\s+/g, '+');
+        const sceneNameEncoded = encodeURIComponent(s.Name);
+
+        scenesHtml += `
+            <tr>
+                <td onclick="openScene('${sceneNameEncoded}')" class="scene-link">
+                    ${s.Name}
+                </td>
+                <td style="white-space:nowrap">${s["Release date"] || "---"}</td>
+                <td>
                     <div class="search-links">
-                        <a href="https://www.whoreshub.com/search/${q}/" target="_blank">1</a>
-                        <a href="https://pornmz.com/?s=${q}" target="_blank">2</a>
+                        <!-- APSTREAM adicionado como link 'A' -->
+                        <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" title="APStream" style="color:#00ffff; border-color:#00ffff">A</a>
+                        <a href="https://www.whoreshub.com/search/${qFull}/" target="_blank" title="WhoresHub">1</a>
+                        <a href="https://pornmz.com/?s=${qFull}" target="_blank" title="PornMZ">2</a>
                     </div>
-                </td></tr>`;
-            });
-            scenesHtml += "</tbody></table>";
+                </td>
+            </tr>`;
+    });
+    
+    scenesHtml += "</tbody></table>";
 
-            document.getElementById('profile-content').innerHTML = `
-                <div class="profile-header-name">${p.Name}</div>
-                <div class="profile-data-row">
-                    <div class="data-card"><label>AGE</label><span>${calculateAge(p.Born)}</span></div>
-                    <div class="data-card"><label>SCORE</label><span>${p.Total}</span></div>
-                    <div class="data-card"><label>ORIGIN</label><span>${p.Birthplace}</span></div>
-                    <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements}</span></div>
-                </div>
-                <div class="profile-main">
-                    <img src="${p.Image || ''}" class="profile-img-large">
-                    <div class="profile-bio">
-                        <p>> APPEARANCES IN DATABASE:</p>
-                        ${scenesHtml}
-                    </div>
-                </div>`;
+    document.getElementById('profile-content').innerHTML = `
+        <div class="profile-header-name">${p.Name}</div>
+        <div class="profile-data-row">
+            <div class="data-card"><label>AGE</label><span>${calculateAge(p.Born)}</span></div>
+            <div class="data-card"><label>SCORE</label><span>${p.Total}</span></div>
+            <div class="data-card"><label>ORIGIN</label><span>${p.Birthplace}</span></div>
+            <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements}</span></div>
+        </div>
+        <div class="profile-main">
+            <img src="${p.Image || 'https://via.placeholder.com/400x600?text=NO+PHOTO'}" class="profile-img-large">
+            <div class="profile-bio">
+                <p style="margin-top:0; color:rgba(0,255,65,0.7)">> APPEARANCES IN DATABASE (CLICK SCENE NAME FOR DETAILS):</p>
+                ${related.length > 0 ? scenesHtml : '<p style="opacity:0.5">NO SCENES RECORDED.</p>'}
+            </div>
+        </div>`;
+}
+
+function showSceneDetailPage(s) {
+    document.getElementById('main-page').classList.add('hidden');
+    document.getElementById('scene-detail-page').style.display = 'block';
+
+    // Formatações de busca
+    const titleOnlyQuery = s.Name.trim().replace(/\s+/g, '+'); // Para APStream
+    const fullQuery = encodeURIComponent(`${s.Cast} ${s.Name}`); // Para os outros
+
+    const apStreamUrl = `https://rtv.apstream.org/?search=${titleOnlyQuery}`;
+
+    // Lógica do Cast (mesma de antes)
+    const castNames = s.Cast.split(',').map(name => name.trim());
+    const linkedCast = castNames.map(name => {
+        const actressExists = database.find(a => a.Name.toLowerCase() === name.toLowerCase());
+        if (actressExists) {
+            return `<a href="#profile=${encodeURIComponent(actressExists.Name)}" class="cast-link">${name}</a>`;
+        } else {
+            const babepediaFormat = name.replace(/\s+/g, '_');
+            return `<span>${name}<a href="https://www.babepedia.com/babe/${babepediaFormat}" target="_blank" class="external-link" title="Babepedia">[B]</a></span>`;
         }
+    }).join(', ');
 
-        function showSceneDetailPage(s) {
-            document.getElementById('main-page').classList.add('hidden');
-            document.getElementById('scene-detail-page').style.display = 'block';
-
-            const q = encodeURIComponent(`${s.Cast} ${s.Name}`);
-
-            document.getElementById('scene-detail-content').innerHTML = `
-                <div class="profile-header-name">${s.Name}</div>
-                <div class="profile-data-row">
-                    <div class="data-card"><label>STUDIO</label><span>${s.Studio}</span></div>
-                    <div class="data-card"><label>DATE</label><span>${s["Release date"]}</span></div>
-                    <div class="data-card"><label>MOVIE</label><span>${s.Movie || '---'}</span></div>
+    document.getElementById('scene-detail-content').innerHTML = `
+        <div class="profile-header-name">${s.Name}</div>
+        <div class="profile-data-row">
+            <div class="data-card"><label>STUDIO</label><span>${s.Studio}</span></div>
+            <div class="data-card"><label>DATE</label><span>${s["Release date"]}</span></div>
+            <div class="data-card"><label>MOVIE</label><span>${s.Movie || '---'}</span></div>
+        </div>
+        <div class="profile-main">
+            <img src="${s.Image || 'https://via.placeholder.com/500x300?text=NO+IMAGE'}" class="profile-img-large">
+            <div class="profile-bio">
+                
+                <p>> TITULAR SEARCH (BY SCENE NAME):</p>
+                <div class="search-links">
+                    <a href="${apStreamUrl}" target="_blank" class="btn-primary-search">[!] APSTREAM (DIRECT TITLE SEARCH)</a>
                 </div>
-                <div class="profile-main">
-                    <img src="${s.Image || 'https://via.placeholder.com/500x300?text=NO+IMAGE'}" class="profile-img-large">
-                    <div class="profile-bio">
-                        <p>> CAST:</p>
-                        <h2 style="color:#fff">${s.Cast}</h2>
-                        <p>> SEARCH ENGINE LINKS:</p>
-                        <div class="search-links">
-                            <a href="https://www.whoreshub.com/search/${q}/" target="_blank">WHORESHUB</a>
-                            <a href="https://pornmz.com/?s=${q}" target="_blank">PORNMZ</a>
-                            <a href="https://noodlemagazine.com/video/${q}" target="_blank">NOODLEMAG</a>
-                            <a href="https://www.trendyporn.com/search/${q}/" target="_blank">TRENDYPORN</a>
-                        </div>
-                    </div>
-                </div>`;
-        }
+
+                <p style="margin-top:20px">> CAST:</p>
+                <div style="font-size:1.3rem; margin-bottom:20px; line-height:2.2;">
+                    ${linkedCast}
+                </div>
+                
+                <p>> WEB SEARCH ENGINE LINKS (FULL QUERY):</p>
+                <div class="search-links">
+                    <a href="https://www.whoreshub.com/search/${fullQuery}/" target="_blank">WHORESHUB</a>
+                    <a href="https://pornmz.com/?s=${fullQuery}" target="_blank">PORNMZ</a>
+                    <a href="https://noodlemagazine.com/video/${fullQuery}" target="_blank">NOODLEMAG</a>
+                    <a href="https://www.trendyporn.com/search/${fullQuery}/" target="_blank">TRENDYPORN</a>
+                </div>
+            </div>
+        </div>`;
+}
+
+
 
         // --- ROUTING ---
         function handleRouting() {
