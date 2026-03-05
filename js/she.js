@@ -2277,6 +2277,58 @@
 }
 
 
+,{
+    "Name": "Scarlett Alexis",
+    "Born": "30/4/1999",
+    "Years active": "2022",
+    "Birthplace": "United States",
+    "Ethnicity": "Latin",
+    "Hair color": "Black",
+    "Eye color": "Brown",
+    "Height": "165",
+    "Weight": "54",
+    "Body type": "Slim",
+    "Measurements": "34DD-26-36",
+    "Boobs": "34",
+    "Hips": "26",
+    "Ass": "36",
+    "Total": 44,
+    "Tattoos": "No",
+    "Piercings": "No",
+    "Image": ""
+}
+
+
+,{
+    "Name": "Ava Amira",
+    "Born": "10/11/1993",
+    "Years active": "2020",
+    "Birthplace": "Iraq",
+    "Ethnicity": "Mixed-race (primarily Middle Eastern)",
+    "Hair color": "Blonde",
+    "Eye color": "Brown",
+    "Height": "162",
+    "Weight": "50",
+    "Body type": null,
+    "Measurements": "34-23-34",
+    "Boobs": "34",
+    "Hips": "23",
+    "Ass": "34",
+    "Total": 45,
+    "Tattoos": "Yes",
+    "Piercings": "No",
+    "Image": ""
+}
+
+
+
+
+
+
+
+
+
+
 
 
 ]
