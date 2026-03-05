@@ -3,132 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator JSON Silencioso</title>
+    <title>TERMINAL - ARCHIVE SYSTEM</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f4f4f9; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        textarea { width: 100%; height: 180px; border: 1px solid #ccc; border-radius: 5px; padding: 12px; font-family: monospace; box-sizing: border-box; margin-bottom: 10px; }
-        .controls { margin: 15px 0; display: flex; gap: 10px; }
-        button { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #007bff; color: white; transition: background 0.3s; }
-        button:hover { background-color: #0056b3; }
-        /* Estilo do botão de cópia */
-        .btn-copy { background-color: #28a745; min-width: 130px; }
-        .btn-copy:hover { background-color: #218838; }
-        .btn-copy.success { background-color: #155724; } /* Cor quando copiado */
+        :root { --glow: #00ff41; --bg: #050505; }
+        body { background: var(--bg); color: var(--glow); font-family: 'Courier New', monospace; margin: 0; padding: 20px; overflow-x: hidden; }
+        body::after { content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 3px; pointer-events: none; z-index: 1000; }
+        header { border-bottom: 2px solid var(--glow); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+        h1 { margin: 0; font-size: 1.5rem; }
         
-        #output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.5; white-space: pre; border: 1px solid #333; margin-top: 10px; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #444; }
+        .controls { display: flex; gap: 20px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; border: 1px dashed rgba(0, 255, 65, 0.3); padding: 15px; }
+        input, select { background: #000; border: 1px solid var(--glow); color: var(--glow); padding: 8px; outline: none; font-family: inherit; }
+        button { background: transparent; border: 1px solid var(--glow); color: var(--glow); cursor: pointer; padding: 8px 15px; font-family: inherit; text-transform: uppercase; }
+        button:hover, button.active { background: var(--glow); color: #000; box-shadow: 0 0 10px var(--glow); }
+
+        /* FILTROS */
+        #filter-panel { display: none; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; padding: 15px; border: 1px solid var(--glow); background: rgba(0, 255, 65, 0.05); }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.8; }
+
+        /* LISTA */
+        .view-list { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .view-list th { text-align: left; border-bottom: 1px solid var(--glow); padding: 10px; text-transform: uppercase; font-size: 0.8rem; cursor: pointer; }
+        .view-list td { padding: 10px; border-bottom: 1px solid rgba(0, 255, 65, 0.2); cursor: pointer; }
+        .view-list tr:hover td { background: rgba(0, 255, 65, 0.1); color: #fff; }
+
+        /* CARDS VIEW */
+        .view-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { border: 1px solid var(--glow); padding: 15px; cursor: pointer; transition: 0.2s; background: #000; }
+        .card:hover { box-shadow: 0 0 15px var(--glow); background: rgba(0, 255, 65, 0.05); }
+        .card img { width: 100%; height: 180px; object-fit: cover; border: 1px solid var(--glow); margin-bottom: 10px; filter: grayscale(1) brightness(0.8); }
+
+        /* PERFIL (ESTILO SOLICITADO) */
+        #profile-page { display: none; }
+        .profile-header-name { font-size: 3rem; margin: 10px 0; border-bottom: 1px solid var(--glow); padding-bottom: 5px; text-transform: uppercase; letter-spacing: 5px; }
+        
+        .profile-data-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+        .data-card { 
+            border: 1px solid var(--glow); 
+            padding: 10px 20px; 
+            background: rgba(0, 255, 65, 0.05);
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .data-card label { font-size: 0.6rem; opacity: 0.6; text-transform: uppercase; margin-bottom: 5px; }
+        .data-card span { font-size: 1.2rem; font-weight: bold; }
+
+        .profile-main { display: flex; gap: 30px; margin-top: 20px; }
+        .profile-img-large { width: 300px; border: 1px solid var(--glow); box-shadow: 0 0 20px var(--glow); }
+        .profile-bio { flex: 1; border: 1px dashed rgba(0, 255, 65, 0.3); padding: 20px; font-size: 0.9rem; line-height: 1.6; }
+
+        .back-btn { margin-bottom: 20px; display: inline-block; text-decoration: none; color: var(--glow); border: 1px solid var(--glow); padding: 5px 15px; }
+        .back-btn:hover { background: var(--glow); color: #000; }
+
+        .hidden { display: none !important; }
+        .cursor { display: inline-block; width: 10px; height: 1.2em; background: var(--glow); animation: blink 1s infinite; vertical-align: middle; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Gerador de JSON</h2>
-    
-    <label>Cole a Bio aqui:</label>
-    <textarea id="inputText" placeholder="Cole os dados brutos aqui..."></textarea>
-    
-    <div class="controls">
-        <button onclick="processData()">Gerar JSON</button>
-        <button id="copyBtn" class="btn-copy" onclick="copyToClipboard()">Copiar JSON</button>
+    <div id="main-page">
+        <header>
+            <h1>ARCHIVE.001 - CENTRAL DATABASE</h1>
+            <span>STATUS: ONLINE <span class="cursor"></span></span>
+        </header>
+
+        <div class="controls">
+            <div><label>> SEARCH:</label> <input type="text" id="searchInput" onkeyup="render()" placeholder="Type name..."></div>
+            <button onclick="toggleFilters()">[+] FILTERS</button>
+            <div style="margin-left: auto;">
+                <button id="btnList" onclick="setView('list')" class="active">LIST</button>
+                <button id="btnCard" onclick="setView('card')">CARDS</button>
+            </div>
+        </div>
+
+        <div id="filter-panel">
+            <div class="filter-group"><label>Age</label>
+                <select id="f-age" onchange="render()"><option value="">ALL</option><option value="<20"><20</option><option value="21-25">21-25</option><option value="26-30">26-30</option><option value="31-40">31-40</option><option value="40-45">40-45</option><option value=">46">>46</option></select>
+            </div>
+            <div class="filter-group"><label>Origin</label><select id="f-origin" onchange="render()"><option value="">ALL</option></select></div>
+            <div class="filter-group"><label>Score</label><select id="f-total" onchange="render()"><option value="">ALL</option><option value="0-20">0-20</option><option value="21-40">21-40</option><option value="41-60">41-60</option><option value="61-80">61-80</option><option value="81-100">81-100</option></select></div>
+            <div class="filter-group"><label>Ethnicity</label><select id="f-ethnicity" onchange="render()"><option value="">ALL</option></select></div>
+            <div class="filter-group"><label>Hair</label><select id="f-hair" onchange="render()"><option value="">ALL</option></select></div>
+            <div class="filter-group"><label>Tattoos</label><select id="f-tattoos" onchange="render()"><option value="">ALL</option><option value="Yes">Yes</option><option value="No">No</option></select></div>
+            <button onclick="resetFilters()" style="grid-column: 1/-1;">RESET ALL</button>
+        </div>
+
+        <div id="content"></div>
     </div>
 
-    <label>Resultado:</label>
-    <div id="output">O JSON aparecerá aqui...</div>
-</div>
+    <div id="profile-page">
+        <a href="#" class="back-btn" onclick="goBack(event)">[ BACK ]</a>
+        <div id="profile-content"></div>
+    </div>
 
-<script>
-function processData() {
-    const text = document.getElementById('inputText').value.trim();
-    if (!text) return;
+    <script>
+        let database = [];
+        let currentView = 'list';
+        let sortCol = 'Name';
+        let sortAsc = true;
 
-    const find = (regex) => {
-        const match = text.match(regex);
-        return match ? match[1].trim() : null;
-    };
-
-    const rawBirthplace = find(/Birthplace:\s*([^\n\r]+)/);
-    let country = "";
-    if (rawBirthplace) {
-        const parts = rawBirthplace.split(',');
-        country = parts[parts.length - 1].trim();
-    }
-
-    const monthMap = {
-        January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
-        July: 7, August: 8, September: 9, October: 10, November: 11, December: 12
-    };
-    const dateMatch = text.match(/(\d+)(?:st|nd|rd|th)\s+of\s+(\w+)\s+(\d{4})/);
-    let formattedDate = "";
-    if (dateMatch) {
-        formattedDate = `${dateMatch[1]}/${monthMap[dateMatch[2]]}/${dateMatch[3]}`;
-    }
-
-    const measurementsRaw = find(/Measurements:\s*([^\n\s]+)/);
-    let boobs = "", hips = "", ass = "", total = 0;
-
-    if (measurementsRaw) {
-        const mParts = measurementsRaw.split('-');
-        if (mParts.length === 3) {
-            const nBoobs = parseInt(mParts[0].replace(/\D/g, '')) || 0;
-            const nHips = parseInt(mParts[1].replace(/\D/g, '')) || 0;
-            const nAss = parseInt(mParts[2].replace(/\D/g, '')) || 0;
-            boobs = nBoobs.toString();
-            hips = nHips.toString();
-            ass = nAss.toString();
-            total = (nBoobs + nAss) - nHips;
+        function calculateAge(dateString) {
+            if (!dateString) return 0;
+            const parts = dateString.split('/');
+            const birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+            return age;
         }
-    }
 
-    const hasTattoos = (text.match(/Tattoos:\s*(.+)/i) && !text.match(/Tattoos:\s*None/i)) ? "Yes" : "No";
-    const hasPiercings = (text.match(/Piercings:\s*(.+)/i) && !text.match(/Piercings:\s*None/i)) ? "Yes" : "No";
+        async function loadData() {
+            try {
+                const response = await fetch('js/she.json?t=' + new Date().getTime());
+                database = await response.json();
+                populateFilterOptions();
+                handleRouting();
+            } catch (e) { document.getElementById('content').innerHTML = "> DATABASE ERROR: JSON NOT FOUND"; }
+        }
 
-    const profile = {
-        "Name": text.split('\n')[0].trim(),
-        "Born": formattedDate,
-        "Years active": find(/Years active:\s*(\d{4})/),
-        "Birthplace": country,
-        "Ethnicity": find(/Ethnicity:\s*([^\n\r]+)/),
-        "Hair color": find(/Hair color:\s*([^\n\r]+)/),
-        "Eye color": find(/Eye color:\s*([^\n\r]+)/),
-        "Height": find(/or\s*(\d+)\s*cm/) || find(/Height:\s*(\d+)\s*cm/),
-        "Weight": find(/or\s*(\d+)\s*kg/) || find(/Weight:\s*(\d+)\s*kg/),
-        "Body type": find(/Body type:\s*([^\n\r]+)/),
-        "Measurements": measurementsRaw,
-        "Boobs": boobs,
-        "Hips": hips,
-        "Ass": ass,
-        "Total": total,
-        "Tattoos": hasTattoos,
-        "Piercings": hasPiercings,
-        "Image": ""
-    };
+        function populateFilterOptions() {
+            const getUnique = (field) => [...new Set(database.map(item => item[field]))].filter(Boolean).sort();
+            const fillSelect = (id, field) => {
+                const select = document.getElementById(id);
+                getUnique(field).forEach(val => select.innerHTML += `<option value="${val}">${val}</option>`);
+            };
+            fillSelect('f-ethnicity', 'Ethnicity');
+            fillSelect('f-hair', 'Hair color');
+            fillSelect('f-origin', 'Birthplace');
+        }
 
-    const jsonString = JSON.stringify(profile, null, 4);
-    document.getElementById('output').innerText = jsonString + "";
-}
+        function setSort(column) {
+            if (sortCol === column) sortAsc = !sortAsc; 
+            else { sortCol = column; sortAsc = true; }
+            render();
+        }
 
-function copyToClipboard() {
-    const output = document.getElementById('output');
-    const btn = document.getElementById('copyBtn');
-    const text = output.innerText;
+        function toggleFilters() {
+            const p = document.getElementById('filter-panel');
+            p.style.display = (p.style.display === 'grid') ? 'none' : 'grid';
+        }
 
-    if (text.includes("{")) {
-        navigator.clipboard.writeText(text).then(() => {
-            // Feedback visual no botão em vez do alert
-            const originalText = btn.innerText;
-            btn.innerText = "Copiado!";
-            btn.classList.add("success");
+        function resetFilters() {
+            document.querySelectorAll('select').forEach(s => s.value = "");
+            document.getElementById('searchInput').value = "";
+            render();
+        }
 
-            // Volta ao normal depois de 1.5 segundos
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.classList.remove("success");
-            }, 1500);
-        });
-    }
-}
-</script>
+        function setView(view) {
+            currentView = view;
+            document.getElementById('btnList').classList.toggle('active', view === 'list');
+            document.getElementById('btnCard').classList.toggle('active', view === 'card');
+            render();
+        }
 
+        function render() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const fAge = document.getElementById('f-age').value;
+            const fOrigin = document.getElementById('f-origin').value;
+            const fTotal = document.getElementById('f-total').value;
+            const fEth = document.getElementById('f-ethnicity').value;
+            const fHair = document.getElementById('f-hair').value;
+            const fTattoo = document.getElementById('f-tattoos').value;
+
+            let filtered = database.filter(item => {
+                const age = calculateAge(item.Born);
+                const total = parseInt(item.Total) || 0;
+                let mAge = true;
+                if (fAge === "<20") mAge = age < 20;
+                else if (fAge === "21-25") mAge = age >= 21 && age <= 25;
+                else if (fAge === "26-30") mAge = age >= 26 && age <= 30;
+                else if (fAge === "31-40") mAge = age >= 31 && age <= 40;
+                else if (fAge === "40-45") mAge = age >= 40 && age <= 45;
+                else if (fAge === ">46") mAge = age >= 46;
+
+                let mTotal = true;
+                if (fTotal === "0-20") mTotal = total <= 20;
+                else if (fTotal === "21-40") mTotal = total > 20 && total <= 40;
+                else if (fTotal === "41-60") mTotal = total > 40 && total <= 60;
+                else if (fTotal === "61-80") mTotal = total > 60 && total <= 80;
+                else if (fTotal === "81-100") mTotal = total > 80;
+
+                return item.Name.toLowerCase().includes(query) && mAge && mTotal &&
+                       (fEth === "" || item.Ethnicity === fEth) &&
+                       (fHair === "" || item['Hair color'] === fHair) &&
+                       (fOrigin === "" || item.Birthplace === fOrigin) &&
+                       (fTattoo === "" || item.Tattoos === fTattoo);
+            });
+
+            filtered.sort((a, b) => {
+                let valA, valB;
+                if (sortCol === 'Age') { valA = calculateAge(a.Born); valB = calculateAge(b.Born); }
+                else if (sortCol === 'Total') { valA = parseInt(a.Total) || 0; valB = parseInt(b.Total) || 0; }
+                else { valA = (a[sortCol] || "").toString().toLowerCase(); valB = (b[sortCol] || "").toString().toLowerCase(); }
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            const container = document.getElementById('content');
+            const getIcon = (col) => sortCol === col ? (sortAsc ? ' ▲' : ' ▼') : '';
+
+            if (currentView === 'list') {
+                let html = `<table class="view-list"><thead><tr>
+                        <th onclick="setSort('Name')">Name${getIcon('Name')}</th>
+                        <th onclick="setSort('Age')">Age${getIcon('Age')}</th>
+                        <th onclick="setSort('Birthplace')">Origin${getIcon('Birthplace')}</th>
+                        <th onclick="setSort('Total')">Total${getIcon('Total')}</th>
+                        <th onclick="setSort('Measurements')">Measurements${getIcon('Measurements')}</th>
+                    </tr></thead><tbody>`;
+                filtered.forEach(item => {
+                    html += `<tr onclick="openProfile('${item.Name}')">
+                        <td>${item.Name}</td>
+                        <td>${calculateAge(item.Born)}</td>
+                        <td>${item.Birthplace}</td>
+                        <td style="font-weight:bold">${item.Total}</td>
+                        <td>${item.Measurements}</td></tr>`;
+                });
+                container.innerHTML = html + `</tbody></table>`;
+            } else {
+                let html = `<div class="view-cards">`;
+                filtered.forEach(item => {
+                    html += `<div class="card" onclick="openProfile('${item.Name}')">
+                        <img src="${item.Image || 'https://via.placeholder.com/300x180/000/0f0?text=NO+IMAGE'}">
+                        <strong>${item.Name}</strong><br>
+                        <small>Score: ${item.Total} | Age: ${calculateAge(item.Born)}</small></div>`;
+                });
+                container.innerHTML = html + `</div>`;
+            }
+        }
+
+        function openProfile(n) { window.location.hash = `profile=${encodeURIComponent(n)}`; }
+        function goBack(e) { e.preventDefault(); window.location.hash = ""; }
+        function handleRouting() {
+            const h = window.location.hash;
+            if (h.startsWith('#profile=')) {
+                const p = database.find(x => x.Name === decodeURIComponent(h.split('=')[1]));
+                if (p) showProfilePage(p);
+            } else { showMainPage(); }
+        }
+
+        function showMainPage() {
+            document.getElementById('main-page').classList.remove('hidden');
+            document.getElementById('profile-page').style.display = 'none';
+            render();
+        }
+
+        // --- FUNÇÃO ATUALIZADA ---
+        function showProfilePage(p) {
+            document.getElementById('main-page').classList.add('hidden');
+            document.getElementById('profile-page').style.display = 'block';
+            
+            document.getElementById('profile-content').innerHTML = `
+                <div class="profile-header-name">${p.Name}</div>
+                
+                <div class="profile-data-row">
+                    <div class="data-card"><label>AGE</label><span>${calculateAge(p.Born)}</span></div>
+                    <div class="data-card"><label>SCORE</label><span>${p.Total}</span></div>
+                    <div class="data-card"><label>ORIGIN</label><span>${p.Birthplace}</span></div>
+                    <div class="data-card"><label>HAIR</label><span>${p['Hair color']}</span></div>
+                    <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements}</span></div>
+                    <div class="data-card"><label>TATTOOS</label><span>${p.Tattoos}</span></div>
+                </div>
+
+                <div class="profile-main">
+                    <img src="${p.Image || 'https://via.placeholder.com/400x600/000/0f0?text=NO+PHOTO'}" class="profile-img-large">
+                    <div class="profile-bio">
+                        <p>> ACCESSING ENCRYPTED DATA...</p>
+                        <p>> ETHNICITY: ${p.Ethnicity}</p>
+                        <p>> BIRTHDAY: ${p.Born}</p>
+                        <p>> ADDITIONAL INFO: Subject registered in central archive. No further criminal record found.</p>
+                    </div>
+                </div>`;
+        }
+
+        window.addEventListener('hashchange', handleRouting);
+        loadData();
+    </script>
 </body>
 </html>
