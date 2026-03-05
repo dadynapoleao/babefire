@@ -56,14 +56,27 @@ let existingDatabase = [];
 
 // CARREGA O BANCO DE DADOS ATUAL
 async function loadDatabase() {
+    const statusBadge = document.getElementById('status-badge');
     try {
-        const response = await fetch('js/she.json');
+        // O '?' + data evita que o navegador use o cache antigo do arquivo
+        const response = await fetch('js/she.json?t=' + new Date().getTime());
         if (response.ok) {
             existingDatabase = await response.json();
             console.log("Banco carregado:", existingDatabase.length, "atrizes.");
+            
+            // Avisa no console e opcionalmente na tela que o banco está ativo
+            statusBadge.style.display = 'block';
+            statusBadge.innerText = `DB ATIVO: ${existingDatabase.length} REGISTROS`;
+            statusBadge.className = "status-new";
+            setTimeout(() => { statusBadge.style.display = 'none'; }, 3000);
+        } else {
+            throw new Error();
         }
     } catch (e) {
-        console.warn("Aviso: js/she.json não encontrado ou erro de CORS.");
+        console.error("Erro ao carregar banco de dados.");
+        statusBadge.style.display = 'block';
+        statusBadge.innerText = "⚠️ ERRO AO LER JS/SHE.JSON";
+        statusBadge.className = "status-duplicate";
     }
 }
 
@@ -82,7 +95,8 @@ function resetPage() {
 }
 
 function processData() {
-    const text = document.getElementById('inputText').value.trim();
+    const textInput = document.getElementById('inputText').value;
+    const text = textInput.trim();
     if (!text) return;
 
     const find = (regex) => {
@@ -90,11 +104,14 @@ function processData() {
         return match ? match[1].trim() : null;
     };
 
-    const name = text.split('\n')[0].trim();
+    // Extração do Nome (Limpando espaços extras e caracteres invisíveis)
+    const name = text.split('\n')[0].trim().replace(/\s+/g, ' ');
 
-    // VERIFICAÇÃO DE DUPLICATA
+    // VERIFICAÇÃO DE DUPLICATA MELHORADA
     const statusBadge = document.getElementById('status-badge');
-    const isDuplicate = existingDatabase.some(item => item.Name.toLowerCase() === name.toLowerCase());
+    const isDuplicate = existingDatabase.some(item => 
+        item.Name.trim().toLowerCase() === name.toLowerCase()
+    );
 
     statusBadge.style.display = 'block';
     if (isDuplicate) {
