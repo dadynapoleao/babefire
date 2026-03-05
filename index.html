@@ -448,9 +448,8 @@ function showSceneDetailPage(s) {
             <img src="${s.Image || 'https://via.placeholder.com/500x300?text=NO+IMAGE'}" class="profile-img-large">
             <div class="profile-bio">
                 
-                <p>> TITULAR SEARCH (BY SCENE NAME):</p>
+
                 <div class="search-links">
-                    <a href="${apStreamUrl}" target="_blank" class="btn-primary-search">[!] APSTREAM (DIRECT TITLE SEARCH)</a>
                 </div>
 
                 <p style="margin-top:20px">> CAST:</p>
@@ -460,6 +459,7 @@ function showSceneDetailPage(s) {
                 
                 <p>> WEB SEARCH ENGINE LINKS (FULL QUERY):</p>
                 <div class="search-links">
+                     <a href="https://rtv.apstream.org/?search/${fullQuery}/" target="_blank">apstream</a>
                     <a href="https://www.whoreshub.com/search/${fullQuery}/" target="_blank">WHORESHUB</a>
                     <a href="https://pornmz.com/?s=${fullQuery}" target="_blank">PORNMZ</a>
                     <a href="https://noodlemagazine.com/video/${fullQuery}" target="_blank">NOODLEMAG</a>
