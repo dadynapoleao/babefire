@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator de Cenas - ARCHIVE SYSTEM</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #0d0d0d; color: #00ff41; }
+        .container { max-width: 900px; margin: auto; background: #1a1a1a; padding: 25px; border: 1px solid #00ff41; border-radius: 5px; box-shadow: 0 0 20px rgba(0,255,65,0.2); }
+        textarea, input[type="text"] { 
+            width: 100%; border: 1px solid #00ff41; background: #000; color: #00ff41; 
+            border-radius: 5px; padding: 12px; font-family: 'Courier New', monospace; 
+            box-sizing: border-box; margin-bottom: 15px; outline: none; 
+        }
+        textarea { height: 180px; }
+        input[type="text"]:focus { box-shadow: 0 0 10px rgba(0,255,65,0.5); }
+        
+        .controls { margin: 15px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        button { padding: 12px 20px; border: 1px solid #00ff41; background: transparent; cursor: pointer; font-weight: bold; color: #00ff41; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background: #00ff41; color: #000; }
+        
+        .btn-copy { border-color: #28a745; color: #28a745; }
+        .btn-copy:hover { background: #28a745; color: #fff; }
+
+        #output { background: #000; color: #00ff41; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 14px; white-space: pre; border: 1px dashed #00ff41; margin-top: 10px; min-height: 50px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; opacity: 0.8; }
+        h2 { border-bottom: 2px solid #00ff41; padding-bottom: 10px; margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>SCENE EXTRACTOR .002</h2>
+    
+    <label>> COLE OS DADOS DA CENA AQUI:</label>
+    <textarea id="inputText" placeholder="Cole o texto bruto da cena..."></textarea>
+
+    <label>> URL DA IMAGEM (OPCIONAL):</label>
+    <input type="text" id="imageUrl" placeholder="http://exemplo.com/imagem.jpg">
+    
+    <div class="controls">
+        <button onclick="processScene()">[ GERAR JSON ]</button>
+        <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">[ COPIAR ]</button>
+        <button onclick="resetPage()">[ LIMPAR ]</button>
+    </div>
+
+    <label>> RESULTADO (FORMATO APÊNDICE):</label>
+    <div id="output">Aguardando dados...</div>
+</div>
+
+<script>
+const monthMap = {
+    January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
+    July: 7, August: 8, September: 9, October: 10, November: 11, December: 12
+};
+
+function resetPage() {
+    document.getElementById('inputText').value = "";
+    document.getElementById('imageUrl').value = "";
+    document.getElementById('output').innerText = "Aguardando dados...";
+    document.getElementById('inputText').focus();
+}
+
+function processScene() {
+    const textRaw = document.getElementById('inputText').value.trim();
+    const imgUrl = document.getElementById('imageUrl').value.trim();
+    
+    if (!textRaw) return;
+
+    // 1. Extrair Nome
+    let name = textRaw.split('\n')[0].replace('Scene:', '').trim();
+
+    // 2. Extrair Data e formatar para D/M/YYYY
+    const dateMatch = textRaw.match(/Release date:\s*(\w+)\s*(\d{1,2}),\s*(\d{4})/i);
+    let formattedDate = "";
+    if (dateMatch) {
+        const day = parseInt(dateMatch[2]);
+        const month = monthMap[dateMatch[1]];
+        const year = dateMatch[3];
+        formattedDate = `${day}/${month}/${year}`;
+    }
+
+    // 3. Extrair Número da Cena
+    const sceneMatch = textRaw.match(/Scene\s*#(\d+)/i);
+    const sceneNumber = sceneMatch ? sceneMatch[1] : "";
+
+    // 4. Extrair Estúdio
+    const studioMatch = textRaw.match(/Studio:\s*([^\n\r-]+)/i);
+    const studio = studioMatch ? studioMatch[1].trim() : "";
+
+    // 5. Extrair Filme
+    const movieMatch = textRaw.match(/Movie:\s*([^\n\r-]+)/i);
+    const movie = movieMatch ? movieMatch[1].trim() : "";
+
+    // 6. Extrair Elenco (Cast)
+    const lines = textRaw.split('\n');
+    let castArray = [];
+    let startCollecting = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        
+        if (line.match(/Pornstars \/ Cast/i) || line.match(/performed by/i)) {
+            startCollecting = true;
+            continue;
+        }
+
+        if (startCollecting && line !== "") {
+            if (line.match(/All Scenes/i) || line.match(/Studio:/i)) {
+                continue; 
+            }
+            if (!castArray.includes(line) && line.length < 40 && !line.includes('[Nav]')) {
+                castArray.push(line);
+            }
+        }
+    }
+    
+    const uniqueCast = [...new Set(castArray)];
+
+    const sceneObj = {
+        "Name": name,
+        "Release date": formattedDate,
+        "Scene": sceneNumber,
+        "Studio": studio,
+        "Movie": movie,
+        "Cast": uniqueCast.join(", "),
+        "Image": imgUrl // Campo adicionado aqui
+    };
+
+    document.getElementById('output').innerText = "," + JSON.stringify(sceneObj, null, 4);
+}
+
+function copyToClipboard() {
+    const output = document.getElementById('output');
+    const btn = document.getElementById('copyBtn');
+    const text = output.innerText;
+
+    if (text.includes("{")) {
+        navigator.clipboard.writeText(text).then(() => {
+            const old = btn.innerText;
+            btn.innerText = "[ COPIADO! ]";
+            setTimeout(() => btn.innerText = old, 1500);
+        });
+    }
+}
+</script>
+
+</body>
+</html>
