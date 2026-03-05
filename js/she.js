@@ -2190,13 +2190,91 @@
     "Image": ""
 }
 
+,{
+    "Name": "Carina Blair",
+    "Born": "15/6/1992",
+    "Years active": "2022",
+    "Birthplace": "United States",
+    "Ethnicity": "Caucasian",
+    "Hair color": "Blonde",
+    "Eye color": "Blue",
+    "Height": "157",
+    "Weight": "54",
+    "Body type": "Slim",
+    "Measurements": "36-26-35",
+    "Boobs": "36",
+    "Hips": "26",
+    "Ass": "35",
+    "Total": 45,
+    "Tattoos": "Yes",
+    "Piercings": "Yes",
+    "Image": ""
+}
 
 
+,{
+    "Name": "Jade Valentine",
+    "Born": "13/1/1997",
+    "Years active": "2022",
+    "Birthplace": "United States",
+    "Ethnicity": "Caucasian",
+    "Hair color": "Black",
+    "Eye color": "Blue",
+    "Height": "162",
+    "Weight": "59",
+    "Body type": "Slim",
+    "Measurements": "35B-26-39",
+    "Boobs": "35",
+    "Hips": "26",
+    "Ass": "39",
+    "Total": 48,
+    "Tattoos": "No",
+    "Piercings": "No",
+    "Image": ""
+}
+
+,{
+    "Name": "Madelynn May",
+    "Born": "22/2/1993",
+    "Years active": "2017",
+    "Birthplace": "United States",
+    "Ethnicity": "Caucasian",
+    "Hair color": "Blonde",
+    "Eye color": "Green",
+    "Height": "149",
+    "Weight": "62",
+    "Body type": "Average",
+    "Measurements": "34-27-35",
+    "Boobs": "34",
+    "Hips": "27",
+    "Ass": "35",
+    "Total": 42,
+    "Tattoos": "Yes",
+    "Piercings": "Yes",
+    "Image": ""
+}
 
 
-
-
-
+,{
+    "Name": "Lacey Jayne",
+    "Born": "7/1/1995",
+    "Years active": "2020",
+    "Birthplace": "United States",
+    "Ethnicity": "Caucasian",
+    "Hair color": "Black",
+    "Eye color": "Green",
+    "Height": "160",
+    "Weight": null,
+    "Body type": "Average",
+    "Measurements": "39-23-29",
+    "Boobs": "39",
+    "Hips": "23",
+    "Ass": "29",
+    "Total": 45,
+    "Tattoos": "Yes",
+    "Piercings": "Yes",
+    "Image": ""
+}
 
 
 
