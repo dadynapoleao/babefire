@@ -3,27 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator JSON Silencioso</title>
+    <title>Extrator JSON com Verificador de Duplicatas</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        textarea { width: 100%; height: 180px; border: 1px solid #ccc; border-radius: 5px; padding: 12px; font-family: monospace; box-sizing: border-box; margin-bottom: 10px; }
-        .controls { margin: 15px 0; display: flex; gap: 10px; }
+        textarea { width: 100%; height: 150px; border: 1px solid #ccc; border-radius: 5px; padding: 12px; font-family: monospace; box-sizing: border-box; margin-bottom: 10px; }
+        .controls { margin: 15px 0; display: flex; gap: 10px; align-items: center; }
         button { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #007bff; color: white; transition: background 0.3s; }
         button:hover { background-color: #0056b3; }
-        /* Estilo do botão de cópia */
-        .btn-copy { background-color: #28a745; min-width: 130px; }
-        .btn-copy:hover { background-color: #218838; }
-        .btn-copy.success { background-color: #155724; } /* Cor quando copiado */
+        .btn-copy { background-color: #28a745; }
         
-        #output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.5; white-space: pre; border: 1px solid #333; margin-top: 10px; }
+        /* Status de Verificação */
+        #status-badge { padding: 8px 15px; border-radius: 5px; font-weight: bold; display: none; }
+        .status-new { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-duplicate { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; font-size: 1.1rem; animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        #output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 14px; white-space: pre; border: 1px solid #333; margin-top: 10px; }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #444; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Gerador de JSON</h2>
+    <h2>Gerador de JSON + Verificador</h2>
     
     <label>Cole a Bio aqui:</label>
     <textarea id="inputText" placeholder="Cole os dados brutos aqui..."></textarea>
@@ -31,6 +39,7 @@
     <div class="controls">
         <button onclick="processData()">Gerar JSON</button>
         <button id="copyBtn" class="btn-copy" onclick="copyToClipboard()">Copiar JSON</button>
+        <div id="status-badge"></div>
     </div>
 
     <label>Resultado:</label>
@@ -38,6 +47,21 @@
 </div>
 
 <script>
+let existingDatabase = [];
+
+// 1. CARREGA O BANCO DE DADOS ATUAL AO INICIAR
+async function loadDatabase() {
+    try {
+        const response = await fetch('js/she.json');
+        if (response.ok) {
+            existingDatabase = await response.json();
+            console.log("Banco de dados carregado. Itens:", existingDatabase.length);
+        }
+    } catch (e) {
+        console.warn("Não foi possível carregar js/she.json. Certifique-se de estar usando um servidor local (Live Server).");
+    }
+}
+
 function processData() {
     const text = document.getElementById('inputText').value.trim();
     if (!text) return;
@@ -46,6 +70,23 @@ function processData() {
         const match = text.match(regex);
         return match ? match[1].trim() : null;
     };
+
+    // Extração do Nome (primeira linha)
+    const name = text.split('\n')[0].trim();
+
+    // --- VERIFICAÇÃO DE DUPLICATA ---
+    const statusBadge = document.getElementById('status-badge');
+    const isDuplicate = existingDatabase.some(item => item.Name.toLowerCase() === name.toLowerCase());
+
+    statusBadge.style.display = 'block';
+    if (isDuplicate) {
+        statusBadge.innerText = "⚠️ JÁ EXISTE NO ARQUIVO!";
+        statusBadge.className = "status-duplicate";
+    } else {
+        statusBadge.innerText = "✅ NOVA ATRIZ (ÚNICA)";
+        statusBadge.className = "status-new";
+    }
+    // --------------------------------
 
     const rawBirthplace = find(/Birthplace:\s*([^\n\r]+)/);
     let country = "";
@@ -84,7 +125,7 @@ function processData() {
     const hasPiercings = (text.match(/Piercings:\s*(.+)/i) && !text.match(/Piercings:\s*None/i)) ? "Yes" : "No";
 
     const profile = {
-        "Name": text.split('\n')[0].trim(),
+        "Name": name,
         "Born": formattedDate,
         "Years active": find(/Years active:\s*(\d{4})/),
         "Birthplace": country,
@@ -105,7 +146,7 @@ function processData() {
     };
 
     const jsonString = JSON.stringify(profile, null, 4);
-    document.getElementById('output').innerText = jsonString + "";
+    document.getElementById('output').innerText = jsonString;
 }
 
 function copyToClipboard() {
@@ -115,19 +156,15 @@ function copyToClipboard() {
 
     if (text.includes("{")) {
         navigator.clipboard.writeText(text).then(() => {
-            // Feedback visual no botão em vez do alert
             const originalText = btn.innerText;
             btn.innerText = "Copiado!";
-            btn.classList.add("success");
-
-            // Volta ao normal depois de 1.5 segundos
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.classList.remove("success");
-            }, 1500);
+            setTimeout(() => { btn.innerText = originalText; }, 1500);
         });
     }
 }
+
+// Inicia o carregamento
+loadDatabase();
 </script>
 
 </body>
