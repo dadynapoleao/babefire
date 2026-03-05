@@ -7,11 +7,15 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        textarea { width: 100%; height: 150px; border: 1px solid #ccc; border-radius: 5px; padding: 12px; font-family: monospace; box-sizing: border-box; margin-bottom: 10px; }
-        .controls { margin: 15px 0; display: flex; gap: 10px; align-items: center; }
-        button { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #007bff; color: white; transition: background 0.3s; }
-        button:hover { background-color: #0056b3; }
+        textarea { width: 100%; height: 150px; border: 1px solid #ccc; border-radius: 5px; padding: 12px; font-family: monospace; box-sizing: border-box; margin-bottom: 10px; outline-color: #007bff; }
+        .controls { margin: 15px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        button { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: opacity 0.3s; }
+        button:hover { opacity: 0.8; }
+        
+        .btn-generate { background-color: #007bff; }
         .btn-copy { background-color: #28a745; }
+        .btn-reset { background-color: #6c757d; } /* Cinza para o reset */
         
         /* Status de Verificação */
         #status-badge { padding: 8px 15px; border-radius: 5px; font-weight: bold; display: none; }
@@ -24,7 +28,7 @@
             75% { transform: translateX(5px); }
         }
 
-        #output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 14px; white-space: pre; border: 1px solid #333; margin-top: 10px; }
+        #output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 14px; white-space: pre; border: 1px solid #333; margin-top: 10px; min-height: 50px; }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #444; }
     </style>
 </head>
@@ -37,8 +41,9 @@
     <textarea id="inputText" placeholder="Cole os dados brutos aqui..."></textarea>
     
     <div class="controls">
-        <button onclick="processData()">Gerar JSON</button>
+        <button class="btn-generate" onclick="processData()">Gerar JSON</button>
         <button id="copyBtn" class="btn-copy" onclick="copyToClipboard()">Copiar JSON</button>
+        <button class="btn-reset" onclick="resetPage()">Limpar / Novo</button>
         <div id="status-badge"></div>
     </div>
 
@@ -49,17 +54,31 @@
 <script>
 let existingDatabase = [];
 
-// 1. CARREGA O BANCO DE DADOS ATUAL AO INICIAR
+// CARREGA O BANCO DE DADOS ATUAL
 async function loadDatabase() {
     try {
         const response = await fetch('js/she.json');
         if (response.ok) {
             existingDatabase = await response.json();
-            console.log("Banco de dados carregado. Itens:", existingDatabase.length);
+            console.log("Banco carregado:", existingDatabase.length, "atrizes.");
         }
     } catch (e) {
-        console.warn("Não foi possível carregar js/she.json. Certifique-se de estar usando um servidor local (Live Server).");
+        console.warn("Aviso: js/she.json não encontrado ou erro de CORS.");
     }
+}
+
+function resetPage() {
+    // Limpa o texto de entrada
+    document.getElementById('inputText').value = "";
+    // Reseta o output para o estado inicial
+    document.getElementById('output').innerText = "O JSON aparecerá aqui...";
+    // Esconde o badge de status
+    const statusBadge = document.getElementById('status-badge');
+    statusBadge.style.display = 'none';
+    statusBadge.innerText = "";
+    statusBadge.className = "";
+    // Foca no input novamente
+    document.getElementById('inputText').focus();
 }
 
 function processData() {
@@ -71,10 +90,9 @@ function processData() {
         return match ? match[1].trim() : null;
     };
 
-    // Extração do Nome (primeira linha)
     const name = text.split('\n')[0].trim();
 
-    // --- VERIFICAÇÃO DE DUPLICATA ---
+    // VERIFICAÇÃO DE DUPLICATA
     const statusBadge = document.getElementById('status-badge');
     const isDuplicate = existingDatabase.some(item => item.Name.toLowerCase() === name.toLowerCase());
 
@@ -86,7 +104,6 @@ function processData() {
         statusBadge.innerText = "✅ NOVA ATRIZ (ÚNICA)";
         statusBadge.className = "status-new";
     }
-    // --------------------------------
 
     const rawBirthplace = find(/Birthplace:\s*([^\n\r]+)/);
     let country = "";
@@ -163,7 +180,6 @@ function copyToClipboard() {
     }
 }
 
-// Inicia o carregamento
 loadDatabase();
 </script>
 
