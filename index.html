@@ -119,6 +119,83 @@
     color: #000 !important;
 }
 
+/* --- NOVOS ESTILOS PARA HEADER E EDIÇÃO --- */
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.nav-btn { 
+    text-decoration: none; 
+    border: 1px solid var(--glow); 
+    padding: 5px 10px; 
+    color: var(--glow); 
+    font-size: 0.8rem; 
+    cursor: pointer; 
+    background: transparent; 
+    font-family: inherit;
+    text-transform: uppercase;
+}
+.nav-btn:hover, .nav-btn.active { background: var(--glow); color: #000; }
+
+/* Input disfarçado para edição na tabela */
+.edit-input { 
+    background: #111; 
+    border: none; 
+    border-bottom: 1px dashed #444; 
+    color: #fff; 
+    width: 90%; 
+    font-family: 'Courier New', monospace; 
+    font-size: 0.8rem; 
+    padding: 2px;
+}
+.edit-input:focus { border-bottom: 1px solid var(--glow); outline: none; background: #222; }
+
+/* --- ESTILOS DO POPUP DE EDIÇÃO --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); z-index: 2000;
+    display: none; justify-content: center; align-items: center;
+}
+.modal-box {
+    background: #000; border: 2px solid var(--glow);
+    padding: 20px; width: 600px; max-width: 90%;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+    display: flex; flex-direction: column; gap: 15px;
+}
+.modal-header { font-size: 1.2rem; border-bottom: 1px solid var(--glow); padding-bottom: 10px; margin-bottom: 10px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-size: 0.7rem; color: var(--glow); opacity: 0.7; margin-bottom: 3px; }
+.form-group input { background: #111; border: 1px solid #333; color: #fff; padding: 5px; }
+.form-group input:focus { border-color: var(--glow); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+.btn-save { background: var(--glow); color: #000; font-weight: bold; border: none; padding: 10px 20px; cursor: pointer; }
+.btn-cancel { background: transparent; color: #888; border: 1px solid #444; padding: 10px 20px; cursor: pointer; }
+.btn-cancel:hover { color: #fff; border-color: #fff; }
+
+
+/* Botão pequeno ao lado do input */
+.input-group { display: flex; gap: 5px; }
+.btn-icon { background: #333; border: 1px solid var(--glow); color: var(--glow); cursor: pointer; padding: 5px 10px; }
+.btn-icon:hover { background: var(--glow); color: #000; }
+
+/* Modal de Posicionamento */
+#pos-modal { z-index: 2100; /* Acima do modal de edição */ }
+.preview-container {
+    width: 300px; height: 180px; /* Mesmo tamanho do Card */
+    border: 2px dashed var(--glow);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: #000;
+    cursor: move;
+}
+.preview-image {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: 50% 50%; /* Padrão */
+    pointer-events: none; /* Deixa o evento de mouse para o container */
+}
+.range-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+.range-group { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
+.range-group input { flex: 1; accent-color: var(--glow); }
 
     </style>
 </head>
@@ -127,13 +204,20 @@
     <!-- MAIN PAGE -->
     <div id="main-page">
         <header>
-            <h1>CENTRAL DATABASE</h1>
-            <div class="tabs">
-                <button id="tab-actrisses" class="tab-link active" onclick="switchMainTab('actrisses')">ACTRISSES</button>
-                <button id="tab-scenes" class="tab-link" onclick="switchMainTab('scenes')">SCENES</button>
-            </div>
-            <span>STATUS: ONLINE <span class="cursor"></span></span>
-        </header>
+         <h1>CENTRAL DATABASE</h1>
+    <div class="tabs">
+        <button id="tab-actrisses" class="tab-link active" onclick="switchMainTab('actrisses')">ACTRISSES</button>
+        <button id="tab-scenes" class="tab-link" onclick="switchMainTab('scenes')">SCENES</button>
+    </div>
+    
+    <!-- NOVOS BOTÕES -->
+    <div class="header-actions">
+        <a href="zrobot.html" class="nav-btn" title="Add Actress">+SHE</a>
+        <a href="zrobotVids.html" class="nav-btn" title="Add Video">+VID</a>
+        <button onclick="toggleEditMode()" id="btnEditMode" class="nav-btn" title="Edit Database">✎</button>
+        <button id="btnExport" onclick="exportData()" class="nav-btn hidden" style="border-color:#00ffff; color:#00ffff;">[ SAVE JSON ]</button>
+    </div>
+</header>
 
         <div class="controls">
             <div><label>> SEARCH:</label> <input type="text" id="searchInput" onkeyup="render()" placeholder="Search names, studios..."></div>
@@ -169,6 +253,106 @@
         <div id="scene-detail-content"></div>
     </div>
 
+    <!-- MODAL DE EDIÇÃO -->
+<div id="edit-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">EDIT ENTITY DATA</div>
+        <div class="form-grid">
+            <div class="form-group"><label>NAME</label><input id="e-name"></div>
+            <div class="form-group"><label>BORN (DD/MM/YYYY)</label><input id="e-born"></div>
+            <div class="form-group"><label>BIRTHPLACE</label><input id="e-birthplace"></div>
+            <div class="form-group"><label>SCORE (TOTAL)</label><input id="e-total" type="number"></div>
+            <div class="form-group"><label>MEASUREMENTS</label><input id="e-measurements"></div>
+            <div class="form-group"><label>HEIGHT (cm)</label><input id="e-height"></div>
+            <div class="form-group"><label>WEIGHT (kg)</label><input id="e-weight"></div>
+            <div class="form-group"><label>HAIR COLOR</label><input id="e-hair"></div>
+            <div class="form-group"><label>ETHNICITY</label><input id="e-ethnicity"></div>
+            
+            <div class="form-group" style="grid-column: span 2;">
+                <label>IMAGE PREVIEW & AI TOOL</label>
+                <!-- O PREVIEW QUE ESTAVA FALTANDO -->
+                <div style="border: 1px solid #333; height: 120px; background: #000; display: flex; justify-content: center; margin-bottom:10px;">
+                    <img id="e-preview-small" src="" style="max-height: 100%; object-fit: contain;">
+                </div>
+
+ <div class="input-group">
+    <input id="e-image" oninput="document.getElementById('e-preview-small').src = this.value">
+    <button class="btn-icon" onclick="openPosModal()">⌖</button>
+    <!-- BOTÃO POWER: NEURAL PURGE -->
+    <button id="btn-neural" onclick="runNeuralPurge()" class="btn-icon" style="color: #00ff41; border-color: #00ff41; background: rgba(0,255,65,0.1);">⚡ NEURAL PURGE</button>
+</div>
+<p id="neural-status" style="font-size: 0.6rem; color: #00ff41; display: none; margin-top: 5px;">> INITIALIZING SEGMENTATION MASK...</p>
+
+                <p id="ai-status" style="font-size: 0.6rem; color: #ff00ff; display: none; margin-top:5px;"></p>
+                <input type="hidden" id="e-position">
+            </div>
+        </div>
+        <input type="hidden" id="e-index">
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeEditModal()">CANCEL</button>
+            <button class="btn-save" onclick="saveFromModal()">[ SAVE CHANGES ]</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL DE POSICIONAMENTO DE IMAGEM -->
+<div id="pos-modal" class="modal-overlay">
+    <div class="modal-box" style="width: 400px;">
+        <div class="modal-header">ADJUST IMAGE POSITION</div>
+        <p style="font-size:0.7rem; opacity:0.7; margin:0;">> DRAG IMAGE OR USE SLIDERS TO CENTER FACE</p>
+        
+        <div class="preview-container" id="preview-box" onmousedown="startDrag(event)">
+            <img id="pos-preview-img" class="preview-image" src="">
+        </div>
+
+        <div class="range-controls">
+            <div class="range-group">
+                <label>X:</label>
+                <input type="range" id="pos-x" min="0" max="100" value="50" oninput="updatePreviewFromSliders()">
+            </div>
+            <div class="range-group">
+                <label>Y:</label>
+                <input type="range" id="pos-y" min="0" max="100" value="50" oninput="updatePreviewFromSliders()">
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closePosModal()">CANCEL</button>
+            <button class="btn-save" onclick="savePosition()">APPLY</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE LIMPEZA DE FUNDO (CHROMA KEY) -->
+<div id="purge-modal" class="modal-overlay">
+    <div class="modal-box" style="width: 500px;">
+        <div class="modal-header">SCANNER: BACKGROUND PURGE</div>
+        <p style="font-size:0.7rem; opacity:0.7;">> CLICK ON THE BACKGROUND COLOR TO REMOVE IT</p>
+        
+        <div style="background:#111; padding:10px; display:flex; justify-content:center;">
+            <canvas id="purge-canvas" style="max-width:100%; cursor:crosshair; border:1px solid #333;"></canvas>
+        </div>
+
+        <div class="range-controls">
+            <div class="range-group">
+                <label>SENSITIVITY:</label>
+                <input type="range" id="purge-tol" min="1" max="100" value="30">
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="document.getElementById('purge-modal').style.display='none'">CANCEL</button>
+            <button class="btn-save" onclick="applyPurge()">[ APPLY CHANGES ]</button>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- No seu <head>, remova o script anterior e coloque este: -->
+<script src="https://unpkg.com/@imgly/background-removal@1.4.5/dist/bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
     <script>
         let database = [];
         let sceneDatabase = [];
@@ -176,6 +360,9 @@
         let currentView = 'list';
         let sortCol = 'Name';
         let sortAsc = true;
+ let isEditMode = false;
+ let isDragging = false;
+let selfieSegmentation;
 
         // --- HELPERS ---
         function calculateAge(dateString) {
@@ -268,49 +455,6 @@
             }
         }
 
-        function renderActresses(query, container) {
-            const fAge = document.getElementById('f-age').value;
-            const fOrigin = document.getElementById('f-origin').value;
-            const fEth = document.getElementById('f-ethnicity').value;
-            const fHair = document.getElementById('f-hair').value;
-
-            let filtered = database.filter(item => {
-                const age = calculateAge(item.Born);
-                let mAge = true;
-                if (fAge === "<20") mAge = age < 20;
-                else if (fAge === "21-25") mAge = age >= 21 && age <= 25;
-                else if (fAge === "26-30") mAge = age >= 26 && age <= 30;
-                else if (fAge === "31-40") mAge = age >= 31 && age <= 40;
-                else if (fAge === ">41") mAge = age >= 41;
-
-                return item.Name.toLowerCase().includes(query) && mAge &&
-                       (fEth === "" || item.Ethnicity === fEth) &&
-                       (fHair === "" || item['Hair color'] === fHair) &&
-                       (fOrigin === "" || item.Birthplace === fOrigin);
-            });
-
-            if (currentView === 'list') {
-                let html = `<table class="view-list"><thead><tr><th>NAME</th><th>AGE</th><th>ORIGIN</th><th>SCORE</th><th>MEASUREMENTS</th></tr></thead><tbody>`;
-                filtered.forEach(item => {
-                    html += `<tr onclick="openProfile('${item.Name}')">
-                        <td>${item.Name}</td>
-                        <td>${calculateAge(item.Born)}</td>
-                        <td>${item.Birthplace}</td>
-                        <td style="font-weight:bold">${item.Total}</td>
-                        <td>${item.Measurements}</td></tr>`;
-                });
-                container.innerHTML = html + `</tbody></table>`;
-            } else {
-                let html = `<div class="view-cards">`;
-                filtered.forEach(item => {
-                    html += `<div class="card" onclick="openProfile('${item.Name}')">
-                        <img src="${item.Image || 'https://via.placeholder.com/300x180?text=NO+IMAGE'}">
-                        <strong>${item.Name}</strong><br>
-                        <small>Score: ${item.Total} | Age: ${calculateAge(item.Born)}</small></div>`;
-                });
-                container.innerHTML = html + `</div>`;
-            }
-        }
 
         function renderScenes(query, container) {
             let filtered = sceneDatabase.filter(s => 
@@ -490,6 +634,425 @@ function showSceneDetailPage(s) {
         }
 
         function goBack(e) { e.preventDefault(); window.location.hash = ""; }
+
+
+// --- ADICIONE ESTA FUNÇÃO NOVA ---
+        function sortBy(col) {
+            if (sortCol === col) {
+                sortAsc = !sortAsc; // Inverte a ordem se clicar na mesma coluna
+            } else {
+                sortCol = col;
+                sortAsc = true; // Padrão ascendente para nova coluna
+            }
+            render();
+        }
+
+// --- FUNÇÕES DE EDIÇÃO E EXPORTAÇÃO ---
+      function toggleEditMode() {
+            if (currentMainTab !== 'actrisses') {
+                alert("Please switch to ACTRISSES tab.");
+                return;
+            }
+            isEditMode = !isEditMode;
+            
+            // Visual feedback
+            const btn = document.getElementById('btnEditMode');
+            const exportBtn = document.getElementById('btnExport');
+            
+            if (isEditMode) {
+                btn.classList.add('active');
+                btn.innerHTML = "✖"; // Muda ícone para fechar
+                exportBtn.classList.remove('hidden');
+                document.body.style.cursor = "alias"; // Cursor diferente para indicar modo edição
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = "✎";
+                exportBtn.classList.add('hidden');
+                document.body.style.cursor = "default";
+            }
+        }
+
+        // Decide se abre o perfil ou o editor baseado no modo
+        function handleRowClick(name) {
+            if (isEditMode) {
+                openEditModal(name);
+            } else {
+                openProfile(name);
+            }
+        }
+
+function openEditModal(name) {
+    const index = database.findIndex(i => i.Name === name);
+    if (index === -1) return;
+    const item = database[index];
+
+    // Preenche os campos básicos
+    document.getElementById('e-index').value = index;
+    document.getElementById('e-name').value = item.Name || "";
+    // ... preencha os outros campos aqui (Born, Total, etc) ...
+
+    const imgUrl = item.Image || "";
+    const inputImg = document.getElementById('e-image');
+    const previewImg = document.getElementById('e-preview-small');
+
+    if(inputImg) inputImg.value = imgUrl;
+    
+    // Verifica se o preview existe antes de atribuir a imagem
+    if(previewImg) {
+        previewImg.src = imgUrl;
+    } else {
+        console.error("Elemento 'e-preview-small' não encontrado no HTML!");
+    }
+
+    document.getElementById('e-position').value = item.ImagePosition || "50% 50%";
+    document.getElementById('edit-modal').style.display = 'flex';
+}
+
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+      function saveFromModal() {
+            const index = document.getElementById('e-index').value;
+            
+            database[index].Name = document.getElementById('e-name').value;
+            database[index].Born = document.getElementById('e-born').value;
+            database[index].Birthplace = document.getElementById('e-birthplace').value;
+            database[index].Total = Number(document.getElementById('e-total').value);
+            database[index].Measurements = document.getElementById('e-measurements').value;
+            database[index].Height = document.getElementById('e-height').value;
+            database[index].Weight = document.getElementById('e-weight').value;
+            database[index]['Hair color'] = document.getElementById('e-hair').value;
+            database[index].Ethnicity = document.getElementById('e-ethnicity').value;
+            database[index].Image = document.getElementById('e-image').value;
+            
+            // NOVO: Salvar posição
+            database[index].ImagePosition = document.getElementById('e-position').value;
+
+            closeEditModal();
+            render();
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(database, null, 4);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "she_updated.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // --- ATUALIZAÇÃO NO RENDER ACTRESSES ---
+    function renderActresses(query, container) {
+            const fAge = document.getElementById('f-age').value;
+            const fOrigin = document.getElementById('f-origin').value;
+            const fEth = document.getElementById('f-ethnicity').value;
+            const fHair = document.getElementById('f-hair').value;
+
+            // 1. Filtragem
+            // Nota: Mapeamos o índice original para permitir edição correta mesmo filtrado
+            let filteredIndices = database.map((item, index) => ({ item, index })).filter(({ item }) => {
+                const age = calculateAge(item.Born);
+                let mAge = true;
+                if (fAge === "<20") mAge = age < 20;
+                else if (fAge === "21-25") mAge = age >= 21 && age <= 25;
+                else if (fAge === "26-30") mAge = age >= 26 && age <= 30;
+                else if (fAge === "31-40") mAge = age >= 31 && age <= 40;
+                else if (fAge === ">41") mAge = age >= 41;
+
+                return (item.Name || "").toLowerCase().includes(query) && mAge &&
+                       (fEth === "" || item.Ethnicity === fEth) &&
+                       (fHair === "" || item['Hair color'] === fHair) &&
+                       (fOrigin === "" || item.Birthplace === fOrigin);
+            });
+
+            // 2. Ordenação
+            filteredIndices.sort((a, b) => {
+                let valA, valB;
+                const itemA = a.item;
+                const itemB = b.item;
+
+                if (sortCol === 'Age') {
+                    valA = calculateAge(itemA.Born);
+                    valB = calculateAge(itemB.Born);
+                } else if (sortCol === 'Score') {
+                    valA = parseFloat(itemA.Total) || 0;
+                    valB = parseFloat(itemB.Total) || 0;
+                } else if (sortCol === 'Origin') {
+                    valA = (itemA.Birthplace || '').toLowerCase();
+                    valB = (itemB.Birthplace || '').toLowerCase();
+                } else if (sortCol === 'Measurements') {
+                    valA = (itemA.Measurements || '').toLowerCase();
+                    valB = (itemB.Measurements || '').toLowerCase();
+                } else {
+                    valA = (itemA.Name || '').toLowerCase();
+                    valB = (itemB.Name || '').toLowerCase();
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            const arrow = (col) => sortCol === col ? (sortAsc ? ' ▲' : ' ▼') : '';
+
+            if (currentView === 'list') {
+                let html = `<table class="view-list">
+                    <thead>
+                        <tr>
+                            <th onclick="sortBy('Name')">NAME${arrow('Name')}</th>
+                            <th onclick="sortBy('Age')">AGE${arrow('Age')}</th>
+                            <th onclick="sortBy('Origin')">ORIGIN${arrow('Origin')}</th>
+                            <th onclick="sortBy('Score')">SCORE${arrow('Score')}</th>
+                            <th onclick="sortBy('Measurements')">MEASUREMENTS${arrow('Measurements')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                filteredIndices.forEach(({ item }) => {
+                    // Ao clicar na linha, chama handleRowClick que decide se abre Modal ou Perfil
+                    html += `<tr onclick="handleRowClick('${item.Name}')">
+                        <td>${item.Name}</td>
+                        <td>${calculateAge(item.Born)}</td>
+                        <td>${item.Birthplace}</td>
+                        <td style="font-weight:bold">${item.Total}</td>
+                        <td>${item.Measurements}</td></tr>`;
+                });
+                container.innerHTML = html + `</tbody></table>`;
+            } else {
+                // MODO CARD
+                let html = `<div class="view-cards">`;
+                filteredIndices.forEach(({ item }) => {
+                    // Aplica o posicionamento da imagem salvo no JSON
+                    const pos = item.ImagePosition || 'center'; // Default se não existir
+                    
+                    html += `<div class="card" onclick="handleRowClick('${item.Name}')">
+                        <img src="${item.Image || 'https://via.placeholder.com/300x180?text=NO+IMAGE'}" style="object-position: ${pos}">
+                        <strong>${item.Name}</strong><br>
+                        <small>Score: ${item.Total} | Age: ${calculateAge(item.Born)}</small></div>`;
+                });
+                container.innerHTML = html + `</div>`;
+            }
+        }
+
+         // 1. ABRIR MODAL DE POSICIONAMENTO
+        function openPosModal() {
+            const url = document.getElementById('e-image').value;
+            if (!url) { alert("Please enter an Image URL first."); return; }
+
+            const currentPos = document.getElementById('e-position').value || "50% 50%";
+            const [posX, posY] = currentPos.replace(/%/g, '').split(' ');
+
+            // Configurar imagem e sliders
+            const img = document.getElementById('pos-preview-img');
+            img.src = url;
+            img.style.objectPosition = currentPos;
+
+            document.getElementById('pos-x').value = posX || 50;
+            document.getElementById('pos-y').value = posY || 50;
+
+            document.getElementById('pos-modal').style.display = 'flex';
+        }
+
+        function closePosModal() {
+            document.getElementById('pos-modal').style.display = 'none';
+        }
+
+          // 2. LÓGICA DE ARRASTAR E SLIDERS
+        function updatePreviewFromSliders() {
+            const x = document.getElementById('pos-x').value;
+            const y = document.getElementById('pos-y').value;
+            document.getElementById('pos-preview-img').style.objectPosition = `${x}% ${y}%`;
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            const box = document.getElementById('preview-box');
+            
+            // Função interna para mover
+            function onMouseMove(evt) {
+                if (!isDragging) return;
+                const rect = box.getBoundingClientRect();
+                
+                // Calcular posição do mouse relativa à caixa (0 a 1)
+                let x = (evt.clientX - rect.left) / rect.width;
+                let y = (evt.clientY - rect.top) / rect.height;
+
+                // Limitar entre 0 e 1
+                x = Math.max(0, Math.min(1, x));
+                y = Math.max(0, Math.min(1, y));
+
+                // Converter para porcentagem
+                const xPct = Math.round(x * 100);
+                const yPct = Math.round(y * 100);
+
+                // Atualizar sliders e imagem
+                document.getElementById('pos-x').value = xPct;
+                document.getElementById('pos-y').value = yPct;
+                document.getElementById('pos-preview-img').style.objectPosition = `${xPct}% ${yPct}%`;
+            }
+
+            // Função interna para parar
+            function onMouseUp() {
+                isDragging = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+            // 3. SALVAR POSIÇÃO NO CAMPO OCULTO
+        function savePosition() {
+            const x = document.getElementById('pos-x').value;
+            const y = document.getElementById('pos-y').value;
+            const posString = `${x}% ${y}%`;
+            
+            document.getElementById('e-position').value = posString;
+            closePosModal();
+        }
+
+function openPurgeTool() {
+    const imgUrl = document.getElementById('e-image').value;
+    if (!imgUrl) return alert("Enter Image URL first.");
+
+    const canvas = document.getElementById('purge-canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; // Tenta contornar bloqueios de imagem
+    
+    img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        document.getElementById('purge-modal').style.display = 'flex';
+    };
+    
+    img.onerror = function() {
+        alert("CORS ERROR: This website blocks image scanning. Try hosting the image on Imgur or using a local file.");
+    };
+    
+    img.src = imgUrl;
+
+    // Lógica de clique no canvas para remover cor
+    canvas.onclick = function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        const targetPos = (y * canvas.width + x) * 4;
+        
+        const r = data[targetPos];
+        const g = data[targetPos+1];
+        const b = data[targetPos+2];
+        const tol = document.getElementById('purge-tol').value;
+
+        // Varre a imagem e torna transparente cores similares à clicada
+        for (let i = 0; i < data.length; i += 4) {
+            const dr = Math.abs(data[i] - r);
+            const dg = Math.abs(data[i+1] - g);
+            const db = Math.abs(data[i+2] - b);
+            
+            if (dr < tol && dg < tol && db < tol) {
+                data[i+3] = 0; // Torna o Alpha 0 (Transparente)
+            }
+        }
+        ctx.putImageData(imageData, 0, 0);
+    };
+}
+
+function applyPurge() {
+    const canvas = document.getElementById('purge-canvas');
+    const base64 = canvas.toDataURL("image/png");
+    
+    document.getElementById('e-image').value = base64;
+    document.getElementById('e-preview-small').src = base64;
+    document.getElementById('purge-modal').style.display = 'none';
+    alert("Background Purged Successfully!");
+}
+
+// Inicializa o motor de IA do Google
+async function initAI() {
+    if (selfieSegmentation) return; // Já carregado
+    
+    selfieSegmentation = new SelfieSegmentation({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+    });
+
+    selfieSegmentation.setOptions({ modelSelection: 1 }); // 1 = Qualidade superior
+}
+
+async function runNeuralPurge() {
+    const imgUrl = document.getElementById('e-image').value;
+    const status = document.getElementById('neural-status');
+    const btn = document.getElementById('btn-neural');
+
+    if (!imgUrl) return alert("Enter image URL first.");
+
+    try {
+        status.style.display = 'block';
+        status.innerText = "> DOWNLOADING NEURAL WEIGHTS...";
+        btn.disabled = true;
+
+        await initAI();
+        
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        
+        img.onload = async function() {
+            status.innerText = "> RUNNING PIXEL SEGMENTATION...";
+            
+            // Criamos um canvas temporário para o processamento
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            // Executa a IA na imagem
+            selfieSegmentation.onResults((results) => {
+                // Limpa o canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Desenha a máscara (silhueta)
+                ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+                
+                // Modo "Composição": Mantém apenas o que está dentro da máscara
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+                // Exporta o resultado
+                const finalBase64 = canvas.toDataURL("image/png");
+                document.getElementById('e-image').value = finalBase64;
+                document.getElementById('e-preview-small').src = finalBase64;
+                
+                status.innerText = "> SCAN COMPLETE. TARGET ISOLATED.";
+                btn.disabled = false;
+            });
+
+            await selfieSegmentation.send({ image: img });
+        };
+
+        img.onerror = () => {
+            alert("CORS ERROR: Source website blocks AI scanning. Try downloading the image and using a local path.");
+            btn.disabled = false;
+        };
+
+        img.src = imgUrl;
+
+    } catch (e) {
+        console.error(e);
+        status.innerText = "> ERROR: NEURAL FAILURE.";
+        btn.disabled = false;
+    }
+}
+
 
         window.addEventListener('hashchange', handleRouting);
         loadData();
