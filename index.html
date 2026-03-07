@@ -154,11 +154,39 @@
     display: none; justify-content: center; align-items: center;
 }
 .modal-box {
-    background: #000; border: 2px solid var(--glow);
-    padding: 20px; width: 600px; max-width: 90%;
+    background: #000; 
+    border: 2px solid var(--glow);
+    padding: 20px; 
+    width: 650px; 
+    max-width: 95%; /* Não passa da largura da tela */
+    max-height: 90vh; /* Não passa da altura da tela (90% da visão) */
+    overflow-y: auto; /* Cria barra de rolagem se for muito grande */
+    position: relative; /* Necessário para o botão X */
     box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
-    display: flex; flex-direction: column; gap: 15px;
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px;
 }
+
+.close-modal-x {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: var(--glow);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+.close-modal-x:hover { color: #fff; }
+
+/* Estilização da barra de rolagem interna (Cyberpunk) */
+.modal-box::-webkit-scrollbar { width: 5px; }
+.modal-box::-webkit-scrollbar-track { background: #000; }
+.modal-box::-webkit-scrollbar-thumb { background: var(--glow); }
+
+
 .modal-header { font-size: 1.2rem; border-bottom: 1px solid var(--glow); padding-bottom: 10px; margin-bottom: 10px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .form-group { display: flex; flex-direction: column; }
@@ -196,6 +224,100 @@
 .range-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
 .range-group { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
 .range-group input { flex: 1; accent-color: var(--glow); }
+
+/* Seção de Semelhantes */
+.similar-section { margin-top: 40px; border-top: 1px double var(--glow); padding-top: 20px; }
+.similar-title { font-size: 1rem; color: var(--glow); letter-spacing: 3px; margin-bottom: 20px; text-transform: uppercase; }
+.similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+
+.similar-item { border: 1px solid rgba(0, 255, 65, 0.3); padding: 10px; cursor: pointer; text-align: center; transition: 0.3s; background: rgba(0,0,0,0.5); }
+.similar-item:hover { border-color: var(--glow); box-shadow: 0 0 10px var(--glow); transform: translateY(-5px); }
+.similar-item img { width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid rgba(0, 255, 65, 0.2); margin-bottom: 8px; }
+.similar-item span { font-size: 0.7rem; display: block; text-transform: uppercase; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.similar-pct { font-size: 0.6rem; color: #00ffff; font-family: monospace; }
+
+/* --- ESTILOS DA SEÇÃO SEMELHANTES --- */
+.similar-section { 
+    margin-top: 40px; 
+    border-top: 1px dashed var(--glow); 
+    padding-top: 20px; 
+    clear: both; 
+}
+.similar-title { 
+    font-size: 0.9rem; 
+    color: var(--glow); 
+    margin-bottom: 15px; 
+    text-transform: uppercase; 
+    letter-spacing: 2px;
+}
+.similar-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+    gap: 15px; 
+}
+.similar-item { 
+    border: 1px solid rgba(0, 255, 65, 0.2); 
+    padding: 8px; 
+    cursor: pointer; 
+    background: #000;
+    transition: 0.2s;
+}
+.similar-item:hover { 
+    border-color: var(--glow); 
+    box-shadow: 0 0 10px var(--glow); 
+}
+.similar-item img { 
+    width: 100%; 
+    height: 100px; 
+    object-fit: cover; 
+    border: 1px solid #222;
+}
+.similar-item span { 
+    display: block; 
+    font-size: 0.7rem; 
+    margin-top: 5px; 
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.similar-pct { color: #00ffff !important; font-weight: bold; font-size: 0.6rem !important; }
+
+/* Cards de Ranking Especial */
+.ranking-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+.rank-card {
+    flex: 1;
+    min-width: 100px;
+    border: 1px solid #00ffff;
+    background: rgba(0, 255, 255, 0.05);
+    padding: 10px;
+    text-align: center;
+    box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1);
+}
+.rank-card label {
+    display: block;
+    font-size: 0.55rem;
+    color: #00ffff;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+.rank-card span {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 5px #00ffff;
+}
+.rank-card small {
+    font-size: 0.6rem;
+    opacity: 0.6;
+    display: block;
+}
 
     </style>
 </head>
@@ -256,34 +378,40 @@
     <!-- MODAL DE EDIÇÃO -->
 <div id="edit-modal" class="modal-overlay">
     <div class="modal-box">
+         <button class="close-modal-x" onclick="closeEditModal()">&times;</button>
         <div class="modal-header">EDIT ENTITY DATA</div>
         <div class="form-grid">
             <div class="form-group"><label>NAME</label><input id="e-name"></div>
             <div class="form-group"><label>BORN (DD/MM/YYYY)</label><input id="e-born"></div>
-            <div class="form-group"><label>BIRTHPLACE</label><input id="e-birthplace"></div>
-            <div class="form-group"><label>SCORE (TOTAL)</label><input id="e-total" type="number"></div>
+            <div class="form-group"><label>ORIGIN</label><input id="e-birthplace"></div>
+            <div class="form-group"><label>SCORE</label><input id="e-total" type="number"></div>
             <div class="form-group"><label>MEASUREMENTS</label><input id="e-measurements"></div>
             <div class="form-group"><label>HEIGHT (cm)</label><input id="e-height"></div>
             <div class="form-group"><label>WEIGHT (kg)</label><input id="e-weight"></div>
             <div class="form-group"><label>HAIR COLOR</label><input id="e-hair"></div>
             <div class="form-group"><label>ETHNICITY</label><input id="e-ethnicity"></div>
-            
+            <div class="form-group"><label>EYE COLOR</label><input id="e-eyes"></div>
+            <div class="form-group">
+                <label>TATTOOS?</label>
+                <select id="e-tattoos"><option value="false">NO</option><option value="true">YES</option></select>
+            </div>
+            <div class="form-group">
+                <label>PIERCINGS?</label>
+                <select id="e-piercings"><option value="false">NO</option><option value="true">YES</option></select>
+            </div>
+
+            <!-- SEÇÃO DE IMAGEM COM O PREVIEW QUE ESTAVA FALTANDO -->
             <div class="form-group" style="grid-column: span 2;">
                 <label>IMAGE PREVIEW & AI TOOL</label>
-                <!-- O PREVIEW QUE ESTAVA FALTANDO -->
-                <div style="border: 1px solid #333; height: 120px; background: #000; display: flex; justify-content: center; margin-bottom:10px;">
+                <div style="border: 1px solid #333; height: 100px; background: #000; display: flex; justify-content: center; margin-bottom: 5px;">
+                    <!-- TAG ESSENCIAL ABAIXO -->
                     <img id="e-preview-small" src="" style="max-height: 100%; object-fit: contain;">
                 </div>
-
- <div class="input-group">
-    <input id="e-image" oninput="document.getElementById('e-preview-small').src = this.value">
-    <button class="btn-icon" onclick="openPosModal()">⌖</button>
-    <!-- BOTÃO POWER: NEURAL PURGE -->
-    <button id="btn-neural" onclick="runNeuralPurge()" class="btn-icon" style="color: #00ff41; border-color: #00ff41; background: rgba(0,255,65,0.1);">⚡ NEURAL PURGE</button>
-</div>
-<p id="neural-status" style="font-size: 0.6rem; color: #00ff41; display: none; margin-top: 5px;">> INITIALIZING SEGMENTATION MASK...</p>
-
-                <p id="ai-status" style="font-size: 0.6rem; color: #ff00ff; display: none; margin-top:5px;"></p>
+                <div class="input-group">
+                    <input id="e-image" oninput="document.getElementById('e-preview-small').src = this.value">
+                    <button class="btn-icon" onclick="openPosModal()">⌖</button>
+                    <button onclick="runNeuralPurge()" class="btn-icon" style="color:#00ff41;">⚡ AI</button>
+                </div>
                 <input type="hidden" id="e-position">
             </div>
         </div>
@@ -496,68 +624,95 @@ let selfieSegmentation;
         function openProfile(n) { window.location.hash = `profile=${encodeURIComponent(n)}`; }
         function openScene(n) { window.location.hash = `scene=${n}`; }
 
-      function showProfilePage(p) {
+function showProfilePage(p) {
+    // Reset de visualização
     document.getElementById('main-page').classList.add('hidden');
-    document.getElementById('scene-detail-page').style.display = 'none'; // Esconde página de cena se estiver aberta
+    document.getElementById('scene-detail-page').style.display = 'none';
     document.getElementById('profile-page').style.display = 'block';
 
-    // Filtrar cenas da atriz no banco de dados de cenas
-    let related = sceneDatabase.filter(s => s.Cast && s.Cast.toLowerCase().includes(p.Name.toLowerCase()));
-    
-    // Ordenar por data (Recente -> Antigo)
-    related.sort((a,b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
+    // 1. FILTRAR CENAS
+    let relatedScenes = sceneDatabase.filter(s => s.Cast && s.Cast.toLowerCase().includes(p.Name.toLowerCase()));
+    relatedScenes.sort((a, b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
 
-    let scenesHtml = `
-        <table class="scene-table">
-            <thead>
-                <tr>
-                    <th>SCENE NAME</th>
-                    <th>DATE</th>
-                    <th>SEARCH</th>
-                </tr>
-            </thead>
-            <tbody>`;
-
-related.forEach(s => {
+    let scenesHtml = `<table class="scene-table"><thead><tr><th>SCENE NAME</th><th>DATE</th><th>SEARCH</th></tr></thead><tbody>`;
+    relatedScenes.forEach(s => {
         const qFull = encodeURIComponent(`${s.Cast} ${s.Name}`);
         const qTitle = s.Name.trim().replace(/\s+/g, '+');
-        const sceneNameEncoded = encodeURIComponent(s.Name);
-
-        scenesHtml += `
-            <tr>
-                <td onclick="openScene('${sceneNameEncoded}')" class="scene-link">
-                    ${s.Name}
-                </td>
-                <td style="white-space:nowrap">${s["Release date"] || "---"}</td>
-                <td>
-                    <div class="search-links">
-                        <!-- APSTREAM adicionado como link 'A' -->
-                        <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" title="APStream" style="color:#00ffff; border-color:#00ffff">A</a>
-                        <a href="https://www.whoreshub.com/search/${qFull}/" target="_blank" title="WhoresHub">1</a>
-                        <a href="https://pornmz.com/?s=${qFull}" target="_blank" title="PornMZ">2</a>
-                    </div>
-                </td>
-            </tr>`;
+        scenesHtml += `<tr>
+            <td onclick="openScene('${encodeURIComponent(s.Name)}')" class="scene-link">${s.Name}</td>
+            <td>${s["Release date"] || "---"}</td>
+            <td><div class="search-links">
+                <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" style="color:#00ffff; border-color:#00ffff">A</a>
+                <a href="https://www.whoreshub.com/search/${qFull}/" target="_blank">1</a>
+                <a href="https://pornmz.com/?s=${qFull}" target="_blank">2</a>
+            </div></td></tr>`;
     });
-    
     scenesHtml += "</tbody></table>";
 
+    // 2. ALGORITMO DE SEMELHANTES (9 PARÂMETROS)
+    const currentAge = calculateAge(p.Born);
+   const similarList = database.filter(item => item.Name !== p.Name).map(other => {
+        let pts = 0;
+        const otherAge = calculateAge(other.Born);
+        
+        // Comparações de 9 parâmetros
+        if (currentAge > 0 && otherAge > 0 && Math.abs(currentAge - otherAge) <= 3) pts++;
+        if (p.Ethnicity && p.Ethnicity === other.Ethnicity) pts++;
+        if (p.Measurements && p.Measurements === other.Measurements) pts++;
+        if (p.Height && Math.abs(parseInt(p.Height) - parseInt(other.Height)) <= 5) pts++;
+        if (p.Weight && Math.abs(parseInt(p.Weight) - parseInt(other.Weight)) <= 5) pts++;
+        if (p['Hair color'] && p['Hair color'] === other['Hair color']) pts++;
+        if (p['Eye color'] && p['Eye color'] === other['Eye color']) pts++;
+        if (p.tattoos !== undefined && p.tattoos === other.tattoos) pts++;
+        if (p.piercings !== undefined && p.piercings === other.piercings) pts++;
+
+        const pct = Math.round((pts / 9) * 100);
+        return { ...other, percent: pct };
+    })
+    .filter(a => a.percent >= 60) // AJUSTADO: Agora apenas 60% ou mais aparecerão
+    .sort((a, b) => b.percent - a.percent)
+    .slice(0, 8);
+
+    console.log("Semelhantes encontrados para " + p.Name + ":", similarList.length);
+
+    let similarHtml = "";
+    if (similarList.length > 0) {
+        similarHtml = `
+        <div class="similar-section">
+            <div class="similar-title">> PATTERN RECOGNITION: SIMILAR SUBJECTS (${similarList.length})</div>
+            <div class="similar-grid">`;
+        similarList.forEach(s => {
+            similarHtml += `
+            <div class="similar-item" onclick="openProfile('${encodeURIComponent(s.Name)}')">
+                <img src="${s.Image || 'https://via.placeholder.com/150'}" style="object-position: ${s.ImagePosition || 'center'}">
+                <span>${s.Name}</span>
+                <span class="similar-pct">MATCH: ${s.percent}%</span>
+            </div>`;
+        });
+        similarHtml += `</div></div>`;
+    }
+
+    // 3. MONTAGEM FINAL
     document.getElementById('profile-content').innerHTML = `
         <div class="profile-header-name">${p.Name}</div>
         <div class="profile-data-row">
-            <div class="data-card"><label>AGE</label><span>${calculateAge(p.Born)}</span></div>
-            <div class="data-card"><label>SCORE</label><span>${p.Total}</span></div>
-            <div class="data-card"><label>ORIGIN</label><span>${p.Birthplace}</span></div>
-            <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements}</span></div>
+            <div class="data-card"><label>AGE</label><span>${currentAge || '??'}</span></div>
+            <div class="data-card"><label>SCORE</label><span>${p.Total || 0}</span></div>
+            <div class="data-card"><label>ORIGIN</label><span>${p.Birthplace || '---'}</span></div>
+            <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements || '---'}</span></div>
         </div>
         <div class="profile-main">
-            <img src="${p.Image || 'https://via.placeholder.com/400x600?text=NO+PHOTO'}" class="profile-img-large">
+            <img src="${p.Image || ''}" class="profile-img-large" style="object-position: ${p.ImagePosition || 'center'}">
             <div class="profile-bio">
-                <p style="margin-top:0; color:rgba(0,255,65,0.7)">> APPEARANCES IN DATABASE (CLICK SCENE NAME FOR DETAILS):</p>
-                ${related.length > 0 ? scenesHtml : '<p style="opacity:0.5">NO SCENES RECORDED.</p>'}
+                <p style="margin-top:0; color:var(--glow); opacity:0.7">> REGISTERED APPEARANCES:</p>
+                ${relatedScenes.length > 0 ? scenesHtml : '<p style="opacity:0.5">NO DATA FOUND.</p>'}
             </div>
-        </div>`;
+        </div>
+        ${similarHtml}
+    `;
 }
+
+   
 
 function showSceneDetailPage(s) {
     document.getElementById('main-page').classList.add('hidden');
@@ -686,25 +841,34 @@ function openEditModal(name) {
     if (index === -1) return;
     const item = database[index];
 
-    // Preenche os campos básicos
-    document.getElementById('e-index').value = index;
-    document.getElementById('e-name').value = item.Name || "";
-    // ... preencha os outros campos aqui (Born, Total, etc) ...
+    // Função auxiliar para preencher campos com segurança
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
 
-    const imgUrl = item.Image || "";
-    const inputImg = document.getElementById('e-image');
-    const previewImg = document.getElementById('e-preview-small');
+    setVal('e-index', index);
+    setVal('e-name', item.Name || "");
+    setVal('e-born', item.Born || "");
+    setVal('e-birthplace', item.Birthplace || "");
+    setVal('e-total', item.Total || 0);
+    setVal('e-measurements', item.Measurements || "");
+    setVal('e-height', item.Height || "");
+    setVal('e-weight', item.Weight || "");
+    setVal('e-hair', item['Hair color'] || "");
+    setVal('e-ethnicity', item.Ethnicity || "");
+    setVal('e-eyes', item['Eye color'] || "");
+    setVal('e-tattoos', item.tattoos === true ? "true" : "false");
+    setVal('e-piercings', item.piercings === true ? "true" : "false");
+    setVal('e-image', item.Image || "");
+    setVal('e-position', item.ImagePosition || "50% 50%");
 
-    if(inputImg) inputImg.value = imgUrl;
-    
-    // Verifica se o preview existe antes de atribuir a imagem
-    if(previewImg) {
-        previewImg.src = imgUrl;
-    } else {
-        console.error("Elemento 'e-preview-small' não encontrado no HTML!");
+    // Atualiza o Preview apenas se o elemento existir
+    const preview = document.getElementById('e-preview-small');
+    if (preview) {
+        preview.src = item.Image || "";
     }
 
-    document.getElementById('e-position').value = item.ImagePosition || "50% 50%";
     document.getElementById('edit-modal').style.display = 'flex';
 }
 
@@ -713,26 +877,32 @@ function openEditModal(name) {
             document.getElementById('edit-modal').style.display = 'none';
         }
 
-      function saveFromModal() {
-            const index = document.getElementById('e-index').value;
-            
-            database[index].Name = document.getElementById('e-name').value;
-            database[index].Born = document.getElementById('e-born').value;
-            database[index].Birthplace = document.getElementById('e-birthplace').value;
-            database[index].Total = Number(document.getElementById('e-total').value);
-            database[index].Measurements = document.getElementById('e-measurements').value;
-            database[index].Height = document.getElementById('e-height').value;
-            database[index].Weight = document.getElementById('e-weight').value;
-            database[index]['Hair color'] = document.getElementById('e-hair').value;
-            database[index].Ethnicity = document.getElementById('e-ethnicity').value;
-            database[index].Image = document.getElementById('e-image').value;
-            
-            // NOVO: Salvar posição
-            database[index].ImagePosition = document.getElementById('e-position').value;
+function saveFromModal() {
+    const idx = document.getElementById('e-index').value;
+    
+    // Atualiza o objeto no banco de dados
+    database[idx].Name = document.getElementById('e-name').value;
+    database[idx].Born = document.getElementById('e-born').value;
+    database[idx].Birthplace = document.getElementById('e-birthplace').value;
+    database[idx].Total = Number(document.getElementById('e-total').value);
+    database[idx].Measurements = document.getElementById('e-measurements').value;
+    database[idx].Height = document.getElementById('e-height').value;
+    database[idx].Weight = document.getElementById('e-weight').value;
+    database[idx]['Hair color'] = document.getElementById('e-hair').value;
+    database[idx].Ethnicity = document.getElementById('e-ethnicity').value;
+    
+    // Salva os novos parâmetros
+    database[idx]['Eye color'] = document.getElementById('e-eyes').value;
+    database[idx].tattoos = document.getElementById('e-tattoos').value === "true";
+    database[idx].piercings = document.getElementById('e-piercings').value === "true";
+    
+    database[idx].Image = document.getElementById('e-image').value;
+    database[idx].ImagePosition = document.getElementById('e-position').value;
 
-            closeEditModal();
-            render();
-        }
+    closeEditModal();
+    render(); // Recarrega a lista principal
+    alert("Database updated locally. Don't forget to click [SAVE JSON] to export!");
+}
 
         function exportData() {
             const dataStr = JSON.stringify(database, null, 4);
@@ -1051,6 +1221,195 @@ async function runNeuralPurge() {
         status.innerText = "> ERROR: NEURAL FAILURE.";
         btn.disabled = false;
     }
+}
+
+
+function getSimilarActresses(current) {
+    const currentAge = calculateAge(current.Born);
+    
+    return database.filter(item => item.Name !== current.Name).map(other => {
+        let matches = 0;
+        const totalParams = 9;
+        const otherAge = calculateAge(other.Born);
+
+        // 1. Idade (Margem de 3 anos)
+        if (Math.abs(currentAge - otherAge) <= 3) matches++;
+        // 2. Etnia
+        if (current.Ethnicity === other.Ethnicity) matches++;
+        // 3. Altura (Margem de 5cm)
+        if (Math.abs(parseInt(current.Height) - parseInt(other.Height)) <= 5) matches++;
+        // 4. Peso (Margem de 5kg)
+        if (Math.abs(parseInt(current.Weight) - parseInt(other.Weight)) <= 5) matches++;
+        // 5. Cabelo
+        if (current["Hair color"] === other["Hair color"]) matches++;
+        // 6. Cor dos Olhos (Eye color)
+        if (current["Eye color"] === other["Eye color"]) matches++;
+        // 7. Tatuagens
+        if (current.tattoos === other.tattoos) matches++;
+        // 8. Piercings
+        if (current.piercings === other.piercings) matches++;
+        // 9. Medidas (Medidas exatas ou similares)
+        if (current.Measurements === other.Measurements) matches++;
+
+        const percent = Math.round((matches / totalParams) * 100);
+        return { ...other, percent };
+    }).filter(item => item.percent >= 60) // Apenas 60% ou mais
+      .sort((a, b) => b.percent - a.percent); // Ordena pela maior semelhança
+}
+
+// Fecha o modal se o usuário clicar fora da caixa preta
+window.onclick = function(event) {
+    const modal = document.getElementById('edit-modal');
+    if (event.target == modal) {
+        closeEditModal();
+    }
+}
+
+// Garante que a função close exista
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+}
+
+
+// Extrai números de "34-24-36" -> [34, 24, 36]
+function parseMeasurements(m) {
+    if (!m) return [0, 0, 0];
+    const parts = m.match(/\d+/g);
+    return parts ? parts.map(Number) : [0, 0, 0];
+}
+
+function calculateAllRanks(currentShe) {
+    const list = [...database];
+    const countryList = list.filter(a => a.Birthplace === currentShe.Birthplace);
+    const getPos = (arr, name, valFn) => {
+        const sorted = [...arr].sort((a, b) => valFn(b) - valFn(a));
+        return sorted.findIndex(a => a.Name === name) + 1;
+    };
+    return {
+        global: getPos(list, currentShe.Name, a => parseFloat(a.Total || 0)),
+        country: currentShe.Birthplace ? getPos(countryList, currentShe.Name, a => parseFloat(a.Total || 0)) : 'N/A',
+        boobs: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[0]),
+        hips: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2]),
+        ass: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2])
+    };
+}
+
+// --- FUNÇÃO PRINCIPAL DO PERFIL ---
+function showProfilePage(p) {
+    // 1. PREPARAÇÃO DA PÁGINA
+    document.getElementById('main-page').classList.add('hidden');
+    document.getElementById('scene-detail-page').style.display = 'none';
+    document.getElementById('profile-page').style.display = 'block';
+    window.scrollTo(0, 0);
+
+    // 2. CÁLCULO DE RANKINGS (CARDS CIANO)
+    const ranks = calculateAllRanks(p);
+    const totalGlobal = database.length;
+    const totalCountry = database.filter(a => a.Birthplace === p.Birthplace).length;
+
+    const rankingHtml = `
+        <div class="ranking-container">
+            <div class="rank-card"><label>GLOBAL RANK</label><span>#${ranks.global}</span><small>of ${totalGlobal}</small></div>
+            <div class="rank-card"><label>${p.Birthplace || 'ORIGIN'} RANK</label><span>#${ranks.country}</span><small>of ${totalCountry}</small></div>
+            <div class="rank-card"><label>BOOBS RANK</label><span>#${ranks.boobs}</span><small>by size</small></div>
+            <div class="rank-card"><label>ASS RANK</label><span>#${ranks.ass}</span><small>by size</small></div>
+            <div class="rank-card"><label>HIPS RANK</label><span>#${ranks.hips}</span><small>by size</small></div>
+        </div>`;
+
+    // 3. FILTRAGEM DE CENAS
+    let relatedScenes = sceneDatabase.filter(s => s.Cast && s.Cast.toLowerCase().includes(p.Name.toLowerCase()));
+    relatedScenes.sort((a, b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
+
+    let scenesHtml = `<table class="scene-table"><thead><tr><th>SCENE NAME</th><th>DATE</th><th>SEARCH</th></tr></thead><tbody>`;
+    relatedScenes.forEach(s => {
+        const qFull = encodeURIComponent(`${s.Cast} ${s.Name}`);
+        const qTitle = s.Name.trim().replace(/\s+/g, '+');
+        scenesHtml += `<tr>
+            <td onclick="openScene('${encodeURIComponent(s.Name)}')" class="scene-link">${s.Name}</td>
+            <td style="white-space:nowrap">${s["Release date"] || "---"}</td>
+            <td><div class="search-links">
+                <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" title="APStream" style="color:#00ffff; border-color:#00ffff">A</a>
+                <a href="https://www.whoreshub.com/search/${qFull}/" target="_blank">1</a>
+                <a href="https://pornmz.com/?s=${qFull}" target="_blank">2</a>
+            </div></td></tr>`;
+    });
+    scenesHtml += "</tbody></table>";
+
+    // 4. LÓGICA DE SEMELHANTES (>60%)
+    const currentAge = calculateAge(p.Born);
+    const similarList = database.filter(item => item.Name !== p.Name).map(other => {
+        let pts = 0;
+        const otherAge = calculateAge(other.Born);
+        if (currentAge > 0 && otherAge > 0 && Math.abs(currentAge - otherAge) <= 3) pts++;
+        if (p.Ethnicity && p.Ethnicity === other.Ethnicity) pts++;
+        if (p.Measurements && p.Measurements === other.Measurements) pts++;
+        if (p.Height && Math.abs(parseInt(p.Height) - parseInt(other.Height)) <= 5) pts++;
+        if (p.Weight && Math.abs(parseInt(p.Weight) - parseInt(other.Weight)) <= 5) pts++;
+        if (p['Hair color'] && p['Hair color'] === other['Hair color']) pts++;
+        if (p['Eye color'] && p['Eye color'] === other['Eye color']) pts++;
+        if (p.tattoos !== undefined && p.tattoos === other.tattoos) pts++;
+        if (p.piercings !== undefined && p.piercings === other.piercings) pts++;
+        return { ...other, percent: Math.round((pts / 9) * 100) };
+    }).filter(a => a.percent >= 60).sort((a, b) => b.percent - a.percent).slice(0, 8);
+
+    let similarHtml = "";
+    if (similarList.length > 0) {
+        similarHtml = `<div class="similar-section"><div class="similar-title">> PATTERN RECOGNITION: SIMILAR SUBJECTS</div><div class="similar-grid">`;
+        similarList.forEach(s => {
+            similarHtml += `
+            <div class="similar-item" onclick="openProfile('${encodeURIComponent(s.Name)}')">
+                <img src="${s.Image || ''}" style="object-position: ${s.ImagePosition || 'center'}">
+                <span>${s.Name}</span>
+                <span class="similar-pct">MATCH: ${s.percent}%</span>
+            </div>`;
+        });
+        similarHtml += `</div></div>`;
+    }
+
+    // 5. RENDERIZAÇÃO FINAL DO CONTEÚDO
+    document.getElementById('profile-content').innerHTML = `
+        <div class="profile-header-name">${p.Name}</div>
+        
+        ${rankingHtml}
+
+        <div class="profile-data-row">
+            <div class="data-card"><label>AGE</label><span>${currentAge || '??'}</span></div>
+            <div class="data-card"><label>SCORE</label><span>${p.Total || 0}</span></div>
+            <div class="data-card"><label>ETHNICITY</label><span>${p.Ethnicity || '---'}</span></div>
+            <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements || '---'}</span></div>
+        </div>
+
+        <div class="profile-main">
+            <img src="${p.Image || ''}" class="profile-img-large" style="object-position: ${p.ImagePosition || 'center'}">
+            <div class="profile-bio">
+                <p style="margin-top:0; color:rgba(0,255,65,0.7)">> REGISTERED APPEARANCES:</p>
+                ${relatedScenes.length > 0 ? scenesHtml : '<p style="opacity:0.5">NO SCENES RECORDED.</p>'}
+            </div>
+        </div>
+
+        ${similarHtml}
+    `;
+}
+
+function calculateAllRanks(currentShe) {
+    const list = [...database];
+    const countryList = list.filter(a => a.Birthplace === currentShe.Birthplace);
+
+    const getPos = (arr, name, valFn) => {
+        const sorted = [...arr].sort((a, b) => valFn(b) - valFn(a));
+        return sorted.findIndex(a => a.Name === name) + 1;
+    };
+
+    const curM = parseMeasurements(currentShe.Measurements);
+
+    return {
+        global: getPos(list, currentShe.Name, a => parseFloat(a.Total || 0)),
+        country: currentShe.Birthplace ? getPos(countryList, currentShe.Name, a => parseFloat(a.Total || 0)) : 'N/A',
+        boobs: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[0]),
+        hips: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2]),
+        // Ass rank usamos o mesmo do quadril (hips) que é o padrão de medidas
+        ass: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2]) 
+    };
 }
 
 
