@@ -2299,5 +2299,26 @@
         "piercings": true,
         "Image": "",
         "ImagePosition": "50% 50%"
+    },
+    {
+        "Name": "Kitty Li",
+        "Born": "3/4/1990",
+        "Years active": null,
+        "Birthplace": "United States",
+        "Ethnicity": "Asian",
+        "Hair color": "Brown",
+        "Eye color": "Brown",
+        "Height": "157",
+        "Weight": "53",
+        "Body type": "Slim",
+        "Measurements": "32-23-34",
+        "Boobs": "32",
+        "Hips": "23",
+        "Ass": "34",
+        "Total": 43,
+        "tattoos": true,
+        "piercings": true,
+        "Image": "",
+        "ImagePosition": "50% 50%"
     }
 ]
