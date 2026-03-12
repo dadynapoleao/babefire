@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator JSON - Modo Apêndice</title>
+    <title>Extrator JSON - Auto-Sync GitHub</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -14,6 +14,7 @@
         button:hover { opacity: 0.8; }
         
         .btn-generate { background-color: #007bff; }
+        .btn-github { background-color: #00ffff; color: #000; border: 1px solid #000; } /* Estilo do botão GitHub */
         .btn-copy { background-color: #28a745; }
         .btn-reset { background-color: #6c757d; }
         
@@ -34,40 +35,50 @@
 <body>
 
 <div class="container">
-    <h2>Gerador de JSON (Formato ,{ )</h2>
+    <h2>Gerador de JSON & Sync Cloud</h2>
     
     <label>Cole a Bio aqui:</label>
     <textarea id="inputText" placeholder="Cole os dados brutos aqui..."></textarea>
     
     <div class="controls">
-        <button class="btn-generate" onclick="processData()">Gerar JSON</button>
-        <button id="copyBtn" class="btn-copy" onclick="copyToClipboard()">Copiar JSON</button>
+        <button class="btn-generate" onclick="processData()">1. Gerar Dados</button>
+        <button id="btnSync" class="btn-github" onclick="saveNewSheToGitHub()" style="display:none;">2. Enviar p/ GitHub</button>
         <button class="btn-reset" onclick="resetPage()">Limpar / Novo</button>
         <div id="status-badge"></div>
     </div>
 
-    <label>Resultado (Pronto para colar):</label>
+    <label>Preview do Objeto:</label>
     <div id="output">O JSON aparecerá aqui...</div>
 </div>
 
 <script>
+// CONFIGURAÇÕES GITHUB
+const GITHUB_USER = 'dadynapoleao';
+const GITHUB_REPO = 'babefire';
+const GITHUB_PATH = 'js/she.json';
+// SUA CHAVE DIRETAMENTE AQUI
+const GITHUB_TOKEN = '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';
+
 let existingDatabase = [];
+let currentProfile = null; // Armazena a última She gerada
 
 // Carrega o banco de dados para evitar duplicatas
 async function loadDatabase() {
     try {
-        const response = await fetch('js/she.json?t=' + new Date().getTime());
+        const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}?t=` + new Date().getTime());
         if (response.ok) {
             existingDatabase = await response.json();
             console.log("Banco carregado:", existingDatabase.length);
         }
-    } catch (e) { console.warn("Erro ao ler banco local."); }
+    } catch (e) { console.warn("Erro ao ler banco remoto."); }
 }
 
 function resetPage() {
     document.getElementById('inputText').value = "";
     document.getElementById('output').innerText = "O JSON aparecerá aqui...";
     document.getElementById('status-badge').style.display = 'none';
+    document.getElementById('btnSync').style.display = 'none';
+    currentProfile = null;
     document.getElementById('inputText').focus();
 }
 
@@ -80,23 +91,22 @@ function processData() {
         return match ? match[1].trim() : null;
     };
 
-    // Extração e normalização do Nome
     const name = textRaw.split('\n')[0].trim().replace(/\s+/g, ' ');
-
-    // Verificação de duplicata
-    const statusBadge = document.getElementById('status-badge');
     const isDuplicate = existingDatabase.some(item => item.Name.trim().toLowerCase() === name.toLowerCase());
 
+    const statusBadge = document.getElementById('status-badge');
     statusBadge.style.display = 'block';
+    
     if (isDuplicate) {
         statusBadge.innerText = "⚠️ JÁ EXISTE NO ARQUIVO!";
         statusBadge.className = "status-duplicate";
+        document.getElementById('btnSync').style.display = 'none';
     } else {
         statusBadge.innerText = "✅ NOVA ATRIZ (ÚNICA)";
         statusBadge.className = "status-new";
+        document.getElementById('btnSync').style.display = 'inline-block';
     }
 
-    // Extração de data e país
     const rawBirthplace = find(/Birthplace:\s*([^\n\r]+)/);
     let country = "";
     if (rawBirthplace) {
@@ -130,7 +140,7 @@ function processData() {
         }
     }
 
-    const profile = {
+    currentProfile = {
         "Name": name,
         "Born": formattedDate,
         "Years active": find(/Years active:\s*(\d{4})/),
@@ -146,29 +156,72 @@ function processData() {
         "Hips": hips,
         "Ass": ass,
         "Total": total,
-        "Tattoos": (textRaw.match(/Tattoos:\s*(.+)/i) && !textRaw.match(/Tattoos:\s*None/i)) ? "Yes" : "No",
-        "Piercings": (textRaw.match(/Piercings:\s*(.+)/i) && !textRaw.match(/Piercings:\s*None/i)) ? "Yes" : "No",
-        "Image": ""
+        "tattoos": (textRaw.match(/Tattoos:\s*(.+)/i) && !textRaw.match(/Tattoos:\s*None/i)) ? true : false,
+        "piercings": (textRaw.match(/Piercings:\s*(.+)/i) && !textRaw.match(/Piercings:\s*None/i)) ? true : false,
+        "Image": "",
+        "ImagePosition": "50% 50%"
     };
 
-    // FORMATAÇÃO COM A VÍRGULA NO INÍCIO
-    const jsonString = JSON.stringify(profile, null, 4);
-    document.getElementById('output').innerText = "," + jsonString;
+    document.getElementById('output').innerText = JSON.stringify(currentProfile, null, 4);
 }
 
-function copyToClipboard() {
-    const output = document.getElementById('output');
-    const btn = document.getElementById('copyBtn');
-    const text = output.innerText;
+// FUNÇÃO PARA SALVAR NO GITHUB
+async function saveNewSheToGitHub() {
+    if (!currentProfile) return;
 
-    if (text.includes("{")) {
-        navigator.clipboard.writeText(text).then(() => {
-            const old = btn.innerText;
-            btn.innerText = "Copiado!";
-            setTimeout(() => btn.innerText = old, 1500);
+    const btn = document.getElementById('btnSync');
+    btn.innerText = "ENVIANDO...";
+    btn.disabled = true;
+
+    try {
+        // 1. Obter o SHA atual do arquivo she.json
+        const getFile = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
+        
+        if (!getFile.ok) throw new Error("Erro ao acessar o arquivo no GitHub.");
+        
+        const fileData = await getFile.json();
+        const sha = fileData.sha;
+
+        // 2. Adicionar o novo perfil ao banco de dados carregado
+        existingDatabase.push(currentProfile);
+
+        // 3. Preparar o JSON completo e codificar em Base64
+        const newContent = JSON.stringify(existingDatabase, null, 4);
+        const encodedContent = btoa(unescape(encodeURIComponent(newContent)));
+
+        // 4. Enviar de volta para o GitHub
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: `Add new She: ${currentProfile.Name}`,
+                content: encodedContent,
+                sha: sha
+            })
+        });
+
+        if (response.ok) {
+            alert("✅ SUCESSO! Banco de dados atualizado automaticamente.");
+            resetPage();
+            loadDatabase(); // Recarrega a lista interna
+        } else {
+            const error = await response.json();
+            throw new Error(error.message);
+        }
+    } catch (err) {
+        alert("Erro Crítico: " + err.message);
+        console.error(err);
+    } finally {
+        btn.innerText = "2. Enviar p/ GitHub";
+        btn.disabled = false;
     }
 }
+
 
 loadDatabase();
 </script>
