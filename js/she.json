@@ -2258,28 +2258,46 @@
         "Tattoos": "Yes",
         "Piercings": "Yes",
         "Image": ""
+    },
+    {
+        "Name": "Kazumi Squirts",
+        "Born": "14/2/1997",
+        "Years active": "2021",
+        "Birthplace": "Kuwait",
+        "Ethnicity": "Asian",
+        "Hair color": "Blonde",
+        "Eye color": "Brown",
+        "Height": "157",
+        "Weight": "54",
+        "Body type": "Slim",
+        "Measurements": "34-26-36",
+        "Boobs": "34",
+        "Hips": "26",
+        "Ass": "36",
+        "Total": 44,
+        "Tattoos": "No",
+        "Piercings": "No",
+        "Image": ""
+    },
+    {
+        "Name": "Lola Dangerous",
+        "Born": "20/4/2004",
+        "Years active": "2024",
+        "Birthplace": "Italy",
+        "Ethnicity": "Caucasian",
+        "Hair color": "Brown",
+        "Eye color": "Brown",
+        "Height": "160",
+        "Weight": "53",
+        "Body type": "Slim",
+        "Measurements": "34-24-34",
+        "Boobs": "34",
+        "Hips": "24",
+        "Ass": "34",
+        "Total": 44,
+        "tattoos": false,
+        "piercings": true,
+        "Image": "",
+        "ImagePosition": "50% 50%"
     }
-
-    ,{
-    "Name": "Kazumi Squirts",
-    "Born": "14/2/1997",
-    "Years active": "2021",
-    "Birthplace": "Kuwait",
-    "Ethnicity": "Asian",
-    "Hair color": "Blonde",
-    "Eye color": "Brown",
-    "Height": "157",
-    "Weight": "54",
-    "Body type": "Slim",
-    "Measurements": "34-26-36",
-    "Boobs": "34",
-    "Hips": "26",
-    "Ass": "36",
-    "Total": 44,
-    "Tattoos": "No",
-    "Piercings": "No",
-    "Image": ""
-}
-
-
 ]
