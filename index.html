@@ -333,12 +333,15 @@
     </div>
     
     <!-- NOVOS BOTÕES -->
-    <div class="header-actions">
-        <a href="zrobot.html" class="nav-btn" title="Add Actress">+SHE</a>
-        <a href="zrobotVids.html" class="nav-btn" title="Add Video">+VID</a>
-        <button onclick="toggleEditMode()" id="btnEditMode" class="nav-btn" title="Edit Database">✎</button>
-        <button id="btnExport" onclick="exportData()" class="nav-btn hidden" style="border-color:#00ffff; color:#00ffff;">[ SAVE JSON ]</button>
-    </div>
+  <div class="header-actions">
+    <!-- Abre a página de adicionar Atriz -->
+    <a href="zrobot.html" class="nav-btn" title="Add Actress">+SHE</a>
+    <!-- Abre a página de adicionar Vídeo/Cena -->
+    <a href="zrobotVids.html" class="nav-btn" title="Add Video">+VID</a>
+    <button onclick="toggleEditMode()" id="btnEditMode" class="nav-btn" title="Edit Database">✎</button>
+    <!-- Esse botão agora serve apenas como um "Backup manual" se você quiser baixar o JSON -->
+    <button id="btnExport" onclick="exportData()" class="nav-btn hidden" style="border-color:#00ffff; color:#00ffff;">[ BACKUP JSON ]</button>
+</div>
 </header>
 
         <div class="controls">
