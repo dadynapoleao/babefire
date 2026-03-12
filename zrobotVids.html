@@ -137,33 +137,44 @@ function processScene() {
 async function saveSceneToGitHub() {
     if (!currentSceneObj) return;
 
+    // PEGA O TOKEN DO SEU NAVEGADOR
+    let token = localStorage.getItem('gh_token');
+    
+    // Se não tiver o token salvo, ele pergunta uma única vez
+    if (!token) {
+        token = prompt("Seu token foi cancelado ou não existe. Insira o NOVO Token:");
+        if (token) {
+            localStorage.setItem('gh_token', token);
+        } else {
+            return; // Cancela se o usuário não digitar
+        }
+    }
+
     const btn = document.getElementById('btnSync');
     btn.innerText = "[ ENVIANDO... ]";
     btn.disabled = true;
 
     try {
-        // 1. Pega o SHA atual do arquivo scene.json
         const getFile = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            headers: { 'Authorization': `token ${token}` }
         });
         
-        if (!getFile.ok) throw new Error("Não foi possível acessar o arquivo no GitHub.");
-        
+        if (getFile.status === 401) {
+            localStorage.removeItem('gh_token'); // Limpa se o token estiver errado
+            throw new Error("Token Inválido ou Expirado. O campo foi limpo, tente clicar de novo.");
+        }
+
         const fileData = await getFile.json();
         const sha = fileData.sha;
 
-        // 2. Adiciona a nova cena ao array carregado
         existingScenes.push(currentSceneObj);
-
-        // 3. Prepara o conteúdo completo
         const newContent = JSON.stringify(existingScenes, null, 4);
         const encodedContent = btoa(unescape(encodeURIComponent(newContent)));
 
-        // 4. Faz o upload
         const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Authorization': `token ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -174,23 +185,20 @@ async function saveSceneToGitHub() {
         });
 
         if (response.ok) {
-            alert("✅ SUCESSO! Nova cena adicionada ao banco de dados.");
+            alert("✅ SUCESSO! Banco de dados atualizado.");
             resetPage();
-            loadSceneDatabase(); // Recarrega a lista
+            loadSceneDatabase();
         } else {
-            const error = await response.json();
-            throw new Error(error.message);
+            throw new Error("Falha no upload.");
         }
 
     } catch (err) {
         alert("❌ ERRO: " + err.message);
-        console.error(err);
     } finally {
         btn.innerText = "[ 2. ENVIAR PARA GITHUB ]";
         btn.disabled = false;
     }
 }
-
 // Carregar ao abrir a página
 loadSceneDatabase();
 </script>
