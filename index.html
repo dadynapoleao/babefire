@@ -177,213 +177,50 @@
             .profile-main { grid-template-columns: 1fr; }
             .profile-img-large { max-width: 300px; margin: 0 auto; }
         }
-
-        .ranking-container { 
-    display: flex; 
-    gap: 10px; 
-    margin-bottom: 20px; 
-    justify-content: flex-end; /* Alinha o grupo todo à direita */
-}
-
-.rank-card { 
-    flex: 0 0 auto; /* IMPORTANTE: Remove o crescimento automático */
-    width: 160px;   /* Define um tamanho fixo menor */
-    background: #0d1117; 
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent); 
-    padding: 10px 15px; 
-    border-radius: 8px;
-}
-.ranking-container {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: flex-end; /* Empurra os cartões para a DIREITA */
-}
-
-.rank-card {
-    flex: 0 0 auto; /* Impede que o cartão estique sozinho */
-    width: 150px;   /* Define um tamanho pequeno e fixo */
-    background: #0d1117;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    padding: 10px 15px;
-    border-radius: 8px;
-}
-
-/* Container dos Ranks agora em coluna e na direita */
-.ranking-container { 
-    display: flex; 
-    flex-direction: column; /* Faz ficar um debaixo do outro */
-    gap: 8px; 
-    position: absolute; /* Fixa na direita do cabeçalho do perfil */
-    right: 0;
-    top: 60px;
-}
-
-/* Card de Rank menor e alinhado */
-.rank-card { 
-    width: 130px; /* Largura fixa para os três */
-    background: #0d1117; 
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent); 
-    padding: 8px 12px; 
-    border-radius: 6px;
-    text-align: left;
-}
-
-.rank-card label { font-size: 0.55rem; color: var(--accent); font-weight: 800; text-transform: uppercase; }
-.rank-card span { font-size: 1rem; font-weight: 800; color: #fff; display: block; }
-
-.profile-data-row { 
-    display: flex; 
-    gap: 10px; 
-    margin-bottom: 25px; 
-    align-items: stretch; /* Garante que todos tenham a mesma altura */
-    width: 100%;
-}
-
-/* Estilo dos cartões de Dados (Age, Origin, etc) */
-.data-card { 
-    background: var(--surface); 
-    border: 1px solid var(--border); 
-    padding: 10px; 
-    border-radius: 8px;
-    min-width: 110px;
-    text-align: center;
-}
-
-/* Estilo dos cartões de Rank (Global, Origin Rank, Score) */
-.rank-card { 
-    background: #0d1117; 
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent); 
-    padding: 10px; 
-    border-radius: 8px;
-    width: 110px; /* Largura reduzida para caber tudo na linha */
-    text-align: left;
-}
-
-/* O TRUQUE: Empurra o grupo de Ranks para a extrema DIREITA */
-.rank-card:first-of-type {
-    margin-left: auto;
-}
-
-.rank-card label, .data-card label { font-size: 0.55rem; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 2px; }
-.rank-card span, .data-card span { font-size: 1rem; font-weight: 800; color: #fff; }
-
-/* Fundo escuro do Modal */
-.modal-overlay {
-    position: fixed; 
-    top: 0; left: 0; 
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85); 
-    z-index: 2000;
-    display: none; 
-    justify-content: center; 
-    align-items: center; 
-    backdrop-filter: blur(8px);
-    padding: 20px; /* Margem de segurança para não encostar na borda da tela */
-    box-sizing: border-box;
-}
-
-/* A caixa do Popup */
-.modal-box {
-    background: var(--surface); 
-    border: 1px solid var(--accent); 
-    padding: 25px; 
-    width: 100%;
-    max-width: 650px; /* Largura máxima no PC */
-    max-height: 90vh; /* Altura máxima de 90% da tela */
-    border-radius: 20px; 
-    position: relative; 
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    overflow-y: auto; /* ATIVA ROLAGEM se o conteúdo for maior que a tela */
+/* Container Geral dos Cards */
+.profile-stats-container {
     display: flex;
     flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
 }
 
-/* Ajuste do Grid para ser responsivo (1 coluna no celular, 2 no PC) */
-.form-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 15px; 
-}
-
-/* Celular: Força 1 coluna apenas para não espremer os campos */
-@media (max-width: 600px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    .modal-box {
-        padding: 15px;
-    }
-}
-
-/* Botões no rodapé do modal */
-.modal-footer {
+/* Linhas de Cards */
+.stats-row {
     display: flex;
-    justify-content: flex-end;
     gap: 10px;
-    margin-top: 25px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
 }
 
-/* Container principal com menos espaço entre os itens */
-.profile-data-row { 
-    display: flex; 
-    gap: 6px; /* Espaço mínimo entre os cards */
-    margin-bottom: 20px; 
-    align-items: stretch;
-    width: 100%;
-    overflow-x: auto; /* Rolagem lateral se a tela for muito pequena */
-}
-
-/* Cards de Dados (Esquerda) - Largura reduzida */
-.data-card { 
-    flex: 0 0 auto;
-    background: var(--surface); 
-    border: 1px solid var(--border); 
-    padding: 6px 8px; 
-    border-radius: 6px;
-    width: 95px; /* Largura bem estreita */
+/* Estilo Base dos Cards */
+.stat-box {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    border-radius: 4px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.2);
 }
 
-/* Cards de Rank (Direita) - Ainda mais estreitos */
-.rank-card { 
-    flex: 0 0 auto;
-    background: #0d1117; 
-    border: 1px solid var(--border);
-    border-left: 2px solid var(--accent); 
-    padding: 6px 8px; 
-    border-radius: 6px;
-    width: 75px; /* Largura mínima para números de Rank */
-    text-align: left;
+/* Estilo CIANO (Ranks) */
+.box-teal {
+    border: 1px solid #008b8b;
 }
+.box-teal label { color: #00ffff; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+.box-teal span { color: #fff; font-size: 1.4rem; font-weight: 800; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+.box-teal small { color: #2e8b57; font-size: 0.6rem; margin-top: 3px; }
 
-/* Empurra o bloco de ranks para a direita */
-.rank-card:first-of-type {
-    margin-left: auto;
+/* Estilo VERDE (Dados) */
+.box-green {
+    border: 1px solid #006400;
+    max-width: 180px; /* Dados ficam mais compactos */
 }
-
-/* Diminuindo as fontes para caber no espaço reduzido */
-.rank-card label, .data-card label { 
-    font-size: 0.5rem; 
-    color: var(--accent); 
-    font-weight: 800; 
-    text-transform: uppercase; 
-    white-space: nowrap; 
-    overflow: hidden;
-}
-
-.rank-card span, .data-card span { 
-    font-size: 0.8rem; 
-    font-weight: 800; 
-    color: #fff; 
-    display: block;
-}
+.box-green label { color: #32cd32; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.box-green span { color: #32cd32; font-size: 1.4rem; font-weight: 800; }
+        
     </style>
 </head>
 <body>
@@ -682,7 +519,7 @@
         function openProfile(n) { window.location.hash = `profile=${encodeURIComponent(n)}`; }
         function openScene(n) { window.location.hash = `scene=${n}`; }
 
-  function showProfilePage(p) {
+function showProfilePage(p) {
     document.getElementById('main-page').classList.add('hidden');
     document.getElementById('scene-detail-page').classList.add('hidden');
     document.getElementById('profile-page').classList.remove('hidden');
@@ -699,7 +536,7 @@
         const qTitle = s.Name.trim().replace(/\s+/g, '+');
         scenesHtml += `<tr>
             <td onclick="openScene('${encodeURIComponent(s.Name)}')" class="scene-link">${s.Name}</td>
-            <td style="white-space:nowrap">${s["Release date"] || "---"}</td>
+            <td>${s["Release date"] || "---"}</td>
             <td><div class="search-links">
                 <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" style="color:var(--accent)">A</a>
                 <a href="https://www.whoreshub.com/search/${qFull}/" target="_blank">1</a>
@@ -711,21 +548,55 @@
     document.getElementById('profile-content').innerHTML = `
         <div class="profile-header-name">${p.Name}</div>
 
-        <!-- TUDO NA MESMA LINHA HORIZONTAL -->
-<div class="profile-data-row">
-            <!-- GRUPO DADOS (ESQUERDA) -->
-            <div class="data-card"><label>Age</label><span>${calculateAge(p.Born)}</span></div>
-            <div class="data-card"><label>Ethnicity</label><span>${p.Ethnicity || '---'}</span></div>
-            <div class="data-card"><label>Measurements</label><span>${p.Measurements || '---'}</span></div>
-            <div class="data-card"><label>Origin</label><span>${p.Birthplace || '---'}</span></div>
-            
-            <!-- GRUPO RANKS (DIREITA) -->
-            <div class="rank-card"><label>Global</label><span>#${ranks.global}</span></div>
-            <div class="rank-card"><label>Origin</label><span>#${ranks.country}</span></div>
-            <div class="rank-card"><label>Score</label><span>${ranks.score}</span></div>
-            <div class="rank-card"><label>Boobs</label><span>#${ranks.boobs}</span></div>
-            <div class="rank-card"><label>Ass</label><span>#${ranks.ass}</span></div>
-            <div class="rank-card"><label>Hips</label><span>#${ranks.hips}</span></div>
+        <div class="profile-stats-container">
+            <!-- PRIMEIRA LINHA: RANKS (CIANO) -->
+            <div class="stats-row">
+                <div class="stat-box box-teal">
+                    <label>Global Rank</label>
+                    <span>#${ranks.global}</span>
+                    <small>of ${ranks.totalGlobal}</small>
+                </div>
+                <div class="stat-box box-teal">
+                    <label>${p.Birthplace || 'Origin'} Rank</label>
+                    <span>#${ranks.country}</span>
+                    <small>of ${ranks.totalCountry}</small>
+                </div>
+                <div class="stat-box box-teal">
+                    <label>Boobs Rank</label>
+                    <span>#${ranks.boobs}</span>
+                    <small>by size</small>
+                </div>
+                <div class="stat-box box-teal">
+                    <label>Ass Rank</label>
+                    <span>#${ranks.ass}</span>
+                    <small>by size</small>
+                </div>
+                <div class="stat-box box-teal">
+                    <label>Hips Rank</label>
+                    <span>#${ranks.hips}</span>
+                    <small>by size</small>
+                </div>
+            </div>
+
+            <!-- SEGUNDA LINHA: DADOS (VERDE) -->
+            <div class="stats-row">
+                <div class="stat-box box-green">
+                    <label>Age</label>
+                    <span>${calculateAge(p.Born)}</span>
+                </div>
+                <div class="stat-box box-green">
+                    <label>Score</label>
+                    <span>${p.Total || 0}</span>
+                </div>
+                <div class="stat-box box-green">
+                    <label>Ethnicity</label>
+                    <span>${p.Ethnicity || '---'}</span>
+                </div>
+                <div class="stat-box box-green">
+                    <label>Measurements</label>
+                    <span>${p.Measurements || '---'}</span>
+                </div>
+            </div>
         </div>
 
         <div class="profile-main">
@@ -752,22 +623,44 @@
 
             document.getElementById('scene-detail-content').innerHTML = `
                 <div class="profile-header-name">${s.Name}</div>
-                <div class="profile-data-row">
-                    <div class="data-card"><label>Studio</label><span>${s.Studio}</span></div>
-                    <div class="data-card"><label>Date</label><span>${s["Release date"]}</span></div>
-                </div>
-                <div class="profile-main">
-                    <img src="${s.Image || 'https://via.placeholder.com/600x400'}" class="profile-img-large">
-                    <div class="profile-bio">
-                        <p style="color:var(--accent); font-weight:bold; font-size:0.7rem; text-transform:uppercase">Cast Members</p>
-                        <div style="font-size:1.2rem; margin-bottom:30px">${linkedCast}</div>
-                        <p style="color:var(--accent); font-weight:bold; font-size:0.7rem; text-transform:uppercase">Search Links</p>
-                        <div class="search-links">
-                            <a href="https://rtv.apstream.org/?search=${s.Name.replace(/\s+/g, '+')}" target="_blank">ApStream</a>
-                            <a href="https://www.whoreshub.com/search/${fullQuery}/" target="_blank">WhoresHub</a>
-                            <a href="https://pornmz.com/?s=${fullQuery}" target="_blank">PornMZ</a>
-                        </div>
-                    </div>
+            <div class="profile-data-row">
+            <!-- Dados da Esquerda -->
+            <div class="data-card"><label>Age</label><span>${calculateAge(p.Born)}</span></div>
+            <div class="data-card"><label>Ethnicity</label><span>${p.Ethnicity || '---'}</span></div>
+            <div class="data-card"><label>Measurements</label><span>${p.Measurements || '---'}</span></div>
+            <div class="data-card"><label>Origin</label><span>${p.Birthplace || '---'}</span></div>
+            
+            <!-- Ranks na Direita com detalhes of/by size -->
+            <div class="rank-card">
+                <label>Global Rank</label>
+                <span>#${ranks.global}</span>
+                <small>of ${ranks.totalGlobal}</small>
+            </div>
+            <div class="rank-card">
+                <label>${p.Birthplace || 'Origin'} Rank</label>
+                <span>#${ranks.country}</span>
+                <small>of ${ranks.totalCountry}</small>
+            </div>
+            <div class="rank-card">
+                <label>Score</label>
+                <span>${ranks.score}</span>
+            </div>
+            <div class="rank-card">
+                <label>Boobs Rank</label>
+                <span>#${ranks.boobs}</span>
+                <small>by size</small>
+            </div>
+            <div class="rank-card">
+                <label>Ass Rank</label>
+                <span>#${ranks.ass}</span>
+                <small>by size</small>
+            </div>
+            <div class="rank-card">
+                <label>Hips Rank</label>
+                <span>#${ranks.hips}</span>
+                <small>by size</small>
+            </div>
+        </div>
                 </div>`;
         }
 
@@ -864,11 +757,10 @@
             const a = document.createElement('a'); a.href = url; a.download = "she.json"; a.click();
         }
 
-     function calculateAllRanks(currentShe) {
+    function calculateAllRanks(currentShe) {
     const list = [...database];
     const countryList = list.filter(a => a.Birthplace === currentShe.Birthplace);
 
-    // Função auxiliar para extrair números das medidas (ex: 34-24-36)
     const parseM = (m) => {
         if (!m) return [0, 0, 0];
         const parts = m.match(/\d+/g);
@@ -882,7 +774,9 @@
 
     return {
         global: getPos(list, currentShe.Name, a => parseFloat(a.Total || 0)),
+        totalGlobal: list.length,
         country: currentShe.Birthplace ? getPos(countryList, currentShe.Name, a => parseFloat(a.Total || 0)) : 'N/A',
+        totalCountry: countryList.length,
         score: currentShe.Total || 0,
         boobs: getPos(list, currentShe.Name, a => parseM(a.Measurements)[0]),
         ass: getPos(list, currentShe.Name, a => parseM(a.Measurements)[2]),
