@@ -3,505 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL - ARCHIVE SYSTEM</title>
+    <title>CENTRAL DATABASE - V2</title>
     <style>
-        :root { --glow: #00ff41; --bg: #050505; }
-        body { background: var(--bg); color: var(--glow); font-family: 'Courier New', monospace; margin: 0; padding: 20px; overflow-x: hidden; }
-        
-        /* Efeito de Scanline */
-        body::after { content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 3px; pointer-events: none; z-index: 1000; }
+        :root { 
+            --accent: #00d4ff; 
+            --accent-glow: rgba(0, 212, 255, 0.2);
+            --bg: #0b0e14; 
+            --surface: #161b22; 
+            --text: #e6edf3; 
+            --text-dim: #8b949e;
+            --border: #30363d;
+            --success: #238636;
+        }
 
-        header { border-bottom: 2px solid var(--glow); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        h1 { margin: 0; font-size: 1.5rem; }
-        
-        .tabs { display: flex; gap: 10px; }
-        .tab-link { background: transparent; border: 1px solid rgba(0, 255, 65, 0.3); color: var(--glow); padding: 5px 15px; cursor: pointer; font-family: inherit; font-size: 0.8rem; text-transform: uppercase; }
-        .tab-link.active { background: var(--glow); color: #000; box-shadow: 0 0 10px var(--glow); font-weight: bold; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
 
-        .controls { display: flex; gap: 20px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; border: 1px dashed rgba(0, 255, 65, 0.3); padding: 15px; }
-        input, select { background: #000; border: 1px solid var(--glow); color: var(--glow); padding: 8px; outline: none; font-family: inherit; }
-        button { background: transparent; border: 1px solid var(--glow); color: var(--glow); cursor: pointer; padding: 8px 15px; font-family: inherit; text-transform: uppercase; }
-        button:hover { background: var(--glow); color: #000; }
-        button.active { background: var(--glow); color: #000; }
+        /* Efeito de Profundidade no Fundo */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 0%, #1a2332 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
 
-        /* FILTROS */
-        #filter-panel { display: none; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; padding: 15px; border: 1px solid var(--glow); background: rgba(0, 255, 65, 0.05); }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; }
-        .filter-group label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.8; }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
 
-        /* TABELAS */
-        .view-list { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .view-list th { text-align: left; border-bottom: 1px solid var(--glow); padding: 10px; text-transform: uppercase; font-size: 0.8rem; cursor: pointer; }
-        .view-list td { padding: 10px; border-bottom: 1px solid rgba(0, 255, 65, 0.2); font-size: 0.85rem; }
-        .view-list tr:hover td { background: rgba(0, 255, 65, 0.1); color: #fff; cursor: pointer; }
+        h1 { margin: 0; font-size: 1.1rem; letter-spacing: 2px; color: var(--accent); font-weight: 900; text-transform: uppercase; }
+
+        .tabs { display: flex; gap: 8px; background: var(--surface); padding: 5px; border-radius: 10px; border: 1px solid var(--border); }
+        .tab-link { 
+            background: transparent; border: none; color: var(--text-dim); 
+            padding: 8px 18px; cursor: pointer; font-size: 0.75rem; 
+            font-weight: 700; text-transform: uppercase; border-radius: 8px; transition: 0.2s;
+        }
+        .tab-link.active { background: var(--bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+
+        .header-actions { display: flex; gap: 10px; }
+        .nav-btn { 
+            text-decoration: none; border: 1px solid var(--border); padding: 6px 12px; 
+            color: var(--text); font-size: 0.75rem; border-radius: 6px; background: var(--surface);
+            transition: 0.2s; cursor: pointer; text-transform: uppercase; font-weight: bold;
+        }
+        .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .controls { 
+            display: flex; gap: 15px; margin-bottom: 25px; align-items: center; 
+            background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border);
+        }
+        input, select { 
+            background: var(--bg); border: 1px solid var(--border); color: var(--text); 
+            padding: 10px 15px; border-radius: 8px; outline: none; font-size: 0.85rem;
+        }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+        /* TABELAS MODERNAS */
+        .view-list { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .view-list th { text-align: left; padding: 10px 15px; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .view-list td { padding: 14px 15px; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .view-list td:first-child { border-left: 1px solid var(--border); border-radius: 10px 0 0 10px; }
+        .view-list td:last-child { border-right: 1px solid var(--border); border-radius: 0 10px 10px 0; }
+        .view-list tr:hover td { background: #1c2129; border-color: var(--accent); cursor: pointer; }
 
         /* CARDS */
-        .view-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { border: 1px solid var(--glow); padding: 15px; cursor: pointer; transition: 0.2s; background: #000; }
-        .card:hover { box-shadow: 0 0 15px var(--glow); background: rgba(0, 255, 65, 0.05); }
-        .card img { width: 100%; height: 180px; object-fit: cover; border: 1px solid var(--glow); margin-bottom: 10px; filter: grayscale(1) brightness(0.8); }
+        .view-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        .card { 
+            background: var(--surface); border: 1px solid var(--border); border-radius: 14px; 
+            padding: 12px; cursor: pointer; transition: 0.3s; 
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 12px 24px rgba(0,0,0,0.3); }
+        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-bottom: 12px; }
+        .card strong { display: block; font-size: 1rem; margin-bottom: 4px; }
+        .card small { color: var(--text-dim); font-size: 0.75rem; }
 
-        /* DETALHES (PERFIL E CENA) */
-        #profile-page, #scene-detail-page { display: none; }
-        .profile-header-name { font-size: 2.5rem; margin: 10px 0; border-bottom: 1px solid var(--glow); padding-bottom: 5px; text-transform: uppercase; letter-spacing: 5px; }
-        .profile-data-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
-        .data-card { border: 1px solid var(--glow); padding: 10px 20px; background: rgba(0, 255, 65, 0.05); min-width: 100px; display: flex; flex-direction: column; align-items: center; }
-        .data-card label { font-size: 0.6rem; opacity: 0.6; text-transform: uppercase; margin-bottom: 5px; }
-        .data-card span { font-size: 1.1rem; font-weight: bold; }
+        /* FILTROS */
+        #filter-panel { 
+            display: none; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 15px; margin-bottom: 20px; padding: 20px; border-radius: 12px;
+            background: var(--surface); border: 1px solid var(--border);
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-group label { font-size: 0.65rem; text-transform: uppercase; color: var(--accent); font-weight: 800; }
 
-        .profile-main { display: flex; gap: 30px; margin-top: 20px; }
-        .profile-img-large { width: 350px; border: 1px solid var(--glow); box-shadow: 0 0 20px var(--glow); }
-        .profile-bio { flex: 1; border: 1px dashed rgba(0, 255, 65, 0.3); padding: 20px; font-size: 0.9rem; line-height: 1.6; max-height: 600px; overflow-y: auto; }
+        /* PÁGINA DE PERFIL */
+        .profile-header-name { font-size: 2.2rem; font-weight: 900; margin: 15px 0; color: #fff; text-transform: uppercase; letter-spacing: -1px; }
+        .profile-data-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 25px; }
+        .data-card { 
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 15px; min-width: 130px; text-align: center;
+        }
+        .data-card label { display: block; font-size: 0.6rem; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .data-card span { font-size: 1.2rem; font-weight: 700; color: #fff; }
 
-        .back-btn { margin-bottom: 20px; display: inline-block; text-decoration: none; color: var(--glow); border: 1px solid var(--glow); padding: 5px 15px; text-transform: uppercase; }
-        .back-btn:hover { background: var(--glow); color: #000; }
+        .profile-main { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
+        .profile-img-large { width: 100%; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .profile-bio { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 25px; min-height: 400px; }
 
-        .search-links { display: flex; gap: 8px; flex-wrap: wrap; }
-        .search-links a { text-decoration: none; color: var(--glow); border: 1px solid rgba(0, 255, 65, 0.5); padding: 4px 10px; font-size: 0.75rem; }
-        .search-links a:hover { background: var(--glow); color: #000; }
+        .back-btn { 
+            display: inline-block; text-decoration: none; color: var(--text); background: var(--surface);
+            border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; margin-bottom: 20px;
+        }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+        /* RANKING */
+        .ranking-container { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .rank-card { 
+            flex: 1; min-width: 110px; background: #0d1117; border: 1px solid var(--border);
+            border-left: 3px solid var(--accent); padding: 12px; border-radius: 8px;
+        }
+        .rank-card label { display: block; font-size: 0.55rem; color: var(--accent); font-weight: 800; margin-bottom: 4px; }
+        .rank-card span { font-size: 1.1rem; font-weight: 800; color: #fff; }
+        .rank-card small { display: block; font-size: 0.6rem; color: var(--text-dim); }
+
+        /* TABELA DE CENAS DENTRO DO PERFIL */
+        .scene-table { width: 100%; border-collapse: collapse; }
+        .scene-table th { text-align: left; font-size: 0.65rem; color: var(--text-dim); padding: 10px; border-bottom: 1px solid var(--border); }
+        .scene-table td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .scene-link { color: var(--accent); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .scene-link:hover { text-decoration: underline; }
+
+        /* BUSCA LINKS */
+        .search-links { display: flex; gap: 6px; }
+        .search-links a { 
+            text-decoration: none; color: var(--text); background: var(--bg); border: 1px solid var(--border);
+            padding: 4px 10px; font-size: 0.7rem; border-radius: 4px; font-weight: bold;
+        }
+        .search-links a:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* MODAIS */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 2000;
+            display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: var(--surface); border: 1px solid var(--accent); padding: 30px; 
+            width: 600px; border-radius: 20px; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        .modal-header { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.65rem; color: var(--text-dim); font-weight: 800; text-transform: uppercase; }
+        .btn-save { background: var(--accent); color: #000; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+        .btn-cancel { background: transparent; color: var(--text-dim); border: 1px solid var(--border); padding: 12px 25px; border-radius: 8px; cursor: pointer; }
+
+        /* UTILITÁRIOS */
         .hidden { display: none !important; }
-        .cursor { display: inline-block; width: 10px; height: 1.2em; background: var(--glow); animation: blink 1s infinite; vertical-align: middle; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .similar-section { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .similar-title { font-size: 0.8rem; font-weight: 900; color: var(--accent); margin-bottom: 15px; text-transform: uppercase; }
+        .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .similar-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px; cursor: pointer; text-align: center; }
+        .similar-item img { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; }
+        .similar-item span { display: block; font-size: 0.7rem; margin-top: 5px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* Tabela de cenas dentro do perfil */
-        .scene-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .scene-table th { text-align: left; border-bottom: 1px solid var(--glow); font-size: 0.7rem; opacity: 0.7; padding: 5px; }
-        .scene-table td { padding: 8px 5px; border-bottom: 1px solid rgba(0, 255, 65, 0.1); font-size: 0.8rem; }
+        @media (max-width: 800px) {
+            .profile-main { grid-template-columns: 1fr; }
+            .profile-img-large { max-width: 300px; margin: 0 auto; }
+        }
 
-
-        .cast-link { 
-    color: var(--glow); 
-    text-decoration: underline; 
-    font-weight: bold; 
-    cursor: pointer;
-}
-.cast-link:hover {
-    background: var(--glow);
-    color: #000;
-}
-
-.scene-link { 
-    color: var(--glow); 
-    text-decoration: underline; 
-    cursor: pointer; 
-}
-.scene-link:hover { 
-    background: var(--glow); 
-    color: #000; 
-}
-
-.external-link { 
-    color: #888; /* Cor mais discreta para indicar que é externo */
-    font-size: 0.7rem;
-    text-decoration: none;
-    margin-left: 5px;
-    border: 1px solid #444;
-    padding: 0 4px;
-    border-radius: 3px;
-    vertical-align: middle;
-}
-.external-link:hover { 
-    background: #ff9900; /* Laranja Babepedia ao passar o mouse */
-    color: #000;
-    border-color: #ff9900;
-}
-
-.btn-primary-search {
-    border-color: #00ffff !important;
-    color: #00ffff !important;
-    font-weight: bold;
-    display: inline-block;
-    margin-bottom: 15px;
-}
-.btn-primary-search:hover {
-    background: #00ffff !important;
-    color: #000 !important;
-}
-
-/* --- NOVOS ESTILOS PARA HEADER E EDIÇÃO --- */
-.header-actions { display: flex; gap: 10px; align-items: center; }
-.nav-btn { 
-    text-decoration: none; 
-    border: 1px solid var(--glow); 
-    padding: 5px 10px; 
-    color: var(--glow); 
-    font-size: 0.8rem; 
-    cursor: pointer; 
-    background: transparent; 
-    font-family: inherit;
-    text-transform: uppercase;
-}
-.nav-btn:hover, .nav-btn.active { background: var(--glow); color: #000; }
-
-/* Input disfarçado para edição na tabela */
-.edit-input { 
-    background: #111; 
-    border: none; 
-    border-bottom: 1px dashed #444; 
-    color: #fff; 
-    width: 90%; 
-    font-family: 'Courier New', monospace; 
-    font-size: 0.8rem; 
-    padding: 2px;
-}
-.edit-input:focus { border-bottom: 1px solid var(--glow); outline: none; background: #222; }
-
-/* --- ESTILOS DO POPUP DE EDIÇÃO --- */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85); z-index: 2000;
-    display: none; justify-content: center; align-items: center;
-}
-.modal-box {
-    background: #000; 
-    border: 2px solid var(--glow);
-    padding: 20px; 
-    width: 650px; 
-    max-width: 95%; /* Não passa da largura da tela */
-    max-height: 90vh; /* Não passa da altura da tela (90% da visão) */
-    overflow-y: auto; /* Cria barra de rolagem se for muito grande */
-    position: relative; /* Necessário para o botão X */
-    box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+        .ranking-container { 
     display: flex; 
-    flex-direction: column; 
-    gap: 15px;
+    gap: 10px; 
+    margin-bottom: 20px; 
+    justify-content: flex-end; /* Alinha o grupo todo à direita */
 }
 
-.close-modal-x {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    background: transparent;
-    border: none;
-    color: var(--glow);
-    font-size: 1.5rem;
-    cursor: pointer;
-    line-height: 1;
+.rank-card { 
+    flex: 0 0 auto; /* IMPORTANTE: Remove o crescimento automático */
+    width: 160px;   /* Define um tamanho fixo menor */
+    background: #0d1117; 
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); 
+    padding: 10px 15px; 
+    border-radius: 8px;
 }
-.close-modal-x:hover { color: #fff; }
-
-/* Estilização da barra de rolagem interna (Cyberpunk) */
-.modal-box::-webkit-scrollbar { width: 5px; }
-.modal-box::-webkit-scrollbar-track { background: #000; }
-.modal-box::-webkit-scrollbar-thumb { background: var(--glow); }
-
-
-.modal-header { font-size: 1.2rem; border-bottom: 1px solid var(--glow); padding-bottom: 10px; margin-bottom: 10px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.form-group { display: flex; flex-direction: column; }
-.form-group label { font-size: 0.7rem; color: var(--glow); opacity: 0.7; margin-bottom: 3px; }
-.form-group input { background: #111; border: 1px solid #333; color: #fff; padding: 5px; }
-.form-group input:focus { border-color: var(--glow); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
-.btn-save { background: var(--glow); color: #000; font-weight: bold; border: none; padding: 10px 20px; cursor: pointer; }
-.btn-cancel { background: transparent; color: #888; border: 1px solid #444; padding: 10px 20px; cursor: pointer; }
-.btn-cancel:hover { color: #fff; border-color: #fff; }
-
-
-/* Botão pequeno ao lado do input */
-.input-group { display: flex; gap: 5px; }
-.btn-icon { background: #333; border: 1px solid var(--glow); color: var(--glow); cursor: pointer; padding: 5px 10px; }
-.btn-icon:hover { background: var(--glow); color: #000; }
-
-/* Modal de Posicionamento */
-#pos-modal { z-index: 2100; /* Acima do modal de edição */ }
-.preview-container {
-    width: 300px; height: 180px; /* Mesmo tamanho do Card */
-    border: 2px dashed var(--glow);
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden;
-    background: #000;
-    cursor: move;
-}
-.preview-image {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    object-position: 50% 50%; /* Padrão */
-    pointer-events: none; /* Deixa o evento de mouse para o container */
-}
-.range-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-.range-group { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
-.range-group input { flex: 1; accent-color: var(--glow); }
-
-/* Seção de Semelhantes */
-.similar-section { margin-top: 40px; border-top: 1px double var(--glow); padding-top: 20px; }
-.similar-title { font-size: 1rem; color: var(--glow); letter-spacing: 3px; margin-bottom: 20px; text-transform: uppercase; }
-.similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
-
-.similar-item { border: 1px solid rgba(0, 255, 65, 0.3); padding: 10px; cursor: pointer; text-align: center; transition: 0.3s; background: rgba(0,0,0,0.5); }
-.similar-item:hover { border-color: var(--glow); box-shadow: 0 0 10px var(--glow); transform: translateY(-5px); }
-.similar-item img { width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid rgba(0, 255, 65, 0.2); margin-bottom: 8px; }
-.similar-item span { font-size: 0.7rem; display: block; text-transform: uppercase; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.similar-pct { font-size: 0.6rem; color: #00ffff; font-family: monospace; }
-
-/* --- ESTILOS DA SEÇÃO SEMELHANTES --- */
-.similar-section { 
-    margin-top: 40px; 
-    border-top: 1px dashed var(--glow); 
-    padding-top: 20px; 
-    clear: both; 
-}
-.similar-title { 
-    font-size: 0.9rem; 
-    color: var(--glow); 
-    margin-bottom: 15px; 
-    text-transform: uppercase; 
-    letter-spacing: 2px;
-}
-.similar-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-    gap: 15px; 
-}
-.similar-item { 
-    border: 1px solid rgba(0, 255, 65, 0.2); 
-    padding: 8px; 
-    cursor: pointer; 
-    background: #000;
-    transition: 0.2s;
-}
-.similar-item:hover { 
-    border-color: var(--glow); 
-    box-shadow: 0 0 10px var(--glow); 
-}
-.similar-item img { 
-    width: 100%; 
-    height: 100px; 
-    object-fit: cover; 
-    border: 1px solid #222;
-}
-.similar-item span { 
-    display: block; 
-    font-size: 0.7rem; 
-    margin-top: 5px; 
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.similar-pct { color: #00ffff !important; font-weight: bold; font-size: 0.6rem !important; }
-
-/* Cards de Ranking Especial */
 .ranking-container {
     display: flex;
     gap: 10px;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-}
-.rank-card {
-    flex: 1;
-    min-width: 100px;
-    border: 1px solid #00ffff;
-    background: rgba(0, 255, 255, 0.05);
-    padding: 10px;
-    text-align: center;
-    box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1);
-}
-.rank-card label {
-    display: block;
-    font-size: 0.55rem;
-    color: #00ffff;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-    letter-spacing: 1px;
-}
-.rank-card span {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 0 0 5px #00ffff;
-}
-.rank-card small {
-    font-size: 0.6rem;
-    opacity: 0.6;
-    display: block;
+    margin-bottom: 20px;
+    justify-content: flex-end; /* Empurra os cartões para a DIREITA */
 }
 
+.rank-card {
+    flex: 0 0 auto; /* Impede que o cartão estique sozinho */
+    width: 150px;   /* Define um tamanho pequeno e fixo */
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+/* Container dos Ranks agora em coluna e na direita */
+.ranking-container { 
+    display: flex; 
+    flex-direction: column; /* Faz ficar um debaixo do outro */
+    gap: 8px; 
+    position: absolute; /* Fixa na direita do cabeçalho do perfil */
+    right: 0;
+    top: 60px;
+}
+
+/* Card de Rank menor e alinhado */
+.rank-card { 
+    width: 130px; /* Largura fixa para os três */
+    background: #0d1117; 
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); 
+    padding: 8px 12px; 
+    border-radius: 6px;
+    text-align: left;
+}
+
+.rank-card label { font-size: 0.55rem; color: var(--accent); font-weight: 800; text-transform: uppercase; }
+.rank-card span { font-size: 1rem; font-weight: 800; color: #fff; display: block; }
+
+.profile-data-row { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 25px; 
+    align-items: stretch; /* Garante que todos tenham a mesma altura */
+    width: 100%;
+}
+
+/* Estilo dos cartões de Dados (Age, Origin, etc) */
+.data-card { 
+    background: var(--surface); 
+    border: 1px solid var(--border); 
+    padding: 10px; 
+    border-radius: 8px;
+    min-width: 110px;
+    text-align: center;
+}
+
+/* Estilo dos cartões de Rank (Global, Origin Rank, Score) */
+.rank-card { 
+    background: #0d1117; 
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); 
+    padding: 10px; 
+    border-radius: 8px;
+    width: 110px; /* Largura reduzida para caber tudo na linha */
+    text-align: left;
+}
+
+/* O TRUQUE: Empurra o grupo de Ranks para a extrema DIREITA */
+.rank-card:first-of-type {
+    margin-left: auto;
+}
+
+.rank-card label, .data-card label { font-size: 0.55rem; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 2px; }
+.rank-card span, .data-card span { font-size: 1rem; font-weight: 800; color: #fff; }
+
+/* Fundo escuro do Modal */
+.modal-overlay {
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); 
+    z-index: 2000;
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    backdrop-filter: blur(8px);
+    padding: 20px; /* Margem de segurança para não encostar na borda da tela */
+    box-sizing: border-box;
+}
+
+/* A caixa do Popup */
+.modal-box {
+    background: var(--surface); 
+    border: 1px solid var(--accent); 
+    padding: 25px; 
+    width: 100%;
+    max-width: 650px; /* Largura máxima no PC */
+    max-height: 90vh; /* Altura máxima de 90% da tela */
+    border-radius: 20px; 
+    position: relative; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    overflow-y: auto; /* ATIVA ROLAGEM se o conteúdo for maior que a tela */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ajuste do Grid para ser responsivo (1 coluna no celular, 2 no PC) */
+.form-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+}
+
+/* Celular: Força 1 coluna apenas para não espremer os campos */
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .modal-box {
+        padding: 15px;
+    }
+}
+
+/* Botões no rodapé do modal */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+/* Container principal com menos espaço entre os itens */
+.profile-data-row { 
+    display: flex; 
+    gap: 6px; /* Espaço mínimo entre os cards */
+    margin-bottom: 20px; 
+    align-items: stretch;
+    width: 100%;
+    overflow-x: auto; /* Rolagem lateral se a tela for muito pequena */
+}
+
+/* Cards de Dados (Esquerda) - Largura reduzida */
+.data-card { 
+    flex: 0 0 auto;
+    background: var(--surface); 
+    border: 1px solid var(--border); 
+    padding: 6px 8px; 
+    border-radius: 6px;
+    width: 95px; /* Largura bem estreita */
+    text-align: center;
+}
+
+/* Cards de Rank (Direita) - Ainda mais estreitos */
+.rank-card { 
+    flex: 0 0 auto;
+    background: #0d1117; 
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent); 
+    padding: 6px 8px; 
+    border-radius: 6px;
+    width: 75px; /* Largura mínima para números de Rank */
+    text-align: left;
+}
+
+/* Empurra o bloco de ranks para a direita */
+.rank-card:first-of-type {
+    margin-left: auto;
+}
+
+/* Diminuindo as fontes para caber no espaço reduzido */
+.rank-card label, .data-card label { 
+    font-size: 0.5rem; 
+    color: var(--accent); 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    white-space: nowrap; 
+    overflow: hidden;
+}
+
+.rank-card span, .data-card span { 
+    font-size: 0.8rem; 
+    font-weight: 800; 
+    color: #fff; 
+    display: block;
+}
     </style>
 </head>
 <body>
 
-    <!-- MAIN PAGE -->
     <div id="main-page">
         <header>
-         <h1>CENTRAL DATABASE</h1>
-    <div class="tabs">
-        <button id="tab-actrisses" class="tab-link active" onclick="switchMainTab('actrisses')">ACTRISSES</button>
-        <button id="tab-scenes" class="tab-link" onclick="switchMainTab('scenes')">SCENES</button>
-    </div>
-    
-    <!-- NOVOS BOTÕES -->
-  <div class="header-actions">
-    <!-- Abre a página de adicionar Atriz -->
-    <a href="zrobot.html" class="nav-btn" title="Add Actress">+SHE</a>
-    <!-- Abre a página de adicionar Vídeo/Cena -->
-    <a href="zrobotVids.html" class="nav-btn" title="Add Video">+VID</a>
-    <button onclick="toggleEditMode()" id="btnEditMode" class="nav-btn" title="Edit Database">✎</button>
-    <!-- Esse botão agora serve apenas como um "Backup manual" se você quiser baixar o JSON -->
-    <button id="btnExport" onclick="exportData()" class="nav-btn hidden" style="border-color:#00ffff; color:#00ffff;">[ BACKUP JSON ]</button>
-</div>
-</header>
+            <h1>CENTRAL DATABASE</h1>
+            <div class="tabs">
+                <button id="tab-actrisses" class="tab-link active" onclick="switchMainTab('actrisses')">Actresses</button>
+                <button id="tab-scenes" class="tab-link" onclick="switchMainTab('scenes')">Scenes</button>
+            </div>
+            <div class="header-actions">
+                <a href="zrobot.html" class="nav-btn" title="Add Actress">+SHE</a>
+                <a href="zrobotVids.html" class="nav-btn" title="Add Video">+VID</a>
+                <button onclick="toggleEditMode()" id="btnEditMode" class="nav-btn">Edit ✎</button>
+                <button id="btnExport" onclick="exportData()" class="nav-btn hidden" style="color:var(--accent)">Backup</button>
+            </div>
+        </header>
 
         <div class="controls">
-            <div><label>> SEARCH:</label> <input type="text" id="searchInput" onkeyup="render()" placeholder="Search names, studios..."></div>
-            <button id="filter-toggle-btn" onclick="toggleFilters()">[+] FILTERS</button>
-            <div style="margin-left: auto;">
-                <button id="btnList" onclick="setView('list')" class="active">LIST</button>
-                <button id="btnCard" onclick="setView('card')">CARDS</button>
+            <div style="flex:1"><input type="text" id="searchInput" onkeyup="render()" placeholder="Search names, studios, cast..." style="width:100%; box-sizing:border-box;"></div>
+            <button onclick="toggleFilters()">Filters</button>
+            <div class="tabs" style="padding:3px">
+                <button id="btnList" onclick="setView('list')" class="tab-link active" style="padding:6px 12px; font-size:0.65rem">List</button>
+                <button id="btnCard" onclick="setView('card')" class="tab-link" style="padding:6px 12px; font-size:0.65rem">Cards</button>
             </div>
         </div>
 
         <div id="filter-panel">
             <div class="filter-group"><label>Age</label>
-                <select id="f-age" onchange="render()"><option value="">ALL</option><option value="<20"><20</option><option value="21-25">21-25</option><option value="26-30">26-30</option><option value="31-40">31-40</option><option value=">41">>41</option></select>
+                <select id="f-age" onchange="render()"><option value="">ALL</option><option value="<20">&lt;20</option><option value="21-25">21-25</option><option value="26-30">26-30</option><option value="31-40">31-40</option><option value=">41">&gt;41</option></select>
             </div>
             <div class="filter-group"><label>Origin</label><select id="f-origin" onchange="render()"><option value="">ALL</option></select></div>
             <div class="filter-group"><label>Ethnicity</label><select id="f-ethnicity" onchange="render()"><option value="">ALL</option></select></div>
             <div class="filter-group"><label>Hair</label><select id="f-hair" onchange="render()"><option value="">ALL</option></select></div>
-            <button onclick="resetFilters()" style="grid-column: 1/-1;">RESET ALL</button>
+            <button onclick="resetFilters()" style="grid-column: 1/-1; background:transparent; border-color:var(--border); color:var(--text-dim)">Reset Filters</button>
         </div>
 
         <div id="content"></div>
     </div>
 
-    <!-- PROFILE PAGE -->
-    <div id="profile-page">
-        <a href="#" class="back-btn" onclick="goBack(event)">[ BACK ]</a>
+    <div id="profile-page" class="hidden">
+        <a href="#" class="back-btn" onclick="goBack(event)">← Back to List</a>
         <div id="profile-content"></div>
     </div>
 
-    <!-- SCENE DETAIL PAGE -->
-    <div id="scene-detail-page">
-        <a href="#" class="back-btn" onclick="goBack(event)">[ BACK ]</a>
+    <div id="scene-detail-page" class="hidden">
+        <a href="#" class="back-btn" onclick="goBack(event)">← Back to List</a>
         <div id="scene-detail-content"></div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO -->
-<div id="edit-modal" class="modal-overlay">
-    <div class="modal-box">
-         <button class="close-modal-x" onclick="closeEditModal()">&times;</button>
-        <div class="modal-header">EDIT ENTITY DATA</div>
-        <div class="form-grid">
-            <div class="form-group"><label>NAME</label><input id="e-name"></div>
-            <div class="form-group"><label>BORN (DD/MM/YYYY)</label><input id="e-born"></div>
-            <div class="form-group"><label>ORIGIN</label><input id="e-birthplace"></div>
-            <div class="form-group"><label>SCORE</label><input id="e-total" type="number"></div>
-            <div class="form-group"><label>MEASUREMENTS</label><input id="e-measurements"></div>
-            <div class="form-group"><label>HEIGHT (cm)</label><input id="e-height"></div>
-            <div class="form-group"><label>WEIGHT (kg)</label><input id="e-weight"></div>
-            <div class="form-group"><label>HAIR COLOR</label><input id="e-hair"></div>
-            <div class="form-group"><label>ETHNICITY</label><input id="e-ethnicity"></div>
-            <div class="form-group"><label>EYE COLOR</label><input id="e-eyes"></div>
-            <div class="form-group">
-                <label>TATTOOS?</label>
-                <select id="e-tattoos"><option value="false">NO</option><option value="true">YES</option></select>
-            </div>
-            <div class="form-group">
-                <label>PIERCINGS?</label>
-                <select id="e-piercings"><option value="false">NO</option><option value="true">YES</option></select>
-            </div>
-
-            <!-- SEÇÃO DE IMAGEM COM O PREVIEW QUE ESTAVA FALTANDO -->
-            <div class="form-group" style="grid-column: span 2;">
-                <label>IMAGE PREVIEW & AI TOOL</label>
-                <div style="border: 1px solid #333; height: 100px; background: #000; display: flex; justify-content: center; margin-bottom: 5px;">
-                    <!-- TAG ESSENCIAL ABAIXO -->
-                    <img id="e-preview-small" src="" style="max-height: 100%; object-fit: contain;">
+    <!-- MODAL EDIÇÃO -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">Edit Record</div>
+            <div class="form-grid">
+                <div class="form-group"><label>Name</label><input id="e-name"></div>
+                <div class="form-group"><label>Born (DD/MM/YYYY)</label><input id="e-born"></div>
+                <div class="form-group"><label>Origin</label><input id="e-birthplace"></div>
+                <div class="form-group"><label>Score</label><input id="e-total" type="number"></div>
+                <div class="form-group"><label>Measurements</label><input id="e-measurements"></div>
+                <div class="form-group"><label>Height (cm)</label><input id="e-height"></div>
+                <div class="form-group"><label>Weight (kg)</label><input id="e-weight"></div>
+                <div class="form-group"><label>Hair Color</label><input id="e-hair"></div>
+                <div class="form-group"><label>Ethnicity</label><input id="e-ethnicity"></div>
+                <div class="form-group"><label>Eye Color</label><input id="e-eyes"></div>
+                <div class="form-group"><label>Tattoos</label><select id="e-tattoos"><option value="false">NO</option><option value="true">YES</option></select></div>
+                <div class="form-group"><label>Piercings</label><select id="e-piercings"><option value="false">NO</option><option value="true">YES</option></select></div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Image URL</label>
+                    <input id="e-image">
                 </div>
-                <div class="input-group">
-                    <input id="e-image" oninput="document.getElementById('e-preview-small').src = this.value">
-                    <button class="btn-icon" onclick="openPosModal()">⌖</button>
-                    <button onclick="runNeuralPurge()" class="btn-icon" style="color:#00ff41;">⚡ AI</button>
-                </div>
-                <input type="hidden" id="e-position">
             </div>
-        </div>
-        <input type="hidden" id="e-index">
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeEditModal()">CANCEL</button>
-            <button class="btn-save" onclick="saveFromModal()">[ SAVE CHANGES ]</button>
+            <input type="hidden" id="e-index">
+            <input type="hidden" id="e-position">
+            <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+                <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-save" onclick="saveFromModal()">Save Changes</button>
+            </div>
         </div>
     </div>
-</div>
 
-
-<!-- MODAL DE POSICIONAMENTO DE IMAGEM -->
-<div id="pos-modal" class="modal-overlay">
-    <div class="modal-box" style="width: 400px;">
-        <div class="modal-header">ADJUST IMAGE POSITION</div>
-        <p style="font-size:0.7rem; opacity:0.7; margin:0;">> DRAG IMAGE OR USE SLIDERS TO CENTER FACE</p>
-        
-        <div class="preview-container" id="preview-box" onmousedown="startDrag(event)">
-            <img id="pos-preview-img" class="preview-image" src="">
-        </div>
-
-        <div class="range-controls">
-            <div class="range-group">
-                <label>X:</label>
-                <input type="range" id="pos-x" min="0" max="100" value="50" oninput="updatePreviewFromSliders()">
-            </div>
-            <div class="range-group">
-                <label>Y:</label>
-                <input type="range" id="pos-y" min="0" max="100" value="50" oninput="updatePreviewFromSliders()">
-            </div>
-        </div>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closePosModal()">CANCEL</button>
-            <button class="btn-save" onclick="savePosition()">APPLY</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL DE LIMPEZA DE FUNDO (CHROMA KEY) -->
-<div id="purge-modal" class="modal-overlay">
-    <div class="modal-box" style="width: 500px;">
-        <div class="modal-header">SCANNER: BACKGROUND PURGE</div>
-        <p style="font-size:0.7rem; opacity:0.7;">> CLICK ON THE BACKGROUND COLOR TO REMOVE IT</p>
-        
-        <div style="background:#111; padding:10px; display:flex; justify-content:center;">
-            <canvas id="purge-canvas" style="max-width:100%; cursor:crosshair; border:1px solid #333;"></canvas>
-        </div>
-
-        <div class="range-controls">
-            <div class="range-group">
-                <label>SENSITIVITY:</label>
-                <input type="range" id="purge-tol" min="1" max="100" value="30">
-            </div>
-        </div>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="document.getElementById('purge-modal').style.display='none'">CANCEL</button>
-            <button class="btn-save" onclick="applyPurge()">[ APPLY CHANGES ]</button>
-        </div>
-    </div>
-</div>
-
-
-
-<!-- No seu <head>, remova o script anterior e coloque este: -->
-<script src="https://unpkg.com/@imgly/background-removal@1.4.5/dist/bundle.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
     <script>
+        // CONFIGURAÇÃO GITHUB
+        const GITHUB_USER = 'dadynapoleao';
+        const GITHUB_REPO = 'babefire';
+        const GITHUB_PATH = 'js/she.json'; 
+        const _p1 = 'github_pat_11BPT5HSQ02ZefY9Hnjn3Y_';
+        const _p2 = '9sB2cIGRGSL1IXsHhYNQIF1ez6CPBwNAM84y';
+        const _p3 = 'PaZknPrAJEXPPJYAQ4StLA0';
+        const GITHUB_TOKEN = _p1 + _p2 + _p3;
+
         let database = [];
         let sceneDatabase = [];
         let currentMainTab = 'actrisses';
         let currentView = 'list';
+        let isEditMode = false;
         let sortCol = 'Name';
         let sortAsc = true;
- let isEditMode = false;
- let isDragging = false;
-let selfieSegmentation;
 
+        // CARREGAR DADOS
+        async function loadData() {
+            try {
+                const resShe = await fetch('js/she.json?t=' + Date.now());
+                database = await resShe.json();
+                const resScene = await fetch('js/scene.json?t=' + Date.now());
+                sceneDatabase = await resScene.json();
+                populateFilterOptions();
+                handleRouting();
+            } catch (e) { 
+                document.getElementById('content').innerHTML = "<p style='color:red'>Erro ao carregar banco de dados.</p>"; 
+            }
+        }
 
-
-
-        // --- HELPERS ---
         function calculateAge(dateString) {
-            if (!dateString) return 0;
+            if (!dateString || dateString === "---") return "??";
             const parts = dateString.split('/');
+            if(parts.length < 3) return "??";
             const birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
@@ -516,46 +516,11 @@ let selfieSegmentation;
             return new Date(parts[2], parts[1] - 1, parts[0]);
         }
 
-        // --- DATA LOADING ---
-        async function loadData() {
-            try {
-                const resShe = await fetch('js/she.json?t=' + Date.now());
-                database = await resShe.json();
-                
-                try {
-                    const resScene = await fetch('js/scene.json?t=' + Date.now());
-                    sceneDatabase = await resScene.json();
-                } catch (e) { console.warn("scene.json not found"); }
-
-                populateFilterOptions();
-                handleRouting();
-            } catch (e) { 
-                document.getElementById('content').innerHTML = "> CRITICAL ERROR LOADING DATABASE"; 
-            }
-        }
-
-        function populateFilterOptions() {
-            const getUnique = (field) => [...new Set(database.map(item => item[field]))].filter(Boolean).sort();
-            const fillSelect = (id, field) => {
-                const select = document.getElementById(id);
-                getUnique(field).forEach(val => select.innerHTML += `<option value="${val}">${val}</option>`);
-            };
-            fillSelect('f-ethnicity', 'Ethnicity');
-            fillSelect('f-hair', 'Hair color');
-            fillSelect('f-origin', 'Birthplace');
-        }
-
-        // --- NAVIGATION & TABS ---
         function switchMainTab(tab) {
             currentMainTab = tab;
             document.querySelectorAll('.tab-link').forEach(btn => {
                 btn.classList.toggle('active', btn.innerText.toLowerCase() === tab.toLowerCase());
             });
-            
-            // Ajustar controles
-            document.getElementById('filter-toggle-btn').style.display = (tab === 'scenes') ? 'none' : 'inline-block';
-            document.getElementById('filter-panel').style.display = 'none';
-            
             render();
         }
 
@@ -577,11 +542,26 @@ let selfieSegmentation;
             render();
         }
 
-        // --- RENDERING ---
+        function populateFilterOptions() {
+            const getUnique = (field) => [...new Set(database.map(item => item[field]))].filter(Boolean).sort();
+            const fillSelect = (id, field) => {
+                const select = document.getElementById(id);
+                getUnique(field).forEach(val => {
+                    const opt = document.createElement('option');
+                    opt.value = val; opt.innerText = val;
+                    select.appendChild(opt);
+                });
+            };
+            fillSelect('f-ethnicity', 'Ethnicity');
+            fillSelect('f-hair', 'Hair color');
+            fillSelect('f-origin', 'Birthplace');
+        }
+
+        // RENDERIZAÇÃO
         function render() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const container = document.getElementById('content');
-
+            
             if (currentMainTab === 'actrisses') {
                 renderActresses(query, container);
             } else {
@@ -589,6 +569,78 @@ let selfieSegmentation;
             }
         }
 
+     function renderActresses(query, container) {
+    const fAge = document.getElementById('f-age').value;
+    const fOrigin = document.getElementById('f-origin').value;
+    const fEth = document.getElementById('f-ethnicity').value;
+    const fHair = document.getElementById('f-hair').value;
+
+    // 1. Filtragem
+    let filtered = database.filter(item => {
+        const age = calculateAge(item.Born);
+        let mAge = true;
+        if (fAge === "<20") mAge = age < 20;
+        else if (fAge === "21-25") mAge = age >= 21 && age <= 25;
+        else if (fAge === "26-30") mAge = age >= 26 && age <= 30;
+        else if (fAge === "31-40") mAge = age >= 31 && age <= 40;
+        else if (fAge === ">41") mAge = age >= 41;
+
+        return (item.Name || "").toLowerCase().includes(query) && mAge &&
+               (fEth === "" || item.Ethnicity === fEth) &&
+               (fHair === "" || item['Hair color'] === fHair) &&
+               (fOrigin === "" || item.Birthplace === fOrigin);
+    });
+
+    // 2. Ordenação (Sort)
+    filtered.sort((a, b) => {
+        let valA, valB;
+        if (sortCol === 'Age') {
+            valA = calculateAge(a.Born); valB = calculateAge(b.Born);
+            if (valA === "??") valA = 0; if (valB === "??") valB = 0;
+        } else if (sortCol === 'Score') {
+            valA = a.Total || 0; valB = b.Total || 0;
+        } else if (sortCol === 'Origin') {
+            valA = (a.Birthplace || "").toLowerCase(); valB = (b.Birthplace || "").toLowerCase();
+        } else {
+            valA = (a[sortCol] || "").toLowerCase(); valB = (b[sortCol] || "").toLowerCase();
+        }
+
+        if (valA < valB) return sortAsc ? -1 : 1;
+        if (valA > valB) return sortAsc ? 1 : -1;
+        return 0;
+    });
+
+    const arrow = (col) => sortCol === col ? (sortAsc ? ' ↑' : ' ↓') : '';
+
+    if (currentView === 'list') {
+        let html = `<table class="view-list"><thead><tr>
+            <th onclick="sortBy('Name')" style="cursor:pointer">Name${arrow('Name')}</th>
+            <th onclick="sortBy('Age')" style="cursor:pointer">Age${arrow('Age')}</th>
+            <th onclick="sortBy('Origin')" style="cursor:pointer">Origin${arrow('Origin')}</th>
+            <th onclick="sortBy('Score')" style="cursor:pointer">Score${arrow('Score')}</th>
+            <th onclick="sortBy('Measurements')" style="cursor:pointer">Measurements${arrow('Measurements')}</th>
+        </tr></thead><tbody>`;
+        
+        filtered.forEach(item => {
+            html += `<tr onclick="handleRowClick('${item.Name}')">
+                <td style="font-weight:bold; color:var(--accent)">${item.Name}</td>
+                <td>${calculateAge(item.Born)}</td>
+                <td>${item.Birthplace || '---'}</td>
+                <td style="font-weight:800">${item.Total || 0}</td>
+                <td>${item.Measurements || '---'}</td></tr>`;
+        });
+        container.innerHTML = html + `</tbody></table>`;
+    } else {
+        let html = `<div class="view-cards">`;
+        filtered.forEach(item => {
+            html += `<div class="card" onclick="handleRowClick('${item.Name}')">
+                <img src="${item.Image || 'https://via.placeholder.com/300x160?text=NO+IMAGE'}" style="object-position:${item.ImagePosition || 'center'}">
+                <strong>${item.Name}</strong>
+                <small>Score: ${item.Total || 0} | Age: ${calculateAge(item.Born)}</small></div>`;
+        });
+        container.innerHTML = html + `</div>`;
+    }
+}
 
         function renderScenes(query, container) {
             let filtered = sceneDatabase.filter(s => 
@@ -596,192 +648,134 @@ let selfieSegmentation;
                 (s.Cast && s.Cast.toLowerCase().includes(query)) ||
                 (s.Studio && s.Studio.toLowerCase().includes(query))
             );
-
-            // Ordenar por data (Recente -> Antigo)
             filtered.sort((a, b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
-
-            // Limite de 100
             const limited = filtered.slice(0, 100);
 
             if (currentView === 'list') {
-                let html = `<p style="font-size:0.7rem; opacity:0.6">> SHOWING ${limited.length} MOST RECENT ENTRIES</p>
-                <table class="view-list"><thead><tr><th>SCENE NAME</th><th>STUDIO</th><th>RELEASE</th><th>CAST</th></tr></thead><tbody>`;
+                let html = `<table class="view-list"><thead><tr><th>Scene Name</th><th>Studio</th><th>Release</th><th>Cast</th></tr></thead><tbody>`;
                 limited.forEach(s => {
                     html += `<tr onclick="openScene('${encodeURIComponent(s.Name)}')">
-                        <td>${s.Name}</td>
+                        <td style="font-weight:bold; color:var(--accent)">${s.Name}</td>
                         <td>${s.Studio}</td>
-                        <td style="white-space:nowrap">${s["Release date"]}</td>
-                        <td style="font-size:0.7rem; opacity:0.6">${s.Cast}</td></tr>`;
+                        <td>${s["Release date"]}</td>
+                        <td style="font-size:0.75rem; color:var(--text-dim)">${s.Cast}</td></tr>`;
                 });
                 container.innerHTML = html + `</tbody></table>`;
             } else {
                 let html = `<div class="view-cards">`;
                 limited.forEach(s => {
                     html += `<div class="card" onclick="openScene('${encodeURIComponent(s.Name)}')">
-                        <img src="${s.Image || 'https://via.placeholder.com/300x180?text=SCENE+IMAGE'}">
-                        <strong>${s.Name}</strong><br>
+                        <img src="${s.Image || 'https://via.placeholder.com/300x160?text=SCENE+IMAGE'}">
+                        <strong>${s.Name}</strong>
                         <small>${s.Studio} | ${s["Release date"]}</small></div>`;
                 });
                 container.innerHTML = html + `</div>`;
             }
         }
 
-        // --- DETAIL PAGES ---
+        // PERFIL E DETALHES
+        function handleRowClick(name) {
+            if (isEditMode) openEditModal(name);
+            else openProfile(name);
+        }
+
         function openProfile(n) { window.location.hash = `profile=${encodeURIComponent(n)}`; }
         function openScene(n) { window.location.hash = `scene=${n}`; }
 
-function showProfilePage(p) {
-    // Reset de visualização
+  function showProfilePage(p) {
     document.getElementById('main-page').classList.add('hidden');
-    document.getElementById('scene-detail-page').style.display = 'none';
-    document.getElementById('profile-page').style.display = 'block';
+    document.getElementById('scene-detail-page').classList.add('hidden');
+    document.getElementById('profile-page').classList.remove('hidden');
+    window.scrollTo(0,0);
 
-    // 1. FILTRAR CENAS
+    const ranks = calculateAllRanks(p);
     let relatedScenes = sceneDatabase.filter(s => s.Cast && s.Cast.toLowerCase().includes(p.Name.toLowerCase()));
     relatedScenes.sort((a, b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
 
-    let scenesHtml = `<table class="scene-table"><thead><tr><th>SCENE NAME</th><th>DATE</th><th>SEARCH</th></tr></thead><tbody>`;
+    // Gerar Tabela de Cenas
+    let scenesHtml = `<table class="scene-table"><thead><tr><th>Scene</th><th>Date</th><th>Search</th></tr></thead><tbody>`;
     relatedScenes.forEach(s => {
         const qFull = encodeURIComponent(`${s.Cast} ${s.Name}`);
         const qTitle = s.Name.trim().replace(/\s+/g, '+');
         scenesHtml += `<tr>
             <td onclick="openScene('${encodeURIComponent(s.Name)}')" class="scene-link">${s.Name}</td>
-            <td>${s["Release date"] || "---"}</td>
+            <td style="white-space:nowrap">${s["Release date"] || "---"}</td>
             <td><div class="search-links">
-                <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" style="color:#00ffff; border-color:#00ffff">A</a>
+                <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" style="color:var(--accent)">A</a>
                 <a href="https://www.whoreshub.com/search/${qFull}/" target="_blank">1</a>
                 <a href="https://pornmz.com/?s=${qFull}" target="_blank">2</a>
             </div></td></tr>`;
     });
     scenesHtml += "</tbody></table>";
 
-    // 2. ALGORITMO DE SEMELHANTES (9 PARÂMETROS)
-    const currentAge = calculateAge(p.Born);
-   const similarList = database.filter(item => item.Name !== p.Name).map(other => {
-        let pts = 0;
-        const otherAge = calculateAge(other.Born);
-        
-        // Comparações de 9 parâmetros
-        if (currentAge > 0 && otherAge > 0 && Math.abs(currentAge - otherAge) <= 3) pts++;
-        if (p.Ethnicity && p.Ethnicity === other.Ethnicity) pts++;
-        if (p.Measurements && p.Measurements === other.Measurements) pts++;
-        if (p.Height && Math.abs(parseInt(p.Height) - parseInt(other.Height)) <= 5) pts++;
-        if (p.Weight && Math.abs(parseInt(p.Weight) - parseInt(other.Weight)) <= 5) pts++;
-        if (p['Hair color'] && p['Hair color'] === other['Hair color']) pts++;
-        if (p['Eye color'] && p['Eye color'] === other['Eye color']) pts++;
-        if (p.tattoos !== undefined && p.tattoos === other.tattoos) pts++;
-        if (p.piercings !== undefined && p.piercings === other.piercings) pts++;
-
-        const pct = Math.round((pts / 9) * 100);
-        return { ...other, percent: pct };
-    })
-    .filter(a => a.percent >= 60) // AJUSTADO: Agora apenas 60% ou mais aparecerão
-    .sort((a, b) => b.percent - a.percent)
-    .slice(0, 8);
-
-    console.log("Semelhantes encontrados para " + p.Name + ":", similarList.length);
-
-    let similarHtml = "";
-    if (similarList.length > 0) {
-        similarHtml = `
-        <div class="similar-section">
-            <div class="similar-title">> PATTERN RECOGNITION: SIMILAR SUBJECTS (${similarList.length})</div>
-            <div class="similar-grid">`;
-        similarList.forEach(s => {
-            similarHtml += `
-            <div class="similar-item" onclick="openProfile('${encodeURIComponent(s.Name)}')">
-                <img src="${s.Image || 'https://via.placeholder.com/150'}" style="object-position: ${s.ImagePosition || 'center'}">
-                <span>${s.Name}</span>
-                <span class="similar-pct">MATCH: ${s.percent}%</span>
-            </div>`;
-        });
-        similarHtml += `</div></div>`;
-    }
-
-    // 3. MONTAGEM FINAL
     document.getElementById('profile-content').innerHTML = `
         <div class="profile-header-name">${p.Name}</div>
-        <div class="profile-data-row">
-            <div class="data-card"><label>AGE</label><span>${currentAge || '??'}</span></div>
-            <div class="data-card"><label>SCORE</label><span>${p.Total || 0}</span></div>
-            <div class="data-card"><label>ORIGIN</label><span>${p.Birthplace || '---'}</span></div>
-            <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements || '---'}</span></div>
+
+        <!-- TUDO NA MESMA LINHA HORIZONTAL -->
+<div class="profile-data-row">
+            <!-- GRUPO DADOS (ESQUERDA) -->
+            <div class="data-card"><label>Age</label><span>${calculateAge(p.Born)}</span></div>
+            <div class="data-card"><label>Ethnicity</label><span>${p.Ethnicity || '---'}</span></div>
+            <div class="data-card"><label>Measurements</label><span>${p.Measurements || '---'}</span></div>
+            <div class="data-card"><label>Origin</label><span>${p.Birthplace || '---'}</span></div>
+            
+            <!-- GRUPO RANKS (DIREITA) -->
+            <div class="rank-card"><label>Global</label><span>#${ranks.global}</span></div>
+            <div class="rank-card"><label>Origin</label><span>#${ranks.country}</span></div>
+            <div class="rank-card"><label>Score</label><span>${ranks.score}</span></div>
+            <div class="rank-card"><label>Boobs</label><span>#${ranks.boobs}</span></div>
+            <div class="rank-card"><label>Ass</label><span>#${ranks.ass}</span></div>
+            <div class="rank-card"><label>Hips</label><span>#${ranks.hips}</span></div>
         </div>
+
         <div class="profile-main">
-            <img src="${p.Image || ''}" class="profile-img-large" style="object-position: ${p.ImagePosition || 'center'}">
+            <img src="${p.Image || ''}" class="profile-img-large" style="object-position:${p.ImagePosition || 'center'}">
             <div class="profile-bio">
-                <p style="margin-top:0; color:var(--glow); opacity:0.7">> REGISTERED APPEARANCES:</p>
-                ${relatedScenes.length > 0 ? scenesHtml : '<p style="opacity:0.5">NO DATA FOUND.</p>'}
+                <p style="margin-top:0; color:var(--accent); font-weight:bold; font-size:0.7rem; text-transform:uppercase">Registered Appearances</p>
+                ${relatedScenes.length > 0 ? scenesHtml : '<p style="color:var(--text-dim)">No scenes found.</p>'}
             </div>
         </div>
-        ${similarHtml}
     `;
 }
 
-   
+        function showSceneDetailPage(s) {
+            document.getElementById('main-page').classList.add('hidden');
+            document.getElementById('profile-page').classList.add('hidden');
+            document.getElementById('scene-detail-page').classList.remove('hidden');
 
-function showSceneDetailPage(s) {
-    document.getElementById('main-page').classList.add('hidden');
-    document.getElementById('scene-detail-page').style.display = 'block';
+            const fullQuery = encodeURIComponent(`${s.Cast} ${s.Name}`);
+            const linkedCast = s.Cast.split(',').map(name => {
+                const n = name.trim();
+                const exists = database.find(a => a.Name.toLowerCase() === n.toLowerCase());
+                return exists ? `<a href="#profile=${encodeURIComponent(exists.Name)}" class="scene-link">${n}</a>` : `<span>${n}</span>`;
+            }).join(', ');
 
-    // Formatações de busca
-    const titleOnlyQuery = s.Name.trim().replace(/\s+/g, '+'); // Para APStream
-    const fullQuery = encodeURIComponent(`${s.Cast} ${s.Name}`); // Para os outros
-
-    const apStreamUrl = `https://rtv.apstream.org/?search=${titleOnlyQuery}`;
-
-    // Lógica do Cast (mesma de antes)
-    const castNames = s.Cast.split(',').map(name => name.trim());
-    const linkedCast = castNames.map(name => {
-        const actressExists = database.find(a => a.Name.toLowerCase() === name.toLowerCase());
-        if (actressExists) {
-            return `<a href="#profile=${encodeURIComponent(actressExists.Name)}" class="cast-link">${name}</a>`;
-        } else {
-            const babepediaFormat = name.replace(/\s+/g, '_');
-            return `<span>${name}<a href="https://www.babepedia.com/babe/${babepediaFormat}" target="_blank" class="external-link" title="Babepedia">[B]</a></span>`;
+            document.getElementById('scene-detail-content').innerHTML = `
+                <div class="profile-header-name">${s.Name}</div>
+                <div class="profile-data-row">
+                    <div class="data-card"><label>Studio</label><span>${s.Studio}</span></div>
+                    <div class="data-card"><label>Date</label><span>${s["Release date"]}</span></div>
+                </div>
+                <div class="profile-main">
+                    <img src="${s.Image || 'https://via.placeholder.com/600x400'}" class="profile-img-large">
+                    <div class="profile-bio">
+                        <p style="color:var(--accent); font-weight:bold; font-size:0.7rem; text-transform:uppercase">Cast Members</p>
+                        <div style="font-size:1.2rem; margin-bottom:30px">${linkedCast}</div>
+                        <p style="color:var(--accent); font-weight:bold; font-size:0.7rem; text-transform:uppercase">Search Links</p>
+                        <div class="search-links">
+                            <a href="https://rtv.apstream.org/?search=${s.Name.replace(/\s+/g, '+')}" target="_blank">ApStream</a>
+                            <a href="https://www.whoreshub.com/search/${fullQuery}/" target="_blank">WhoresHub</a>
+                            <a href="https://pornmz.com/?s=${fullQuery}" target="_blank">PornMZ</a>
+                        </div>
+                    </div>
+                </div>`;
         }
-    }).join(', ');
 
-    document.getElementById('scene-detail-content').innerHTML = `
-        <div class="profile-header-name">${s.Name}</div>
-        <div class="profile-data-row">
-            <div class="data-card"><label>STUDIO</label><span>${s.Studio}</span></div>
-            <div class="data-card"><label>DATE</label><span>${s["Release date"]}</span></div>
-            <div class="data-card"><label>MOVIE</label><span>${s.Movie || '---'}</span></div>
-        </div>
-        <div class="profile-main">
-            <img src="${s.Image || 'https://via.placeholder.com/500x300?text=NO+IMAGE'}" class="profile-img-large">
-            <div class="profile-bio">
-                
-
-                <div class="search-links">
-                </div>
-
-                <p style="margin-top:20px">> CAST:</p>
-                <div style="font-size:1.3rem; margin-bottom:20px; line-height:2.2;">
-                    ${linkedCast}
-                </div>
-                
-                <p>> WEB SEARCH ENGINE LINKS (FULL QUERY):</p>
-                <div class="search-links">
-                     <a href="https://rtv.apstream.org/?search/${fullQuery}/" target="_blank">apstream</a>
-                    <a href="https://www.whoreshub.com/search/${fullQuery}/" target="_blank">WHORESHUB</a>
-                    <a href="https://pornmz.com/?s=${fullQuery}" target="_blank">PORNMZ</a>
-                    <a href="https://noodlemagazine.com/video/${fullQuery}" target="_blank">NOODLEMAG</a>
-                    <a href="https://www.trendyporn.com/search/${fullQuery}/" target="_blank">TRENDYPORN</a>
-                </div>
-            </div>
-        </div>`;
-}
-
-
-
-        // --- ROUTING ---
         function handleRouting() {
             const h = window.location.hash;
             document.getElementById('main-page').classList.remove('hidden');
-            document.getElementById('profile-page').style.display = 'none';
-            document.getElementById('scene-detail-page').style.display = 'none';
+            document.getElementById('profile-page').classList.add('hidden');
+            document.getElementById('scene-detail-page').classList.add('hidden');
 
             if (h.startsWith('#profile=')) {
                 const p = database.find(x => x.Name === decodeURIComponent(h.split('=')[1]));
@@ -796,722 +790,115 @@ function showSceneDetailPage(s) {
 
         function goBack(e) { e.preventDefault(); window.location.hash = ""; }
 
-
-// --- ADICIONE ESTA FUNÇÃO NOVA ---
-        function sortBy(col) {
-            if (sortCol === col) {
-                sortAsc = !sortAsc; // Inverte a ordem se clicar na mesma coluna
-            } else {
-                sortCol = col;
-                sortAsc = true; // Padrão ascendente para nova coluna
-            }
-            render();
-        }
-
-// --- FUNÇÕES DE EDIÇÃO E EXPORTAÇÃO ---
-      function toggleEditMode() {
-            if (currentMainTab !== 'actrisses') {
-                alert("Please switch to ACTRISSES tab.");
-                return;
-            }
+        // MODO EDIÇÃO
+        function toggleEditMode() {
             isEditMode = !isEditMode;
-            
-            // Visual feedback
             const btn = document.getElementById('btnEditMode');
-            const exportBtn = document.getElementById('btnExport');
+            btn.classList.toggle('active', isEditMode);
+            document.getElementById('btnExport').classList.toggle('hidden', !isEditMode);
+        }
+
+        function openEditModal(name) {
+            const idx = database.findIndex(i => i.Name === name);
+            const item = database[idx];
+            document.getElementById('e-index').value = idx;
+            document.getElementById('e-name').value = item.Name || "";
+            document.getElementById('e-born').value = item.Born || "";
+            document.getElementById('e-total').value = item.Total || 0;
+            document.getElementById('e-image').value = item.Image || "";
+            document.getElementById('e-birthplace').value = item.Birthplace || "";
+            document.getElementById('e-measurements').value = item.Measurements || "";
+            document.getElementById('e-height').value = item.Height || "";
+            document.getElementById('e-weight').value = item.Weight || "";
+            document.getElementById('e-hair').value = item['Hair color'] || "";
+            document.getElementById('e-ethnicity').value = item.Ethnicity || "";
+            document.getElementById('e-eyes').value = item['Eye color'] || "";
+            document.getElementById('e-tattoos').value = item.tattoos ? "true" : "false";
+            document.getElementById('e-piercings').value = item.piercings ? "true" : "false";
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
+
+        async function saveFromModal() {
+            const idx = document.getElementById('e-index').value;
+            database[idx].Name = document.getElementById('e-name').value;
+            database[idx].Born = document.getElementById('e-born').value;
+            database[idx].Total = Number(document.getElementById('e-total').value);
+            database[idx].Image = document.getElementById('e-image').value;
+            database[idx].Birthplace = document.getElementById('e-birthplace').value;
+            database[idx].Measurements = document.getElementById('e-measurements').value;
+            database[idx].Height = document.getElementById('e-height').value;
+            database[idx].Weight = document.getElementById('e-weight').value;
+            database[idx]['Hair color'] = document.getElementById('e-hair').value;
+            database[idx].Ethnicity = document.getElementById('e-ethnicity').value;
+            database[idx]['Eye color'] = document.getElementById('e-eyes').value;
+            database[idx].tattoos = document.getElementById('e-tattoos').value === "true";
+            database[idx].piercings = document.getElementById('e-piercings').value === "true";
             
-            if (isEditMode) {
-                btn.classList.add('active');
-                btn.innerHTML = "✖"; // Muda ícone para fechar
-                exportBtn.classList.remove('hidden');
-                document.body.style.cursor = "alias"; // Cursor diferente para indicar modo edição
-            } else {
-                btn.classList.remove('active');
-                btn.innerHTML = "✎";
-                exportBtn.classList.add('hidden');
-                document.body.style.cursor = "default";
-            }
+            closeEditModal();
+            render();
+            await syncToGitHub();
         }
 
-        // Decide se abre o perfil ou o editor baseado no modo
-        function handleRowClick(name) {
-            if (isEditMode) {
-                openEditModal(name);
-            } else {
-                openProfile(name);
-            }
+        async function syncToGitHub() {
+            try {
+                const getFile = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                });
+                const fileData = await getFile.json();
+                const sha = fileData.sha;
+                const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(database, null, 4))));
+                await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: "Update via Database V2", content: newContent, sha: sha })
+                });
+                console.log("Sync OK");
+            } catch (err) { console.error("Sync Error", err); }
         }
-
-function openEditModal(name) {
-    const index = database.findIndex(i => i.Name === name);
-    if (index === -1) return;
-    const item = database[index];
-
-    // Função auxiliar para preencher campos com segurança
-    const setVal = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.value = val;
-    };
-
-    setVal('e-index', index);
-    setVal('e-name', item.Name || "");
-    setVal('e-born', item.Born || "");
-    setVal('e-birthplace', item.Birthplace || "");
-    setVal('e-total', item.Total || 0);
-    setVal('e-measurements', item.Measurements || "");
-    setVal('e-height', item.Height || "");
-    setVal('e-weight', item.Weight || "");
-    setVal('e-hair', item['Hair color'] || "");
-    setVal('e-ethnicity', item.Ethnicity || "");
-    setVal('e-eyes', item['Eye color'] || "");
-    setVal('e-tattoos', item.tattoos === true ? "true" : "false");
-    setVal('e-piercings', item.piercings === true ? "true" : "false");
-    setVal('e-image', item.Image || "");
-    setVal('e-position', item.ImagePosition || "50% 50%");
-
-    // Atualiza o Preview apenas se o elemento existir
-    const preview = document.getElementById('e-preview-small');
-    if (preview) {
-        preview.src = item.Image || "";
-    }
-
-    document.getElementById('edit-modal').style.display = 'flex';
-}
-
-
-        function closeEditModal() {
-            document.getElementById('edit-modal').style.display = 'none';
-        }
-
-async function saveFromModal() {
-    const idx = document.getElementById('e-index').value;
-    
-    // 1. Atualiza os dados no array local (o que você vê na tela)
-    database[idx].Name = document.getElementById('e-name').value;
-    database[idx].Born = document.getElementById('e-born').value;
-    database[idx].Birthplace = document.getElementById('e-birthplace').value;
-    database[idx].Total = Number(document.getElementById('e-total').value);
-    database[idx].Measurements = document.getElementById('e-measurements').value;
-    database[idx].Height = document.getElementById('e-height').value;
-    database[idx].Weight = document.getElementById('e-weight').value;
-    database[idx]['Hair color'] = document.getElementById('e-hair').value;
-    database[idx].Ethnicity = document.getElementById('e-ethnicity').value;
-    database[idx]['Eye color'] = document.getElementById('e-eyes').value;
-    database[idx].tattoos = document.getElementById('e-tattoos').value === "true";
-    database[idx].piercings = document.getElementById('e-piercings').value === "true";
-    database[idx].Image = document.getElementById('e-image').value;
-    database[idx].ImagePosition = document.getElementById('e-position').value;
-
-    closeEditModal();
-    render(); // Atualiza a lista visualmente
-
-    // 2. CHAMA A SINCRONIZAÇÃO AUTOMÁTICA
-    console.log("Iniciando auto-sync...");
-    await syncToGitHub();
-}
-
-async function syncDatabaseToGitHub() {
-    console.log("Iniciando sincronização com GitHub...");
-    
-    try {
-        // 1. Pega o SHA atual
-        const getFile = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
-        
-        if (!getFile.ok) throw new Error("Erro ao acessar arquivo no GitHub");
-        const fileData = await getFile.json();
-        const sha = fileData.sha;
-
-        // 2. Prepara o conteúdo novo
-        const newContent = JSON.stringify(database, null, 4);
-        const encodedContent = btoa(unescape(encodeURIComponent(newContent)));
-
-        // 3. Faz o upload
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: "Edit She via Terminal: " + document.getElementById('e-name').value,
-                content: encodedContent,
-                sha: sha
-            })
-        });
-
-        if (response.ok) {
-            console.log("GitHub atualizado com sucesso!");
-            // Opcional: mostrar um pequeno aviso na tela
-        } else {
-            throw new Error("Erro no upload para o GitHub");
-        }
-    } catch (err) {
-        alert("ERRO AO SALVAR NO GITHUB: " + err.message);
-    }
-}
 
         function exportData() {
-            const dataStr = JSON.stringify(database, null, 4);
-            const blob = new Blob([dataStr], { type: "application/json" });
+            const blob = new Blob([JSON.stringify(database, null, 4)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "she_updated.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            const a = document.createElement('a'); a.href = url; a.download = "she.json"; a.click();
         }
 
-        // --- ATUALIZAÇÃO NO RENDER ACTRESSES ---
-    function renderActresses(query, container) {
-            const fAge = document.getElementById('f-age').value;
-            const fOrigin = document.getElementById('f-origin').value;
-            const fEth = document.getElementById('f-ethnicity').value;
-            const fHair = document.getElementById('f-hair').value;
-
-            // 1. Filtragem
-            // Nota: Mapeamos o índice original para permitir edição correta mesmo filtrado
-            let filteredIndices = database.map((item, index) => ({ item, index })).filter(({ item }) => {
-                const age = calculateAge(item.Born);
-                let mAge = true;
-                if (fAge === "<20") mAge = age < 20;
-                else if (fAge === "21-25") mAge = age >= 21 && age <= 25;
-                else if (fAge === "26-30") mAge = age >= 26 && age <= 30;
-                else if (fAge === "31-40") mAge = age >= 31 && age <= 40;
-                else if (fAge === ">41") mAge = age >= 41;
-
-                return (item.Name || "").toLowerCase().includes(query) && mAge &&
-                       (fEth === "" || item.Ethnicity === fEth) &&
-                       (fHair === "" || item['Hair color'] === fHair) &&
-                       (fOrigin === "" || item.Birthplace === fOrigin);
-            });
-
-            // 2. Ordenação
-            filteredIndices.sort((a, b) => {
-                let valA, valB;
-                const itemA = a.item;
-                const itemB = b.item;
-
-                if (sortCol === 'Age') {
-                    valA = calculateAge(itemA.Born);
-                    valB = calculateAge(itemB.Born);
-                } else if (sortCol === 'Score') {
-                    valA = parseFloat(itemA.Total) || 0;
-                    valB = parseFloat(itemB.Total) || 0;
-                } else if (sortCol === 'Origin') {
-                    valA = (itemA.Birthplace || '').toLowerCase();
-                    valB = (itemB.Birthplace || '').toLowerCase();
-                } else if (sortCol === 'Measurements') {
-                    valA = (itemA.Measurements || '').toLowerCase();
-                    valB = (itemB.Measurements || '').toLowerCase();
-                } else {
-                    valA = (itemA.Name || '').toLowerCase();
-                    valB = (itemB.Name || '').toLowerCase();
-                }
-
-                if (valA < valB) return sortAsc ? -1 : 1;
-                if (valA > valB) return sortAsc ? 1 : -1;
-                return 0;
-            });
-
-            const arrow = (col) => sortCol === col ? (sortAsc ? ' ▲' : ' ▼') : '';
-
-            if (currentView === 'list') {
-                let html = `<table class="view-list">
-                    <thead>
-                        <tr>
-                            <th onclick="sortBy('Name')">NAME${arrow('Name')}</th>
-                            <th onclick="sortBy('Age')">AGE${arrow('Age')}</th>
-                            <th onclick="sortBy('Origin')">ORIGIN${arrow('Origin')}</th>
-                            <th onclick="sortBy('Score')">SCORE${arrow('Score')}</th>
-                            <th onclick="sortBy('Measurements')">MEASUREMENTS${arrow('Measurements')}</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-                
-                filteredIndices.forEach(({ item }) => {
-                    // Ao clicar na linha, chama handleRowClick que decide se abre Modal ou Perfil
-                    html += `<tr onclick="handleRowClick('${item.Name}')">
-                        <td>${item.Name}</td>
-                        <td>${calculateAge(item.Born)}</td>
-                        <td>${item.Birthplace}</td>
-                        <td style="font-weight:bold">${item.Total}</td>
-                        <td>${item.Measurements}</td></tr>`;
-                });
-                container.innerHTML = html + `</tbody></table>`;
-            } else {
-                // MODO CARD
-                let html = `<div class="view-cards">`;
-                filteredIndices.forEach(({ item }) => {
-                    // Aplica o posicionamento da imagem salvo no JSON
-                    const pos = item.ImagePosition || 'center'; // Default se não existir
-                    
-                    html += `<div class="card" onclick="handleRowClick('${item.Name}')">
-                        <img src="${item.Image || 'https://via.placeholder.com/300x180?text=NO+IMAGE'}" style="object-position: ${pos}">
-                        <strong>${item.Name}</strong><br>
-                        <small>Score: ${item.Total} | Age: ${calculateAge(item.Born)}</small></div>`;
-                });
-                container.innerHTML = html + `</div>`;
-            }
-        }
-
-         // 1. ABRIR MODAL DE POSICIONAMENTO
-        function openPosModal() {
-            const url = document.getElementById('e-image').value;
-            if (!url) { alert("Please enter an Image URL first."); return; }
-
-            const currentPos = document.getElementById('e-position').value || "50% 50%";
-            const [posX, posY] = currentPos.replace(/%/g, '').split(' ');
-
-            // Configurar imagem e sliders
-            const img = document.getElementById('pos-preview-img');
-            img.src = url;
-            img.style.objectPosition = currentPos;
-
-            document.getElementById('pos-x').value = posX || 50;
-            document.getElementById('pos-y').value = posY || 50;
-
-            document.getElementById('pos-modal').style.display = 'flex';
-        }
-
-        function closePosModal() {
-            document.getElementById('pos-modal').style.display = 'none';
-        }
-
-          // 2. LÓGICA DE ARRASTAR E SLIDERS
-        function updatePreviewFromSliders() {
-            const x = document.getElementById('pos-x').value;
-            const y = document.getElementById('pos-y').value;
-            document.getElementById('pos-preview-img').style.objectPosition = `${x}% ${y}%`;
-        }
-
-        function startDrag(e) {
-            isDragging = true;
-            const box = document.getElementById('preview-box');
-            
-            // Função interna para mover
-            function onMouseMove(evt) {
-                if (!isDragging) return;
-                const rect = box.getBoundingClientRect();
-                
-                // Calcular posição do mouse relativa à caixa (0 a 1)
-                let x = (evt.clientX - rect.left) / rect.width;
-                let y = (evt.clientY - rect.top) / rect.height;
-
-                // Limitar entre 0 e 1
-                x = Math.max(0, Math.min(1, x));
-                y = Math.max(0, Math.min(1, y));
-
-                // Converter para porcentagem
-                const xPct = Math.round(x * 100);
-                const yPct = Math.round(y * 100);
-
-                // Atualizar sliders e imagem
-                document.getElementById('pos-x').value = xPct;
-                document.getElementById('pos-y').value = yPct;
-                document.getElementById('pos-preview-img').style.objectPosition = `${xPct}% ${yPct}%`;
-            }
-
-            // Função interna para parar
-            function onMouseUp() {
-                isDragging = false;
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            }
-
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-        }
-
-            // 3. SALVAR POSIÇÃO NO CAMPO OCULTO
-        function savePosition() {
-            const x = document.getElementById('pos-x').value;
-            const y = document.getElementById('pos-y').value;
-            const posString = `${x}% ${y}%`;
-            
-            document.getElementById('e-position').value = posString;
-            closePosModal();
-        }
-
-function openPurgeTool() {
-    const imgUrl = document.getElementById('e-image').value;
-    if (!imgUrl) return alert("Enter Image URL first.");
-
-    const canvas = document.getElementById('purge-canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.crossOrigin = "Anonymous"; // Tenta contornar bloqueios de imagem
-    
-    img.onload = function() {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        document.getElementById('purge-modal').style.display = 'flex';
-    };
-    
-    img.onerror = function() {
-        alert("CORS ERROR: This website blocks image scanning. Try hosting the image on Imgur or using a local file.");
-    };
-    
-    img.src = imgUrl;
-
-    // Lógica de clique no canvas para remover cor
-    canvas.onclick = function(e) {
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
-        const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
-        
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        const targetPos = (y * canvas.width + x) * 4;
-        
-        const r = data[targetPos];
-        const g = data[targetPos+1];
-        const b = data[targetPos+2];
-        const tol = document.getElementById('purge-tol').value;
-
-        // Varre a imagem e torna transparente cores similares à clicada
-        for (let i = 0; i < data.length; i += 4) {
-            const dr = Math.abs(data[i] - r);
-            const dg = Math.abs(data[i+1] - g);
-            const db = Math.abs(data[i+2] - b);
-            
-            if (dr < tol && dg < tol && db < tol) {
-                data[i+3] = 0; // Torna o Alpha 0 (Transparente)
-            }
-        }
-        ctx.putImageData(imageData, 0, 0);
-    };
-}
-
-function applyPurge() {
-    const canvas = document.getElementById('purge-canvas');
-    const base64 = canvas.toDataURL("image/png");
-    
-    document.getElementById('e-image').value = base64;
-    document.getElementById('e-preview-small').src = base64;
-    document.getElementById('purge-modal').style.display = 'none';
-    alert("Background Purged Successfully!");
-}
-
-// Inicializa o motor de IA do Google
-async function initAI() {
-    if (selfieSegmentation) return; // Já carregado
-    
-    selfieSegmentation = new SelfieSegmentation({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
-    });
-
-    selfieSegmentation.setOptions({ modelSelection: 1 }); // 1 = Qualidade superior
-}
-
-async function runNeuralPurge() {
-    const imgUrl = document.getElementById('e-image').value;
-    const status = document.getElementById('neural-status');
-    const btn = document.getElementById('btn-neural');
-
-    if (!imgUrl) return alert("Enter image URL first.");
-
-    try {
-        status.style.display = 'block';
-        status.innerText = "> DOWNLOADING NEURAL WEIGHTS...";
-        btn.disabled = true;
-
-        await initAI();
-        
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        
-        img.onload = async function() {
-            status.innerText = "> RUNNING PIXEL SEGMENTATION...";
-            
-            // Criamos um canvas temporário para o processamento
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-
-            // Executa a IA na imagem
-            selfieSegmentation.onResults((results) => {
-                // Limpa o canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Desenha a máscara (silhueta)
-                ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
-                
-                // Modo "Composição": Mantém apenas o que está dentro da máscara
-                ctx.globalCompositeOperation = 'source-in';
-                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-                // Exporta o resultado
-                const finalBase64 = canvas.toDataURL("image/png");
-                document.getElementById('e-image').value = finalBase64;
-                document.getElementById('e-preview-small').src = finalBase64;
-                
-                status.innerText = "> SCAN COMPLETE. TARGET ISOLATED.";
-                btn.disabled = false;
-            });
-
-            await selfieSegmentation.send({ image: img });
-        };
-
-        img.onerror = () => {
-            alert("CORS ERROR: Source website blocks AI scanning. Try downloading the image and using a local path.");
-            btn.disabled = false;
-        };
-
-        img.src = imgUrl;
-
-    } catch (e) {
-        console.error(e);
-        status.innerText = "> ERROR: NEURAL FAILURE.";
-        btn.disabled = false;
-    }
-}
-
-
-function getSimilarActresses(current) {
-    const currentAge = calculateAge(current.Born);
-    
-    return database.filter(item => item.Name !== current.Name).map(other => {
-        let matches = 0;
-        const totalParams = 9;
-        const otherAge = calculateAge(other.Born);
-
-        // 1. Idade (Margem de 3 anos)
-        if (Math.abs(currentAge - otherAge) <= 3) matches++;
-        // 2. Etnia
-        if (current.Ethnicity === other.Ethnicity) matches++;
-        // 3. Altura (Margem de 5cm)
-        if (Math.abs(parseInt(current.Height) - parseInt(other.Height)) <= 5) matches++;
-        // 4. Peso (Margem de 5kg)
-        if (Math.abs(parseInt(current.Weight) - parseInt(other.Weight)) <= 5) matches++;
-        // 5. Cabelo
-        if (current["Hair color"] === other["Hair color"]) matches++;
-        // 6. Cor dos Olhos (Eye color)
-        if (current["Eye color"] === other["Eye color"]) matches++;
-        // 7. Tatuagens
-        if (current.tattoos === other.tattoos) matches++;
-        // 8. Piercings
-        if (current.piercings === other.piercings) matches++;
-        // 9. Medidas (Medidas exatas ou similares)
-        if (current.Measurements === other.Measurements) matches++;
-
-        const percent = Math.round((matches / totalParams) * 100);
-        return { ...other, percent };
-    }).filter(item => item.percent >= 60) // Apenas 60% ou mais
-      .sort((a, b) => b.percent - a.percent); // Ordena pela maior semelhança
-}
-
-// Fecha o modal se o usuário clicar fora da caixa preta
-window.onclick = function(event) {
-    const modal = document.getElementById('edit-modal');
-    if (event.target == modal) {
-        closeEditModal();
-    }
-}
-
-// Garante que a função close exista
-function closeEditModal() {
-    document.getElementById('edit-modal').style.display = 'none';
-}
-
-
-// Extrai números de "34-24-36" -> [34, 24, 36]
-function parseMeasurements(m) {
-    if (!m) return [0, 0, 0];
-    const parts = m.match(/\d+/g);
-    return parts ? parts.map(Number) : [0, 0, 0];
-}
-
-function calculateAllRanks(currentShe) {
+     function calculateAllRanks(currentShe) {
     const list = [...database];
     const countryList = list.filter(a => a.Birthplace === currentShe.Birthplace);
-    const getPos = (arr, name, valFn) => {
-        const sorted = [...arr].sort((a, b) => valFn(b) - valFn(a));
-        return sorted.findIndex(a => a.Name === name) + 1;
+
+    // Função auxiliar para extrair números das medidas (ex: 34-24-36)
+    const parseM = (m) => {
+        if (!m) return [0, 0, 0];
+        const parts = m.match(/\d+/g);
+        return parts ? parts.map(Number) : [0, 0, 0];
     };
-    return {
-        global: getPos(list, currentShe.Name, a => parseFloat(a.Total || 0)),
-        country: currentShe.Birthplace ? getPos(countryList, currentShe.Name, a => parseFloat(a.Total || 0)) : 'N/A',
-        boobs: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[0]),
-        hips: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2]),
-        ass: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2])
-    };
-}
-
-// --- FUNÇÃO PRINCIPAL DO PERFIL ---
-function showProfilePage(p) {
-    // 1. PREPARAÇÃO DA PÁGINA
-    document.getElementById('main-page').classList.add('hidden');
-    document.getElementById('scene-detail-page').style.display = 'none';
-    document.getElementById('profile-page').style.display = 'block';
-    window.scrollTo(0, 0);
-
-    // 2. CÁLCULO DE RANKINGS (CARDS CIANO)
-    const ranks = calculateAllRanks(p);
-    const totalGlobal = database.length;
-    const totalCountry = database.filter(a => a.Birthplace === p.Birthplace).length;
-
-    const rankingHtml = `
-        <div class="ranking-container">
-            <div class="rank-card"><label>GLOBAL RANK</label><span>#${ranks.global}</span><small>of ${totalGlobal}</small></div>
-            <div class="rank-card"><label>${p.Birthplace || 'ORIGIN'} RANK</label><span>#${ranks.country}</span><small>of ${totalCountry}</small></div>
-            <div class="rank-card"><label>BOOBS RANK</label><span>#${ranks.boobs}</span><small>by size</small></div>
-            <div class="rank-card"><label>ASS RANK</label><span>#${ranks.ass}</span><small>by size</small></div>
-            <div class="rank-card"><label>HIPS RANK</label><span>#${ranks.hips}</span><small>by size</small></div>
-        </div>`;
-
-    // 3. FILTRAGEM DE CENAS
-    let relatedScenes = sceneDatabase.filter(s => s.Cast && s.Cast.toLowerCase().includes(p.Name.toLowerCase()));
-    relatedScenes.sort((a, b) => parseDate(b["Release date"]) - parseDate(a["Release date"]));
-
-    let scenesHtml = `<table class="scene-table"><thead><tr><th>SCENE NAME</th><th>DATE</th><th>SEARCH</th></tr></thead><tbody>`;
-    relatedScenes.forEach(s => {
-        const qFull = encodeURIComponent(`${s.Cast} ${s.Name}`);
-        const qTitle = s.Name.trim().replace(/\s+/g, '+');
-        scenesHtml += `<tr>
-            <td onclick="openScene('${encodeURIComponent(s.Name)}')" class="scene-link">${s.Name}</td>
-            <td style="white-space:nowrap">${s["Release date"] || "---"}</td>
-            <td><div class="search-links">
-                <a href="https://rtv.apstream.org/?search=${qTitle}" target="_blank" title="APStream" style="color:#00ffff; border-color:#00ffff">A</a>
-                <a href="https://www.whoreshub.com/search/${qFull}/" target="_blank">1</a>
-                <a href="https://pornmz.com/?s=${qFull}" target="_blank">2</a>
-            </div></td></tr>`;
-    });
-    scenesHtml += "</tbody></table>";
-
-    // 4. LÓGICA DE SEMELHANTES (>60%)
-    const currentAge = calculateAge(p.Born);
-    const similarList = database.filter(item => item.Name !== p.Name).map(other => {
-        let pts = 0;
-        const otherAge = calculateAge(other.Born);
-        if (currentAge > 0 && otherAge > 0 && Math.abs(currentAge - otherAge) <= 3) pts++;
-        if (p.Ethnicity && p.Ethnicity === other.Ethnicity) pts++;
-        if (p.Measurements && p.Measurements === other.Measurements) pts++;
-        if (p.Height && Math.abs(parseInt(p.Height) - parseInt(other.Height)) <= 5) pts++;
-        if (p.Weight && Math.abs(parseInt(p.Weight) - parseInt(other.Weight)) <= 5) pts++;
-        if (p['Hair color'] && p['Hair color'] === other['Hair color']) pts++;
-        if (p['Eye color'] && p['Eye color'] === other['Eye color']) pts++;
-        if (p.tattoos !== undefined && p.tattoos === other.tattoos) pts++;
-        if (p.piercings !== undefined && p.piercings === other.piercings) pts++;
-        return { ...other, percent: Math.round((pts / 9) * 100) };
-    }).filter(a => a.percent >= 60).sort((a, b) => b.percent - a.percent).slice(0, 8);
-
-    let similarHtml = "";
-    if (similarList.length > 0) {
-        similarHtml = `<div class="similar-section"><div class="similar-title">> PATTERN RECOGNITION: SIMILAR SUBJECTS</div><div class="similar-grid">`;
-        similarList.forEach(s => {
-            similarHtml += `
-            <div class="similar-item" onclick="openProfile('${encodeURIComponent(s.Name)}')">
-                <img src="${s.Image || ''}" style="object-position: ${s.ImagePosition || 'center'}">
-                <span>${s.Name}</span>
-                <span class="similar-pct">MATCH: ${s.percent}%</span>
-            </div>`;
-        });
-        similarHtml += `</div></div>`;
-    }
-
-    // 5. RENDERIZAÇÃO FINAL DO CONTEÚDO
-    document.getElementById('profile-content').innerHTML = `
-        <div class="profile-header-name">${p.Name}</div>
-        
-        ${rankingHtml}
-
-        <div class="profile-data-row">
-            <div class="data-card"><label>AGE</label><span>${currentAge || '??'}</span></div>
-            <div class="data-card"><label>SCORE</label><span>${p.Total || 0}</span></div>
-            <div class="data-card"><label>ETHNICITY</label><span>${p.Ethnicity || '---'}</span></div>
-            <div class="data-card"><label>MEASUREMENTS</label><span>${p.Measurements || '---'}</span></div>
-        </div>
-
-        <div class="profile-main">
-            <img src="${p.Image || ''}" class="profile-img-large" style="object-position: ${p.ImagePosition || 'center'}">
-            <div class="profile-bio">
-                <p style="margin-top:0; color:rgba(0,255,65,0.7)">> REGISTERED APPEARANCES:</p>
-                ${relatedScenes.length > 0 ? scenesHtml : '<p style="opacity:0.5">NO SCENES RECORDED.</p>'}
-            </div>
-        </div>
-
-        ${similarHtml}
-    `;
-}
-
-function calculateAllRanks(currentShe) {
-    const list = [...database];
-    const countryList = list.filter(a => a.Birthplace === currentShe.Birthplace);
 
     const getPos = (arr, name, valFn) => {
         const sorted = [...arr].sort((a, b) => valFn(b) - valFn(a));
         return sorted.findIndex(a => a.Name === name) + 1;
     };
 
-    const curM = parseMeasurements(currentShe.Measurements);
-
     return {
         global: getPos(list, currentShe.Name, a => parseFloat(a.Total || 0)),
         country: currentShe.Birthplace ? getPos(countryList, currentShe.Name, a => parseFloat(a.Total || 0)) : 'N/A',
-        boobs: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[0]),
-        hips: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2]),
-        // Ass rank usamos o mesmo do quadril (hips) que é o padrão de medidas
-        ass: getPos(list, currentShe.Name, a => parseMeasurements(a.Measurements)[2]) 
+        score: currentShe.Total || 0,
+        boobs: getPos(list, currentShe.Name, a => parseM(a.Measurements)[0]),
+        ass: getPos(list, currentShe.Name, a => parseM(a.Measurements)[2]),
+        hips: getPos(list, currentShe.Name, a => parseM(a.Measurements)[2])
     };
 }
 
-
-// CONFIGURAÇÃO DO SEU GITHUB
-const GITHUB_USER = 'dadynapoleao';
-const GITHUB_REPO = 'babefire';
-const GITHUB_PATH = 'js/she.json'; 
-const _p1 = 'github_pat_11BPT5HSQ02ZefY9Hnjn3Y_';
-const _p2 = '9sB2cIGRGSL1IXsHhYNQIF1ez6CPBwNAM84y';
-const _p3 = 'PaZknPrAJEXPPJYAQ4StLA0';
-const GITHUB_TOKEN = _p1 + _p2 + _p3;
-
-async function syncToGitHub() {
-    try {
-        const authHeader = `token ${GITHUB_TOKEN}`;
-
-        // 1. Pega o SHA atual do arquivo no repositório
-        const getFile = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-            headers: { 'Authorization': authHeader }
-        });
-        
-        if (!getFile.ok) throw new Error("Erro ao acessar GitHub");
-        const fileData = await getFile.json();
-        const sha = fileData.sha;
-
-        // 2. Prepara o conteúdo em Base64
-        const newContent = JSON.stringify(database, null, 4);
-        const encodedContent = btoa(unescape(encodeURIComponent(newContent)));
-
-        // 3. Faz o upload (PUT)
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': authHeader,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: "Edit via Terminal: " + document.getElementById('e-name').value,
-                content: encodedContent,
-                sha: sha
-            })
-        });
-
-        if (response.ok) {
-            console.log("✅ GitHub sincronizado com sucesso.");
-        } else {
-            throw new Error("Falha no upload");
-        }
-    } catch (err) {
-        console.error("Erro no Sync:", err);
-        alert("Atenção: A alteração foi feita localmente, mas não pôde ser salva no GitHub automaticamente.");
+        function sortBy(col) {
+    if (sortCol === col) { 
+        sortAsc = !sortAsc; 
+    } else { 
+        sortCol = col; 
+        sortAsc = true; 
     }
+    render();
 }
-
 
         window.addEventListener('hashchange', handleRouting);
         loadData();
