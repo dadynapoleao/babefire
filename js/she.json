@@ -19,5 +19,26 @@
         "piercings": false,
         "Image": "",
         "ImagePosition": "50% 50%"
+    },
+    {
+        "Name": "Jenna Madison",
+        "Born": "17/4/1994",
+        "Years active": "2015",
+        "Birthplace": "California, United States",
+        "Ethnicity": "Caucasian",
+        "Hair color": "Blonde",
+        "Eye color": "Blue",
+        "Height": "170",
+        "Weight": "54",
+        "Body type": "Slim",
+        "Measurements": "34-24-35",
+        "Boobs": "34",
+        "Hips": "24",
+        "Ass": "35",
+        "Total": 45,
+        "tattoos": false,
+        "piercings": true,
+        "Image": "",
+        "ImagePosition": "50% 50%"
     }
 ]
