@@ -274,28 +274,41 @@
 
     <!-- MODAL EDIÇÃO -->
     <div id="edit-modal" class="modal-overlay">
-        <div class="modal-box">
+        <div class="modal-box" style="width: 800px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">Edit Record</div>
             <div class="form-grid">
                 <div class="form-group"><label>Name</label><input id="e-name"></div>
                 <div class="form-group"><label>Born (DD/MM/YYYY)</label><input id="e-born"></div>
-                <div class="form-group"><label>Origin</label><input id="e-birthplace"></div>
+                
+                <div class="form-group"><label>City</label><input id="e-city"></div>
+                <div class="form-group"><label>State / Province</label><input id="e-state"></div>
+                <div class="form-group"><label>Country</label><input id="e-country"></div>
                 <div class="form-group"><label>Score</label><input id="e-total" type="number"></div>
+                
                 <div class="form-group"><label>Measurements</label><input id="e-measurements"></div>
+                <div class="form-group"><label>Bra/Cup Size</label><input id="e-bra"></div>
+                
                 <div class="form-group"><label>Height (cm)</label><input id="e-height"></div>
                 <div class="form-group"><label>Weight (kg)</label><input id="e-weight"></div>
+                
+                <div class="form-group"><label>Boobs Type</label><input id="e-boobs-type"></div>
+                <div class="form-group"><label>Pubic Hair</label><input id="e-pubic"></div>
+
                 <div class="form-group"><label>Hair Color</label><input id="e-hair"></div>
                 <div class="form-group"><label>Ethnicity</label><input id="e-ethnicity"></div>
+                
                 <div class="form-group"><label>Eye Color</label><input id="e-eyes"></div>
                 <div class="form-group"><label>Tattoos</label><select id="e-tattoos"><option value="false">NO</option><option value="true">YES</option></select></div>
-                <div class="form-group"><label>Piercings</label><select id="e-piercings"><option value="false">NO</option><option value="true">YES</option></select></div>
+                
+                <div class="form-group" style="grid-column: span 2;"><label>Tattoos Description</label><input id="e-tattoos-desc"></div>
+                <div class="form-group" style="grid-column: span 2;"><label>Special Skills</label><input id="e-special"></div>
+                
                 <div class="form-group" style="grid-column: span 2;">
                     <label>Image URL</label>
                     <input id="e-image">
                 </div>
             </div>
             <input type="hidden" id="e-index">
-            <input type="hidden" id="e-position">
             <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
                 <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
                 <button class="btn-save" onclick="saveFromModal()">Save Changes</button>
@@ -741,20 +754,28 @@ function showProfilePage(p) {
         function openEditModal(name) {
             const idx = database.findIndex(i => i.Name === name);
             const item = database[idx];
+            
             document.getElementById('e-index').value = idx;
             document.getElementById('e-name').value = item.Name || "";
             document.getElementById('e-born').value = item.Born || "";
+            document.getElementById('e-city').value = item.City || "";
+            document.getElementById('e-state').value = item['State/Province'] || "";
+            document.getElementById('e-country').value = item.Country || "";
             document.getElementById('e-total').value = item.Total || 0;
-            document.getElementById('e-image').value = item.Image || "";
-            document.getElementById('e-birthplace').value = item.Birthplace || "";
             document.getElementById('e-measurements').value = item.Measurements || "";
+            document.getElementById('e-bra').value = item['Bra/Cup Size'] || "";
             document.getElementById('e-height').value = item.Height || "";
             document.getElementById('e-weight').value = item.Weight || "";
+            document.getElementById('e-boobs-type').value = item['Boobs Type'] || "";
+            document.getElementById('e-pubic').value = item['Pubic Hair'] || "";
             document.getElementById('e-hair').value = item['Hair color'] || "";
             document.getElementById('e-ethnicity').value = item.Ethnicity || "";
             document.getElementById('e-eyes').value = item['Eye color'] || "";
             document.getElementById('e-tattoos').value = item.tattoos ? "true" : "false";
-            document.getElementById('e-piercings').value = item.piercings ? "true" : "false";
+            document.getElementById('e-tattoos-desc').value = item['Tattoos Description'] || "";
+            document.getElementById('e-special').value = item['Special Skills'] || "";
+            document.getElementById('e-image').value = item.Image || "";
+            
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
@@ -762,20 +783,30 @@ function showProfilePage(p) {
 
         async function saveFromModal() {
             const idx = document.getElementById('e-index').value;
+            
             database[idx].Name = document.getElementById('e-name').value;
             database[idx].Born = document.getElementById('e-born').value;
+            database[idx].City = document.getElementById('e-city').value;
+            database[idx]['State/Province'] = document.getElementById('e-state').value;
+            database[idx].Country = document.getElementById('e-country').value;
             database[idx].Total = Number(document.getElementById('e-total').value);
-            database[idx].Image = document.getElementById('e-image').value;
-            database[idx].Birthplace = document.getElementById('e-birthplace').value;
             database[idx].Measurements = document.getElementById('e-measurements').value;
+            database[idx]['Bra/Cup Size'] = document.getElementById('e-bra').value;
             database[idx].Height = document.getElementById('e-height').value;
             database[idx].Weight = document.getElementById('e-weight').value;
+            database[idx]['Boobs Type'] = document.getElementById('e-boobs-type').value;
+            database[idx]['Pubic Hair'] = document.getElementById('e-pubic').value;
             database[idx]['Hair color'] = document.getElementById('e-hair').value;
             database[idx].Ethnicity = document.getElementById('e-ethnicity').value;
             database[idx]['Eye color'] = document.getElementById('e-eyes').value;
             database[idx].tattoos = document.getElementById('e-tattoos').value === "true";
-            database[idx].piercings = document.getElementById('e-piercings').value === "true";
+            database[idx]['Tattoos Description'] = document.getElementById('e-tattoos-desc').value;
+            database[idx]['Special Skills'] = document.getElementById('e-special').value;
+            database[idx].Image = document.getElementById('e-image').value;
             
+            // Mantém compatibilidade com o campo antigo "Birthplace" caso necessário
+            database[idx].Birthplace = database[idx].Country; 
+
             closeEditModal();
             render();
             await syncToGitHub();
